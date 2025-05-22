@@ -1,4 +1,5 @@
-# Sistema de Gestión de Eventos
+# AlertAi
+## Sistema de Gestión de Eventos
 
 Este es un sistema web desarrollado con **Spring Boot** y **MySQL** que permite a los usuarios crear, modificar y eliminar eventos, además de gestionar sus cuentas. También incluye un panel administrativo completo.
 
