@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>AlertAi - Admin</title>
+  <!-- BOOTSTRAP   -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- FONT AWESOM  -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- CSS PERSONALIZADO -->
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <link rel="stylesheet" th:href="@{/css/theme.css}">
+  <link rel="stylesheet" th:href="@{/css/user.css}">
+
+  <!-- FAVICON (ICON DE LA PÁGINA) -->
+  <link rel="icon" type="image/png" href="/img/icon-nav.png">
+
+  <!-- LEAFLET (MAPA)  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+</head> 
+<body>
+
+  <!-- MENÚ -->
+  <section>
+    <nav class="navbar-user sticky-top">
+      <!-- LOGO -->
+      <div class="branding">
+        <a th:href="@{/user/home}">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+            <path d="M177.18,307.9c-1.48,.35-2.9-.76-2.91-2.28-.02-4.67-.06-9.17,.1-13.66,.03-.94,1.12-2.25,2.04-2.68,14.3-6.69,21.11-17.92,21.07-33.63-.03-10.86-.37-21.78,.63-32.57,2.4-25.83,26.36-46.37,52.31-45.56,27.24,.85,49.57,21.69,50.93,47.96,.53,10.33,.23,20.69,.32,31.04,.13,15.59,7.32,26.58,21.58,32.85,1.82,.8,2.56,1.63,2.5,3.65-.12,4.21-.07,8.42-.06,12.85,0,1.52-1.42,2.67-2.9,2.3-10.48-2.66-18.98-7.9-25.97-15.74-9-10.1-13.22-22.06-13.28-35.52-.04-8.93,.01-17.86-.01-26.79-.05-19.4-14.85-34.37-34.01-34.44-18.88-.07-33.75,15.17-33.87,34.6-.07,11.12,.26,22.29-.58,33.36-1.58,20.67-18.08,39.58-37.88,44.26Z"></path>
+            <path d="M225.8,297.54h47.53c1.3,0,2.38,1.06,2.35,2.36-.25,10.42-10.99,20.99-23.44,22.43-13.71,1.59-26.11-7.94-28.76-22-.27-1.45,.84-2.79,2.31-2.79Z"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- MENÚ -->
+      <div class="nav-left">
+        <a th:href="@{/admin/home}" class="active">Inicio</a>
+        <a th:href="@{/admin/allCategories}">Categorías</a>
+        <a th:href="@{/admin/allEvents}">Eventos</a>
+        <a href="/admin/reports">Denuncias</a>
+        <a href="/admin/users">Usuarios</a>
+      </div>
+    
+      <!-- BUSCADOR -->
+      <div class="search-bar">
+        <form action="/search" method="get" id="searchForm" class="search-form" role="search">
+          <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+          <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
+        </form>
+      </div>
+    
+      <!-- MENÚ DEL USUARIO -->
+      <div class="nav-right">
+        <div class="user-menu">
+          <img th:src="${user.image != null} ? @{/uploads/icons/} + ${user.image} : @{/images/default-profile.png}" alt="Foto usuario">
+          <span class="username">
+            <span sec:authorize="hasRole('ADMIN')" th:text="${user.name}"></span>
+          </span>
+
+          <div class="dropdown me-4">
+            <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+
+            <ul class="dropdown-menu dropdown-menu-end custom-dropdown">
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#editarPerfilModal">
+                  <i class="fas fa-user me-1"></i>
+                  <span>Editar perfil</span>
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                  <i class="fas fa-cog me-1"></i>
+                  <span th:text="#{profile.setting}">Configuración</span>
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="/logout">
+                  <i class="fas fa-sign-out-alt me-1"></i>
+                  <span th:text="#{profile.logout}">Cerrar sesión</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- CAMBIAR THEME OCURO/CLARO -->
+          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+            <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </section>
+
+  <!-- DASHBOARD ADMIN -->
+  <div class="dashboard-admin p-4">
+    <div class="row">
+      <!-- CALENDARIO Y MAPA-->
+      <div class="col-md-3 d-flex flex-column gap-3">
+        <div class="calendar">
+          <div class="calendar-header d-flex justify-content-between">
+            <div class="month-year-group">
+              <span class="month-change" id="prev-month">‹</span>
+              <span class="month-picker" id="month-picker"></span>
+              <span class="month-change" id="next-month">›</span>
+            </div>              
+            <div class="year-group">
+              <span class="year-change" id="prev-year">‹</span>
+              <span class="year-picker" id="year"></span>
+              <span class="year-change" id="next-year">›</span>
+            </div>
+          </div>
+          <div class="calendar-body">
+            <div class="calendar-week-day">
+              <div>Dom</div><div>Lun</div><div>Mar</div>
+              <div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+            </div>
+            <div class="calendar-days"></div>
+          </div>
+        </div>
+
+        <div class="map-card">
+          <div id="event-map" style="height: 200px; border-radius: 12px;"></div>
+        </div>
+      </div>
+      <!-- USUARIOS -->
+      <div class="col-md-5">
+        <div class="dashboard-card">
+          <div class="d-flex align-items-center justify-content-between gap-2">
+            <label for="metaUsuarios" class="form-label mb-0"><strong>Meta de usuarios</strong></label>
+            <select id="metaUsuarios" class="form-select form-select-sm" 
+                onchange="location.href='?metaUsuarios=' + this.value;" style="width: 60%; background-color: transparent;">
+              <option value="50" th:selected="${metaUsuarios == 50}">50</option>
+              <option value="100" th:selected="${metaUsuarios == 100}">100</option>
+              <option value="150" th:selected="${metaUsuarios == 150}">150</option>
+              <option value="200" th:selected="${metaUsuarios == 200}">200</option>
+            </select>
+          </div>
+          <hr>
+          <div class="d-flex justify-content-center align-items-center mt-5">
+            <strong class="me-3">Total de usuarios registrados</strong><span class="me-3">-</span>
+            <p class="mb-0" style="color: gold; font-size: 1rem;" th:text="${totalUsers}"></p>
+          </div>
+          <p class="text-sucess text-center mt-2" th:text="'Hay ' + ${#numbers.formatDecimal(porcentajeUsuarios, 1, 1)} + '% de usuarios registrados en base a lo esperado.'" style="font-size: 0.9rem;"></p>
+          
+          <!-- ÚLTIMOS USUARIOS REGISTRADOS  -->
+          <div class="dashboard-card-register mt-5">
+            <p><i class="bi bi-person-lines-fill me-3"></i><strong>Últimos usuarios registrados</strong></p>
+            <div th:each="u : ${latestUsersFormatted}">
+              <div class="card-user">
+                <a th:href="@{/admin/user/{id}(id=${u.id})}" style="font-size: 0.75rem; text-decoration: none;">                  
+                  <div class="d-flex align-items-center justify-content-center">
+                    <img th:src="@{/uploads/icons/{img}(img=${u['image']})}" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 10px;" />
+                    <strong th:text="${u['name']}" style="font-size: 1rem;">Nombre Usuario</strong><br>
+                  </div>
+                </a>
+                <div class="text-end " style="font-size: 0.8rem;">
+                  <span th:text="${u.registration}">Fecha</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- REGISTRAR CATEGORÍAS Y GESTIONAR DENUNCIAS -->
+      <div class="col-md-4">
+        <!-- CATEGORÍAS -->
+        <div class="dashboard-card text-center mb-3">
+          <p style="font-size: 1.2rem;"><strong>Registrar categorías</strong> <i class="bi bi-plus" data-bs-toggle="modal" data-bs-target="#registroCategoriaModal" style="cursor: pointer;"></i></p>
+          <p style="font-size: 0.9rem;">Categorías registradas en el sitema  -  <span th:text="${totalCategory}" style="color: gold;"></span></p>
+        </div>
+
+        <!--DENUNCIAS-->
+        <div class="dashboard-card hoverable-card">
+          <h6>Gestionar denuncias recientes:</h6>
+          <hr>
+          <a href="/admin/reports" style="text-decoration: none;">
+            <div class="dashboard-card-report">
+              <div th:each="report, iterStat : ${reports}" th:if="${iterStat.index} < 5" style="font-size: 0.8rem;">
+                <div class="mb-3 card-report">
+                  <img class="me-2" th:src="${report.user.image != null} ? @{/uploads/icons/} + ${report.user.image} : @{/images/default-profile.png}" alt="" style="width: 20px; height: 20px; border-radius: 50px; background-color: aqua;">
+                  <strong th:text="${report.user.name}"></strong> 
+                  <span> denunció </span>
+                  <strong th:text="${report.event.name}"></strong>
+                  <span> por </span> 
+                  <strong th:text="${report.reason.descripcion}"></strong>
+                </div>
+              </div>
+            
+              <div th:if="${#lists.isEmpty(reports)}" class="muted text-center">
+                No hay denuncias recientes.
+              </div>
+          </a>
+        </div>
+      </div>
+      
+    </div>
+  </div>
+
+  <!-- MODAL -->
+   
+  <!-- REGISTRAR CATEGORÍAS -->
+  <div class="modal fade" id="registroCategoriaModal" tabindex="-1" aria-labelledby="registroCategoriaModalLabel" aria-hidden="true">
+    <div class="modal-dialog ">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="registroCategoriaModalLabel">Registrar categorías</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form th:action="@{/admin/registerCategory}" method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label for="categoryName" class="form-label">Nombre de la categoría</label>
+              <input type="text" class="form-control" id="categoryName" name="name" required>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          <button type="submit" class="btn btn-primary">Registrar categoría</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- EDITAR PERFIL DE USUARIO -->
+  <div class="modal fade" id="editarPerfilModal" tabindex="-1" aria-labelledby="editarPerfilModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-4">
+        <form th:action="@{/user/update}" method="post" enctype="multipart/form-data" th:object="${user}">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editarPerfilModalLabel" style="font-size: 0.9rem;">Editar perfil</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 0.8rem;"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row">
+              <!-- FOTO DE PERFIL -->
+              <div class="col-12 col-md-6 modal-user-photo text-center position-relative mx-auto">
+                <!-- Imagen actual -->
+                <img id="preview-user-image" th:src="@{'/uploads/icons/' + ${user.image}}" data-original-src="@{'/uploads/icons/' + ${user.image}}" src="#" class="img-fluid">
+
+                <input type="file" id="image" name="imageFile" class="overlay-input" data-preview-id="preview-user-image">
+
+                <!-- Botón sobre la imagen -->
+                <label for="image" class="btn btn-sm overlay-button">
+                  <i class="bi bi-camera"></i>
+                </label>
+              </div>
+              <!-- DATOS DEL USUARIO -->
+              <div class="col-12 col-md-6">
+                <div class="mb-2 p-2 rounded border">
+                  <span class="muted mb-1" th:text="#{form.name}" style="font-size:0.7rem">Nombre completo</span>
+                  <input class="form-control border-0 p-0 bg-transparent" type="text" id="name" th:field="*{name}">
+                </div>
+                <div class="mb-2 p-2 rounded border">
+                  <span class="muted mb-1" th:text="#{form.username}" style="font-size:0.7rem">Usuario</span>
+                    <input class="form-control border-0 p-0 bg-transparent" type="text" id="username" th:field="*{username}">
+                  </div>
+                <div class="mb-2 p-2 rounded border">
+                  <span class="muted mb-1" th:text="#{form.phone}" style="font-size:0.7rem">Teléfono</span>
+                  <input class="form-control border-0 p-0 bg-transparent" type="text" id="phone" th:value="*{phone}">
+                </div>
+                <div class="mb-2 p-2 rounded border">
+                  <span class="muted mb-1" th:text="#{form.document}" style="font-size:0.7rem">Documento</span>
+                  <input class="form-control border-0 p-0 bg-transparent" type="text" id="document" th:value="*{document}">
+                </div>
+              </div>
+            </div>
+            <div class="row p-2">
+              <div class="mb-2 p-2 rounded border">
+                <span class="muted mb-1" th:text="#{form.biography}" style="font-size:0.7rem">Biografía</span>
+                <textarea class="form-control border-0 p-0 bg-transparent" id="description" th:field="*{description}" rows="3" ></textarea>
+              </div>
+              
+              <div class="mb-2 p-2 rounded border">
+                <span class="muted mb-1" th:text="#{form.country}" style="font-size:0.7rem">País</span>
+                <input class="form-control border-0 p-0 bg-transparent" type="text" id="country" th:field="*{country}"></input>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary" th:text="#{form.save}">Guardar cambios</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!--CONFIGURACIÓN DE USUARIO-->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content settings-container shadow-lg border-0 rounded-4">
+        <div class="modal-header rounded-top-4">
+          <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}">Configuración de Usuario</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form th:action="@{/user/settings}" method="post">
+            <input type="hidden" name="redirectTo" th:value="${redirectTo}" />
+  
+            <!-- Idioma -->
+            <div class="mb-5 d-flex align-items-center">
+              <label for="language" class="form-label fw-bold me-2" th:text="#{settings.language}">Idioma: </label>
+              <select name="language" id="language" class="form-select shadow-sm rounded-3">
+                <option value="es" th:selected="${#locale.language == 'es'}">Español</option>
+                <option value="pt" th:selected="${#locale.language == 'pt'}">Portugués</option>
+              </select>
+            </div>
+  
+            <!-- Preferencias -->
+            <div class="mb-4">
+              <h6 class="fw-bold mb-3" th:text="#{homepage.preferences}">Preferencias de notificación</h6>
+              <p class="fst-italic small">
+                Selecciona las categorías de eventos sobre las que deseas recibir notificaciones y novedades.
+              </p>
+              <div class="d-flex justify-content-center">
+                <div class="form-check" th:each="cat : ${categories}">
+                  <input class="form-check-input" type="checkbox"
+                         th:id="'cat-' + ${cat.id}"
+                         th:name="categoriaIds"
+                         th:value="${cat.id}"
+                         th:checked="${user.notificaciones.contains(cat)}">
+                  <label class="form-check-label me-4" th:for="'cat-' + ${cat.id}" th:text="${cat.name}"></label>
+                </div>
+              </div>
+            </div>
+
+            <!-- CAMBIO DE CONTRASEÑA -->
+            <div class="text-center mt-3">
+              <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
+                Cambiar contraseña
+              </button>
+            </div>
+
+            <!-- ELIMINAR CUENTA -->
+            <div class="text-center mt-4">
+              <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
+                <i class="bi bi-trash"></i> Eliminar mi cuenta
+              </button>
+            </div>
+
+            <!-- Botones -->
+            <div class="modal-footer d-flex justify-content-center border-top-0 pt-4">
+              <button type="button" class="btn px-4" data-bs-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn px-4" th:text="#{settings.save}">Guardar cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL CAMBIAR CONTRASEÑA -->
+  <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow-sm border-0 rounded-4">
+        <div class="modal-header bg-primary text-white rounded-top-4">
+          <h5 class="modal-title" id="changePasswordModalLabel">Cambiar Contraseña</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form th:action="@{/user/change-password}" method="post">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="currentPassword" class="form-label">Contraseña actual</label>
+              <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+            </div>
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">Nueva contraseña</label>
+              <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+            </div>
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label">Confirmar nueva contraseña</label>
+              <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
+            </div>
+          </div>
+          <div class="modal-footer border-top-0">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar contraseña</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- MODAL DE ELIMINAR CUENTA -->
+  <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow-lg border-0 rounded-4">
+        <div class="modal-header bg-danger text-white rounded-top-4">
+          <h5 class="modal-title" id="deleteAccountModalLabel">¿Eliminar cuenta?</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás segura/o de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-footer border-top-0">
+          <form th:action="@{/user/delete}" method="post">
+            <button type="button" class="btn" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn">Sí, eliminar cuenta</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+           
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/script.js}"></script>
+
+
+  <script th:inline="javascript">
+      /*<![CDATA[*/
+      document.addEventListener("DOMContentLoaded", function () {
+        const calendarEvents = /*[[${calendarEvents}]]*/ "[]";
+        
+
+        try {
+          const parsedEvents = JSON.parse(calendarEvents);
+          let calendar = document.querySelector('.calendar');
+          const month_names = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+
+          const isLeapYear = (year) => {
+            return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+          };
+
+          const getFebDays = (year) => {
+            return isLeapYear(year) ? 29 : 28;
+          };
+
+          const generateCalendar = (month, year) => {
+            let calendar_days = calendar.querySelector('.calendar-days');
+            let calendar_header_year = calendar.querySelector('#year');
+            let month_picker = calendar.querySelector('#month-picker');
+
+            let days_of_month = [31, getFebDays(year), 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+            calendar_days.innerHTML = '';
+
+            if (month === undefined) month = currDate.getMonth();
+            if (year === undefined) year = currDate.getFullYear();
+            
+
+            let curr_month = month_names[month];
+            month_picker.innerHTML = curr_month;
+            calendar_header_year.innerHTML = year;
+
+            let first_day = new Date(year, month, 1);
+
+            for (let i = 0; i <= days_of_month[month] + first_day.getDay() - 1; i++) {
+              let day = document.createElement('div');
+
+              if (i >= first_day.getDay()) {
+                const dateNum = i - first_day.getDay() + 1;
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(dateNum).padStart(2, '0')}`;
+
+                day.classList.add('calendar-day-hover');
+                day.innerHTML = `<div class="day-number">${dateNum}</div>`;
+
+                const eventsForDay = parsedEvents.filter(event => event.start === dateStr);
+                if (eventsForDay.length > 0) {
+                  day.classList.add('event-day');
+                  day.setAttribute('data-event-date', dateStr);
+                  day.addEventListener('click', () => {
+
+                    // Ir al primer evento del día en el mapa
+                    const event = eventsForDay[0];
+                    if (event.latitude && event.longitude) {
+                      map.setView([event.latitude, event.longitude], 13); // Zoom 13
+                      const popupContent = `<strong>${event.title}</strong><br>${event.description || ''}`;
+                      L.popup()
+                        .setLatLng([event.latitude, event.longitude])
+                        .setContent(popupContent)
+                        .openOn(map);
+                    }
+                  });
+
+                }
+
+                if (
+                  dateNum === currDate.getDate() &&
+                  year === currDate.getFullYear() &&
+                  month === currDate.getMonth()
+                ) {
+                  day.classList.add('curr-date');
+                }
+              }
+
+              calendar_days.appendChild(day);
+            }
+          };
+
+          // Inicializar calendario
+          let currDate = new Date();
+          let currentMonth = currDate.getMonth();
+          let currentYear = currDate.getFullYear();
+          generateCalendar(currentMonth, currentYear);
+
+          document.getElementById("prev-month").addEventListener("click", () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+              currentMonth = 11;
+              currentYear--;
+            }
+            generateCalendar(currentMonth, currentYear); // usa tu función
+          });
+
+          document.getElementById("next-month").addEventListener("click", () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+              currentMonth = 0;
+              currentYear++;
+            }
+            generateCalendar(currentMonth, currentYear); 
+          });
+
+          // Navegación
+          let year_text = document.querySelector('#year');
+          let prev_year = document.querySelector('#prev-year');
+          let next_year = document.querySelector('#next-year');
+
+          prev_year.addEventListener('click', () => {
+            currentYear--;
+            generateCalendar(currentMonth, currentYear);
+          });
+
+          next_year.addEventListener('click', () => {
+            currentYear++;
+            generateCalendar(currentMonth, currentYear);
+          });
+
+          // MAPA GENERAL DE EVENTOS
+          const map = L.map('event-map').setView([0, 0], 2);
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+          }).addTo(map);
+
+          const bounds = [];
+
+          parsedEvents.forEach(event => {
+            if (event.latitude && event.longitude) {
+              const marker = L.marker([event.latitude, event.longitude]).addTo(map);
+              marker.bindPopup(`<strong>${event.title}</strong>`);
+              bounds.push([event.latitude, event.longitude]);
+            }
+          });
+
+          if (bounds.length > 0) {
+            map.fitBounds(bounds, { padding: [30, 30] });
+          }
+
+        } catch (error) {
+          console.error("Error parsing calendar events:", error);
+        }
+      });
+      /*]]>*/
+  </script>
+
+</body>
+</html>
