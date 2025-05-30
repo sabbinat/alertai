@@ -24,11 +24,23 @@ Este es un sistema web desarrollado con **Spring Boot** y **MySQL** que permite 
 
 - Java 21+
 - Spring Boot
-- Spring Security (si aplica)
+- Spring Security 
 - MySQL
 - JPA / Hibernate
 - Thymeleaf 
 - Maven
 
-## 🧪 Cómo ejecutar el proyecto
+## ⚠️ Este proyecto necesita credenciales para funcionar correctamente.
+
+1. Copia `application-secret.example.properties` como `application-secret.properties`.
+2. Completa los siguientes datos:
+   - **Contraseña de aplicación** generada en tu cuenta de Gmail para el envío de correos.
+   - **Usuario y contraseña de la base de datos** MySQL usados localmente.
+3. Este archivo está ignorado en el repositorio por seguridad.
+4. Si no tienes las credenciales necesarias, pídeselas a los responsables del proyecto.
+
+💡 Puedes generar una contraseña de aplicación desde tu cuenta Gmail:  
+https://myaccount.google.com/apppasswords
+
+
 
