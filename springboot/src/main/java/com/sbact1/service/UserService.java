@@ -17,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sbact1.model.User;
 import com.sbact1.repository.UserRepository;
-import com.sbact1.repository.VerificationTokenRepository;
+import com.sbact1.repository.TokenRepository;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
@@ -27,7 +27,7 @@ public class UserService {
 
 	@Autowired private BCryptPasswordEncoder passwordEncoder;
 	@Autowired private UserRepository userRepository;
-	@Autowired private VerificationTokenRepository tokenRepository;
+	@Autowired private TokenRepository tokenRepository;
 
 	// Método para guardar un nuevo usuario en la base de datos
 	public User saveUser(User user) {
@@ -54,11 +54,8 @@ public class UserService {
 
 	// Método para actualizar el perfil del usuario, incluyendo su imagen
 	public void updateUserProfile(User updatedUser, MultipartFile file, String email) {
-		User user = userRepository.findByEmail(email);
-
-		if (user == null) {
-			throw new RuntimeException("Usuario no encontrado");
-		}
+		User user = userRepository.findByEmail(email)
+				.orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
 		user.setName(updatedUser.getName());
 		user.setPhone(updatedUser.getPhone());
@@ -66,7 +63,6 @@ public class UserService {
 		user.setDocument(updatedUser.getDocument());
 		user.setUsername(updatedUser.getUsername());
 		user.setDescription(updatedUser.getDescription());
-
 
 		if (file != null && !file.isEmpty()) {
 			try {

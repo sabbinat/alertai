@@ -33,7 +33,6 @@ import com.sbact1.repository.CategoryRepository;
 import com.sbact1.repository.EventRepository;
 import com.sbact1.repository.ReportRepository;
 import com.sbact1.repository.UserRepository;
-import com.sbact1.service.EventService;
 import com.sbact1.service.UserService;
 
 import org.springframework.data.domain.Page;
@@ -51,16 +50,17 @@ public class AdminController {
 	@Autowired private CategoryRepository categoryRepository;
 	@Autowired private UserService userService;
 	@Autowired private EventRepository eventRepository;
-	@Autowired private EventService eventService;
 
 	@ModelAttribute
 	public void commonUser(Principal p, Model m) {
-		if (p != null) {
-			String email = p.getName();
-			User user = userRepository.findByEmail(email);
-			m.addAttribute("user", user);
-		}
-	}
+        if (p != null) {
+            String email = p.getName();
+            Optional<User> optionalUser = userRepository.findByEmail(email);
+            if (optionalUser.isPresent()) {
+                m.addAttribute("user", optionalUser.get());
+            }
+        }
+    }
 
 	// Método para la página principal del admin (/admin/home)
 	@GetMapping("/home")
@@ -81,7 +81,6 @@ public class AdminController {
 				userMap.put("name", u.getName());
 				userMap.put("username", u.getUsername());
 				userMap.put("image", u.getImage());
-				// Capitalizar primera letra de la fecha formateada
 				userMap.put("registration", u.getRegistrationTime()
 					.format(formatter)
 					.substring(0, 1).toUpperCase() + 
@@ -173,11 +172,11 @@ public class AdminController {
 	    Optional<User> categoria = userRepository.findById(id); 
 	    if(categoria.isEmpty()) {
 	        msg.addFlashAttribute("errorEliminar", "Ususario no encontrado");
-	        return "redirect:/admin/admin_listUser/";
+	        return "redirect:/admin/users";
 	    }
         userService.eliminarUsuario(id); 
 	    msg.addFlashAttribute("sucessoEliminar", "Usuario eliminado exitosamente!");
-	    return "redirect:/admin/admin_listUser/";
+	    return "redirect:/admin/users";
 	}
 
 	@PostMapping("/user/cambiar-rol")
@@ -208,7 +207,6 @@ public class AdminController {
 		return "admin/admin_reports";
 	}
 
-
 	@GetMapping("/reports/handle/{id}")
 	public String handleReport(@PathVariable Long id, RedirectAttributes redirectAttributes) {
 		Report report = reportRepository.findById(id).orElse(null);
@@ -217,6 +215,20 @@ public class AdminController {
 			report.setReviewed(true);
 			reportRepository.save(report);
 			redirectAttributes.addFlashAttribute("success", "Denuncia marcada como revisada.");
+		} else {
+			redirectAttributes.addFlashAttribute("error", "La denuncia no existe.");
+		}
+
+		return "redirect:/admin/reports";
+	}
+
+	@GetMapping("/reports/delete/{id}")
+	public String deleteReport(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+		Optional<Report> reportOptional = reportRepository.findById(id);
+
+		if (reportOptional.isPresent()) {
+			reportRepository.delete(reportOptional.get());
+			redirectAttributes.addFlashAttribute("success", "Denuncia eliminada correctamente.");
 		} else {
 			redirectAttributes.addFlashAttribute("error", "La denuncia no existe.");
 		}
@@ -289,12 +301,5 @@ public class AdminController {
 		return "user/profile";
 	}
 
-
-	@PostMapping("/delete/{id}")
-	public String deleteEventAsAdmin(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-		eventService.deleteEventAsAdmin(id);
-		redirectAttributes.addFlashAttribute("successMessage", "Evento eliminado con éxito.");
-		return "redirect:/admin/allEvents";
-	}
 
 }

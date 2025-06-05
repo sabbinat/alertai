@@ -39,46 +39,51 @@ public class CommentController {
      * @return Redirige a la vista del evento después de guardar el comentario.
      */
     @PostMapping("/{id}/comentario")
-    public String publicarComentario(@PathVariable Long id, @RequestParam String content, @RequestParam(required = false) Long parentId,
-                                     Principal principal) {
+    public String publicarComentario(@PathVariable Long id, 
+                                    @RequestParam String content, 
+                                    @RequestParam(required = false) Long parentId,
+                                    Principal principal) {
 
         // Buscar el evento al que se le agregará el comentario
         Event event = eventRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
 
-        // Obtiene el usuario logueado
-        User user = userRepository.findByEmail(principal.getName());
+        // Buscar el usuario autenticado
+        User user = userRepository.findByEmail(principal.getName())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado o no autorizado"));
 
-        // Crea un nuevo objeto Comment y asigna el contenido, evento y usuario
+        // Crear y configurar el comentario
         Comment comment = new Comment();
         comment.setContent(content);
         comment.setEvent(event);
         comment.setUser(user);
 
-        // Si es una respuesta a otro comentario, busca el comentario padre y lo asignar
+        // Si es respuesta a otro comentario, buscar el comentario padre
         if (parentId != null) {
             Comment parentComment = commentRepository.findById(parentId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentario padre no encontrado"));
             comment.setParent(parentComment);
         }
 
-        // Guardar el comentario en la base de datos
+        // Guardar el comentario
         commentRepository.save(comment);
 
         return "redirect:/event/" + id;
     }
 
+
     //Método para eliminar un comentario de un evento. - Solo el autor del comentario puede eliminarlo.
     @PostMapping("/{eventId}/comentario/{commentId}/delete")
     public String eliminarComentario(@PathVariable Long eventId, 
-                                     @PathVariable Long commentId, 
-                                     Principal principal) {
+                                    @PathVariable Long commentId, 
+                                    Principal principal) {
         // Busca el comentario a eliminar
         Comment comment = commentRepository.findById(commentId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Comentario no encontrado"));
 
-        // Obtener el usuario logueado
-        User user = userRepository.findByEmail(principal.getName());
+        // Obtener el usuario logueado usando Optional
+        User user = userRepository.findByEmail(principal.getName())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado o no autorizado"));
 
         // Solo el autor del comentario puede eliminarlo
         if (!Objects.equals(comment.getUser().getId(), user.getId())) {
@@ -88,4 +93,5 @@ public class CommentController {
         commentRepository.delete(comment);
         return "redirect:/event/" + eventId;
     }
+
 }

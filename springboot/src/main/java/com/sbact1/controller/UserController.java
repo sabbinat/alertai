@@ -2,12 +2,15 @@ package com.sbact1.controller;
 
 
 import java.security.Principal;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import com.sbact1.dto.EventDto;
 import com.sbact1.model.Category;
 import com.sbact1.model.Event;
 import com.sbact1.model.User;
@@ -34,31 +38,36 @@ import com.sbact1.service.UserService;
 @RequestMapping("/user")
 public class UserController {
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private CategoryRepository categoryRepository;
-    @Autowired
-    private EventRepository eventRepository;
-    @Autowired
-    private UserService userService;
-    @Autowired    
-    private SettingService settingService;
+    @Autowired private UserRepository userRepository;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private EventRepository eventRepository;
+    @Autowired private UserService userService;
+    @Autowired private SettingService settingService;
     
     // Método que se ejecuta antes de cada petición para agregar el usuario logueado al modelo
     @ModelAttribute
     public void commonUser(Principal p, Model m) {
         if (p != null) {
             String email = p.getName();
-            User user = userRepository.findByEmail(email);
-            m.addAttribute("user", user);
+            Optional<User> optionalUser = userRepository.findByEmail(email);
+            if (optionalUser.isPresent()) {
+                m.addAttribute("user", optionalUser.get());
+            }
         }
     }
 
     // Muestra la página principal del usuario, con eventos, categorías y destacados
     @GetMapping("/home")
-    public String userHome(Model model, Principal principal) {
-        User user = userRepository.findByEmail(principal.getName());
+    public String userHome(Model model, Principal principal, RedirectAttributes redirectAttributes) {
+        Optional<User> userOptional = userRepository.findByEmail(principal.getName());
+
+        // Verificar si está presente
+        if (userOptional.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
+            return "redirect:/signin"; // O a donde quieras redirigir si no se encuentra el usuario
+        }
+
+        User user = userOptional.get();
         List<Event> myEvents = eventRepository.findByUser(user);
         if (myEvents == null) {
             myEvents = new ArrayList<>();
@@ -99,44 +108,65 @@ public class UserController {
 
     // Muestra la página de perfil del usuario, con sus eventos organizados por categoría
     @GetMapping("/profile")
-    public String perfilUsuario(Model model, Principal principal) {
-        User user = userRepository.findByEmail(principal.getName());
-        settingService.cargarSettings(model, "/user/profile");
+    public String perfilUsuario(Model model, Principal principal, RedirectAttributes redirectAttributes) {
+        Optional<User> user = userRepository.findByEmail(principal.getName());
 
-        model.addAttribute("events", eventRepository.findByUser(user));
+        if (user.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
+            return "redirect:/signin";
+        }
+
+        User userAccount = user.get();
+        settingService.cargarSettings(model, "/user/profile");
 
         List<Category> categories = categoryRepository.findAll();
         model.addAttribute("categories", categories);
 
-        // Mapear los eventos por categoría ordenados por fecha
-        Map<Long, List<Event>> eventsByCategory = new HashMap<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, dd 'de' MMMM", new Locale("es", "ES"));
+
+        Map<Long, List<EventDto>> eventsByCategory = new HashMap<>();
+
         for (Category cat : categories) {
-            List<Event> evs = eventRepository.findByUserAndCategoryOrderByStartDateDesc(user, cat);
-            eventsByCategory.put(cat.getId(), evs);
+            List<Event> evs = eventRepository.findByUserAndCategoryOrderByStartDateDesc(userAccount, cat);
+            List<EventDto> eventDtos = evs.stream()
+                .map(e -> new EventDto(e, formatter))
+                .collect(Collectors.toList());
+            eventsByCategory.put(cat.getId(), eventDtos);
         }
         model.addAttribute("eventsByCategory", eventsByCategory);
+        model.addAttribute("user", userAccount);
+
         return "user/profile";
     }
 
     // Actualiza los datos del perfil del usuario, incluyendo imagen
     @PostMapping("/update")
-    public String updateProfile(@ModelAttribute("user") User user,
-                            @RequestParam("imageFile") MultipartFile imageFile,
-                            Principal principal) {
-    userService.updateUserProfile(user, imageFile, principal.getName());
+    public String updateProfile(@ModelAttribute("user") User updatedUser, @RequestParam("imageFile") MultipartFile imageFile, Principal principal) {
+        userService.updateUserProfile(updatedUser, imageFile, principal.getName());
+        
+        Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
+        if (optionalUser.isEmpty()) {
+            return "redirect:/signin"; 
+        }
+        User user = optionalUser.get();
 
-    User currentUser = userRepository.findByEmail(principal.getName());
-    if (currentUser.getRole().equals("ROLE_ADMIN")) {
-        return "redirect:/admin/home";
-    } else {
-        return "redirect:/user/profile";
+        if ("ROLE_ADMIN".equals(user.getRole())) {
+            return "redirect:/admin/home";
+        } else {
+            return "redirect:/user/profile";
+        }
     }
-}
 
     // Muestra el formulario para configurar las preferencias de categorías
     @GetMapping("/preferences")
-    public String showPreferences(Model model, Principal principal) {
-        User user = userRepository.findByEmail(principal.getName());
+    public String showPreferences(Model model, Principal principal, RedirectAttributes redirectAttributes) {
+        Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
+
+        if (optionalUser.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
+            return "redirect:/signin";
+        }
+        User user = optionalUser.get();
         List<Category> categorias = categoryRepository.findAll();
 
         model.addAttribute("user", user);
@@ -147,18 +177,25 @@ public class UserController {
 
     // Guarda las preferencias de categorías seleccionadas por el usuario
     @PostMapping("/preferences")
-    public String savePreferences(@RequestParam List<Long> categoriaIds, Principal principal) {
-        User user = userRepository.findByEmail(principal.getName());
+    public String savePreferences(@RequestParam List<Long> categoriaIds, Principal principal, RedirectAttributes redirectAttributes) {
+        Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
+
+        if (optionalUser.isEmpty()) {
+            redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
+            return "redirect:/signin";
+        }
+
+        User user = optionalUser.get();
         List<Category> categoriasSeleccionadas = categoryRepository.findAllById(categoriaIds);
         user.setNotificaciones(categoriasSeleccionadas);
         userRepository.save(user);
+
         return "redirect:/user/profile"; 
     }
     
     // Muestra la página de configuración del sistema (idioma, visual, etc.)
     @GetMapping("/settings")
-    public String mostrarSettings(Model model, Principal principal,
-            @RequestParam(name = "redirectTo", required = false, defaultValue = "/user/home") String redirectTo) {
+    public String mostrarSettings(Model model, Principal principal, @RequestParam(name = "redirectTo", required = false, defaultValue = "/user/home") String redirectTo) {
         settingService.cargarSettings(model, redirectTo);
         return "settings";
     }

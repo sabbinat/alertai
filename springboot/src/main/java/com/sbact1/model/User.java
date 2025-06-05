@@ -13,6 +13,8 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -42,6 +44,12 @@ public class User {
 	@Column(unique = true)
 	private String email;
 
+
+	@Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
+    @Pattern(
+        regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,}$",
+        message = "La contraseña debe contener una mayúscula, una minúscula, un número y un símbolo especial"
+    )
 	@NotBlank
 	private String password;
 
@@ -75,8 +83,7 @@ public class User {
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Comment> comments;
 
-	
-@PrePersist
+	@PrePersist
 	public void prePersist() {
 		this.registrationTime = LocalDateTime.now();  
 	}

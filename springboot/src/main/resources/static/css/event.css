@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Cal+Sans&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cal+Sans&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
 
 :root {
   --body-night: #121212;
@@ -7,20 +7,20 @@
   --text-night: #ffffff;
   --text-muted-night: #aeaeae;
   --card-shadow-night: #0000000d;
-  --card-bg-night: #333333;
-
-  --body-light: #ffffff;
+  --card-bg-night: #454545;
+  
+  --body-light: #e0e0e0;
   --third-light: #b2bec9;
   --fourth-light: #d3d3d3;
   --text-light: #000000;
   --text-muted-light: #2b2b2b;
-  --card-bg-light: #a0a0a0;
+  --card-bg-light: #ffffff;
   --card-shadow-light: #0000000d;
 
-  --verde-claro: #a8cbd5;
+  --verde-claro: #d6eff6;
   --verde-petroleo-claro: #92b3b0;
   --verde-medio: #5a7e7b;
-  --verde-petroleo-oscuro: #5c7d7a;
+  --verde-petroleo-oscuro: #4d7370;
   --verde-oscuro-boton: #26332f;
   --blanco: #ffffff;
 }
@@ -48,7 +48,7 @@
   color: white;
 }
 .theme-light .event-banner {
-  background: linear-gradient(to bottom, var(--verde-claro),  var(--body-light)); 
+  background: linear-gradient(to bottom, var(--verde-petroleo-claro),  var(--body-light)); 
   color: rgb(0, 0, 0);
 }
 .event-banner::before {
@@ -73,10 +73,18 @@
   z-index: 0;
 }
 .event-banner h1 {
-  font-size: 3.3rem;
+  font-size: 5rem;
   margin: 0;
   text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.3);
-  font-family: "Cal Sans", sans-serif;
+  font-family: "Bebas neue", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+.event-banner h2 {
+  font-size: 3.5rem;
+  margin: 0;
+  text-shadow: 1px 1px 6px rgba(0, 0, 0, 0.3);
+  font-family: "Bebas neue", sans-serif;
   font-weight: 400;
   font-style: normal;
 }
@@ -99,13 +107,18 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-inline: 0.9rem;
 }
 .autor p{
-  font-size: 0.9rem;
-  border-bottom: 1px solid var(--verde-medio);
+  font-size: 1rem;
+  border-bottom: 2px solid var(--verde-medio);
+}
+
+.event-content .event-body{
+  flex: 1;
 }
 .contain textarea::placeholder{
-    color: inherit;
+  color: inherit;
 }
 .contain .dropdown button{
     color: inherit;
@@ -116,10 +129,11 @@
 
 .map-preview-container {
   position: relative;
-  height: 220px;
+  height: 200px;
   width: 100%;
+  border-radius: 8px;
   cursor: pointer;
-  background-color: var(--verde-claro);
+  background-color: var(--verde-petroleo-claro);
 }
 .map-preview-container img {
   width: 100%;
@@ -160,8 +174,8 @@
 
 
 .dropdown .btn::after {
-    display: none !important;
-  }
+  display: none !important;
+}
 
 
 
@@ -188,7 +202,7 @@
 
 /* PÁGINA DE EVENT-BY-CATEGORIES*/
 .event-cat-content{
-  border: 1px solid var(--second-night);
+  border: 1px solid var(--verde-medio);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
   width: 800px;
@@ -216,13 +230,34 @@
 
 
 
-/* MENÚ DE INVITADO */
+/* PÁGINA - ALLEVENTS */
+.content-events {
+  padding: 20px;
+}
+.all-event-card {
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 15px;
+  height: 100%;
+  width: 280px;
+  margin-bottom: 10px;
+}
+.all-event-card:hover {
+  transform: translateY(-5px);
+}
+.all-event-card img {
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+.all-event-card .muted {
+  color: #6c757d;
+  margin: 10px 0 5px;
+  font-size: 0.9rem;
+}
+.all-event-card .event-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+}
 
-.theme-light .guest-menu .btn-register-account{
-  background-color: black;
-  color: white;
-}
-.theme-dark .guest-menu .btn-register-account{
-  background-color: white;
-  color: black;
-}

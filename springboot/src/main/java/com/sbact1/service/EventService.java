@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -45,8 +46,8 @@ public class EventService {
         event.setTime(dto.getTime());
         event.setDescription(dto.getDescription());
         event.setContact(dto.getContact());
-    
-        // Si se proporciona una imagen, se guarda en el sistema de archivos y se asigna al evento
+
+        // Si se proporciona una imagen, se guarda
         if (imageFile != null && !imageFile.isEmpty()) {
             String filename = UUID.randomUUID() + "_" + imageFile.getOriginalFilename();
             Path uploadPath = Paths.get("uploads/events");
@@ -56,27 +57,27 @@ public class EventService {
             }
             event.setImage(filename);
         }
-    
-        // Busca la categoría por ID y la asigna al evento
+
+        // Buscar categoría
         Category cat = categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new RuntimeException("Categoría no encontrada"));
         event.setCategory(cat);
-    
-        // Busca el usuario por email y lo asigna al evento
-        User user = userRepository.findByEmail(email);
+
+        // Buscar usuario
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
         event.setUser(user);
 
-        // Asigna la ubicación al evento
+        // Ubicación
         Location location = new Location();
         location.setAddress(dto.getLocation().getAddress());
         location.setLatitude(dto.getLocation().getLatitude());
         location.setLongitude(dto.getLocation().getLongitude());
-
         event.setLocation(location);
-    
+
         return eventRepository.save(event); 
     }
-    
+
     //Actualiza un evento existente. Solo el creador del evento puede editarlo.
     public void updateEvent(EventDto dto, MultipartFile file, String username) throws Exception {
         //Busca el evento por ID
@@ -121,15 +122,22 @@ public class EventService {
         eventRepository.save(event);
     }
 
-    //Elimina un evento. Solo el propietario puede eliminar su evento.
+    //Elimina un evento. 
     public void deleteEvent(Long id, String username) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
 
-        if (event.getUser().getEmail().equals(username)) {
+        Optional<User> optionalUser = userRepository.findByEmail(username);
+
+        boolean isOwner = event.getUser().getEmail().equals(username);
+        boolean isAdmin = optionalUser
+                .map(user -> "ROLE_ADMIN".equals(user.getRole()))
+                .orElse(false);
+
+        if (isOwner || isAdmin) {
             eventRepository.deleteById(id);
         } else {
-            throw new RuntimeException("No autorizado para eliminar este evento");
+            throw new RuntimeException("No estás autorizado para eliminar este evento.");
         }
     }
 
@@ -144,16 +152,16 @@ public class EventService {
                 .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
     }
 
-    //Elimina un evento sin verificar el propietario. Uso administrativo.
-    public void deleteEventAsAdmin(Long eventId) {
-        eventRepository.deleteById(eventId);
-    }
-
     //Lista los eventos con paginación y filtro opcional por categoría.
     public Page<Event> listarEventos(Long categoriaId, Pageable pageable) {
         if (categoriaId == null) {
             return eventRepository.findAll(pageable);
         }
         return eventRepository.findByCategoryId(categoriaId, pageable);
+    }
+
+    //Lista todos los eventos
+    public List<Event> findAll() {
+        return eventRepository.findAll();
     }
 }

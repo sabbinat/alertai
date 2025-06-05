@@ -1,32 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cal+Sans&family=Nunito:ital,wght@0,200..1000;1,200..1000&display=swap');
+
 :root {
     --body-night: #121212;
-    --second-night: #9296e7;
     --third-night: #999bb6;
     --fourth-night: #1c1c1c;
     --text-night: #ffffff;
     --text-muted-night: #aeaeae;
     --card-shadow-night: #0000000d;
-    --card-bg-night: #333333;
-  
-    --base: #4e54c8;
-    --base-2: #8f94fb;
-  
-    --body-light: #dbdbdb;
-    --second-light: #9296e7;
+    --card-bg-night: #454545;
+    
+    --body-light: #e0e0e0;
     --third-light: #b2bec9;
     --fourth-light: #d3d3d3;
     --text-light: #000000;
     --text-muted-light: #2b2b2b;
-    --card-bg-light: #a0a0a0;
+    --card-bg-light: #ffffff;
     --card-shadow-light: #0000000d;
 
     --verde-claro: #d6eff6;
     --verde-petroleo-claro: #92b3b0;
     --verde-medio: #5a7e7b;
-    --verde-petroleo-oscuro: #5c7d7a;
+    --verde-petroleo-oscuro: #4d7370;
     --verde-oscuro-boton: #26332f;
     --blanco: #ffffff;
-    --negro: #000000;
 }
 
 /* MENU DEL PERFIL */
@@ -109,9 +105,6 @@
 }
 
 
-
-
-
 /* BANNER DEL PERFIL */
 .banner-profile {
     position: relative;
@@ -125,8 +118,8 @@
     background: linear-gradient(to bottom, var(--verde-petroleo-oscuro),  var(--body-night)); 
 }
 .theme-light .banner-profile {
-  background: linear-gradient(to bottom, var(--verde-claro),  var(--body-light)); 
-  }
+  background: linear-gradient(to bottom, var(--verde-petroleo-claro),  var(--body-light)); 
+}
   
 /* FOTO DE PERFIL */
 .profile-pic {
@@ -216,8 +209,12 @@
 
 /* SIDEBAR-LEFT DE BIENVENIDA (CREAR EVENTO) */
 .sidebar {
-    width: 25%;
-    padding: 20px;
+  width: 25%;
+  padding: 20px;
+}
+.sidebar h4{
+  font-size: 2rem;
+  font-weight: 600;
 }
 
 .theme-dark .create-event {
@@ -273,79 +270,66 @@
 }
 .event-card-profile{
   border-radius: 8px;
-  margin-bottom: 20px;
-  padding: 20px;
+  margin-bottom: 10px;
+  padding: 10px;
 }
-.theme-light .event-card-profile {
-    color: var(--text-light);
+.event-info a:hover{
+  text-decoration: underline;
 }
-.theme-light .event-card-profile:hover {
-    background-color: var(--verde-petroleo-claro);
-    color: #000;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-.theme-dark .event-card-profile {
-    color: var(--text-night);
-}
-.theme-dark .event-card-profile:hover {
-    background-color: var(--verde-petroleo-oscuro);
-    color: #000;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
 
 /* IMG DEL USUARIO EN EVENTO */
 
 .user-img {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
 }  
 
 /* CONTENIDO DE EVENTO*/
+.event-item {
+  transition: box-shadow 0.3s ease, transform 0.3s ease;
+}
+.event-item:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
+}
+.event-item img {
+  transition: filter 0.3s ease;
+}
+.event-item img:hover {
+  filter: brightness(1.1);
+}
+.event-item h5 {
+  display: inline-block;
+  position: relative;
+  font-size: 1rem;
+}
+.event-item h5::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  left: 0;
+  bottom: -2px;
+  background-color: #5c62cf;
+  transition: width 0.3s ease;
+}
+.event-item h5:hover::after {
+  width: 100%;
+}
+.event-item {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.5s ease forwards;
+}
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
-.event-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-.event-content .col-md-6 {
-    flex: 1 1 45%; 
-}
-.event-content .col-md-6 h3 {
-    font-size: 1rem;    
-    margin-bottom: 10px;
-}
-.event-content .col-md-6 p {
-    font-size: 0.9rem;
-    line-height: 1.5;
-}
-.event-time-ubic {
-    font-size: 0.8rem;
-    margin-top: 10px;
-}
-.event-time-ubic p {
-    margin: 0;
-    font-size: 0.7rem;
-}
-
-/* IMAGEN DEL EVENTO */
-.event-img{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-.event-content .event-img img {
-    object-fit: cover;
-    border-radius: 5px;
-    width: 150px; 
-    height: 200px;
-}
-.event-content .event-img img:hover {
-    transform: scale(1.05);
-    transition: transform 0.3s ease;
-}
 
 
 /* ACCIONES*/
@@ -355,34 +339,34 @@
   color: inherit;
   padding: 0.25rem;
 }
-.custom-dropdown {
-  min-width: 8rem;
+.dropdown .btn-sm {
+  color: inherit;
   border-radius: 0.5rem;
   border: none;
 }
 
-.theme-light .custom-dropdown {
+.theme-light .dropdown-menu {
   background-color: var(--blanco);
   color: var(--negro);
   box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
 }
-.theme-light .custom-dropdown .dropdown-item {
+.theme-light .dropdown-menu .dropdown-item {
   color: var(--fourth-night);
 }
-.theme-light .custom-dropdown .dropdown-item:hover {
+.theme-light .dropdown-menu .dropdown-item:hover {
   background-color: #f8f9fa;
   color: var(--negro);
 }
 
-.theme-dark .custom-dropdown {
+.theme-dark .dropdown-menu {
   background-color: #343a40;
   color: var(--blanco);
   box-shadow: 0 0.5rem 1rem rgba(255, 255, 255, 0.05);
 }
-.theme-dark .custom-dropdown .dropdown-item {
+.theme-dark .dropdown-menu .dropdown-item {
   color: var(--blanco);
 }
-.theme-dark .custom-dropdown .dropdown-item:hover {
+.theme-dark .dropdown-menu .dropdown-item:hover {
   background-color: #495057;
 }
 
@@ -423,28 +407,6 @@
 .action-icons a:hover {
 transform: scale(1.2);
 }
-
-/* CONFIGURACIÓN */
-
-.settings-container {
-  padding: 1.5rem;
-}
-.settings-container .modal-body {
-  border-radius: 0 0 1rem 1rem;
-}
-.settings-container .form-check {
-  padding: 0.75rem;
-  border-radius: 0.5rem;
-  transition: background 0.3s;
-}
-.settings-container .form-select {
-  border-radius: 0.5rem;
-  width: 150px;
-}
-.settings-container .modal-footer {
-  border-top: none;
-}
-
 
 /*AGREGAR/ACTUALIZAR FOTO DE PERFIL*/
 
@@ -491,35 +453,18 @@ transform: scale(1.2);
     font-size: 2rem; 
 }
 
-/* MODAL */
-
-.form-control, 
-.form-control:focus{
-  font-size: 0.8rem;
-  background-color: transparent !important;
-  color: inherit;
-  box-shadow: none;
-}
-input:focus {
-    outline: none;  
-}
-.modal-body label{
-    font-size: 0.7rem;
-    margin-bottom: 10px;
-}
-
-.modal-body button,
-.modal-footer button{
-  background-color: var(--verde-medio);
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: #000;
-  border: none;
-}
   
 
+.text-truncate-description {
+  display: -webkit-box;
+  -webkit-line-clamp: 1; 
+  line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-  
+
 
 
 

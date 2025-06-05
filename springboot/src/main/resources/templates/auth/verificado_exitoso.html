@@ -1,26 +1,21 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
 <meta charset="UTF-8">
-<title th:text="'AlertAi - ' + ${category.name}">AlertAi - Categoría</title>
-  <!-- BOOTSTRAP   -->
+<title>AlertAi - verificación exitosa</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
-
-  <!-- FONT AWESOM  -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+  <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/main.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-
-    <!-- CSS PERSONALIZADO -->
   <link rel="stylesheet" th:href="@{/css/user.css}">
-  <link rel="stylesheet" th:href="@{/css/theme.css}">
   <link rel="stylesheet" th:href="@{/css/event.css}">
-  <!-- FAVICON -->
+  <link rel="stylesheet" th:href="@{/css/theme.css}">
   <link rel="icon" type="image/png" href="/img/icon-nav.png">
 </head>
 <body>
-
-  <!-- MENÚ -->
+   <!-- MENÚ -->
   <header>
     <nav class="navbar-user sticky-top">
       <!-- LOGO -->
@@ -116,93 +111,13 @@
       </div>
     </nav>
   </header>
-  
+
   <!--BANNER DEL EVENTO -->
-  <section class="event-banner">  
-    <h2 th:text="'Eventos de ' + ${category.name}"></h2>
+  <section class="event-banner">
+    <h1 class="mb-3">¡Cuenta verificada exitosamente!</h1>
+    <p>Ya puedes iniciar sesión en el sistema.</p>  
+    <a href="/signin" class="btn btn-success mt-3">Iniciar sesión</a>
   </section>
-
-  <!-- CONTENIDO DE CATEGORÍAS -->
-  <section class="container m-0 p-0">
-    <div class="row">
-      <!-- LISTA DE CATEGORÍAS EXISTENTES -->
-      <div class="col-sm-12 col-md-4">
-        <div class="list-categories sticky-top">
-          <h4 class="mb-3 hover-bg-title">Categorías</h4>
-          <ul class="list-unstyled">
-            <li th:each="category : ${categories}" class="mb-2">
-              <a th:href="@{'/category/' + ${category.id} + '/events'}" th:text="${category.name}" class="text-decoration-none d-block py-1 px-2 rounded hover-bg"></a>
-              <hr style="color: #717885;">
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      <!-- CONTENIDO DE LA CATEGORÍA SELECCIONADA -->
-      <div class="col-sm-12 col-md-8 ps-5 mt-5">
-
-        <!-- CUANDO NO HAY EVENTOS -->
-        <div th:if="${#lists.isEmpty(events)}" class="d-flex justify-content-center align-items-center">
-          <p>No hay eventos en esta categoría.</p>
-        </div>
-
-        <!-- CUANDO HAY EVENTOS -->
-        <div th:each="event : ${events}" class="mb-4 d-flex justify-content-center align-items-center flex-column">
-            <div class="event-info">
-              <!--EVENTO-->
-              <a th:href="@{/event/{id}(id=${event.id})}" class="text-decoration-none">
-                <div class="event-cat-content row p-3">
-                  <!-- INFORMACIÓN DEL EVENTO -->
-                  <div class="col-12 col-md-8 d-flex flex-column justify-content-center">
-                    <h4 th:text="${event.name}" >Evento</h4>
-                    <p th:text="${event.description}" style="font-size: 1rem; text-align: justify; hyphens: auto;">Descripción del evento</p>
-                    <div class="event-time-ubic">
-                      <div class="d-flex">
-                        <p style="font-size: 0.9rem;">
-                          <i class="bi bi-calendar-event me-1"></i>
-                          <span th:utext="#{event.rangeHtml(${event.startDate}, ${event.endDate})}"></span>
-                        </p>                            
-                      </div>
-                      <p style="font-size: 0.9rem;">
-                        <i class="bi bi-geo-alt me-1"></i>
-                        <span th:text="${event.location.address}" style="color: #7699df;"></span>
-                      </p>
-                    </div>                
-                  </div>
-          
-                  <!-- IMAGEN DEL EVENTO -->
-                  <div class="col-12 col-md-4 d-flex justify-content-center">
-                    <div class="event-cat-img">
-                      <img th:src="${event.image != null} ? '/uploads/events/' + ${event.image} : '/img/default-event.jpeg'" alt="Foto evento" class="img-fluid rounded" />
-                    </div>
-                  </div>
-                </div>
-              </a>
-            </div>
-        </div>
-      </div>
-    </div>
-  </section>
-   
-  <!-- FOOTER -->
-  <footer class="footer py-4 mt-auto">
-    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
-      <!-- Derechos reservados -->
-      <p class="mb-0" th:text="#{footer.rights_reserved}">
-        &copy; 2025 AlertAi. Todos los derechos reservados.
-      </p>
-
-      <!-- Redes sociales -->
-      <div class="footer-links mb-3 mb-md-0">
-        <a href="#" class="me-3" aria-label="Facebook"><i class="bi bi-facebook fs-5"></i></a>
-        <a href="#" class="me-3" aria-label="Twitter"><i class="bi bi-twitter fs-5"></i></a>
-        <a href="#" class="me-3" aria-label="Instagram"><i class="bi bi-instagram fs-5"></i></a>
-        <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
-      </div>
-    </div>
-  </footer>
-
-  <!-- MODAL -->
 
   <!-- INICIAR SESIÓN -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
@@ -342,11 +257,11 @@
       </div>
     </div>
   </div>
-
+  
+  <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/script.js}"></script>
-  <script th:src="@{/js/theme.js}"></script>
-
-
+   <script th:src="@{/js/theme.js}"></script>
+ 
 </body>
 </html>

@@ -1,41 +1,3 @@
-// -------------------------------------
-// 1. Configuración de tema oscuro/claro
-// -------------------------------------
-
-document.addEventListener('DOMContentLoaded', () => {
-  const btn  = document.getElementById('theme-toggle-btn');
-  const icon = document.getElementById('theme-icon');
-  const body = document.body;
-
-  // 1) Carga tema guardado o predeterminado
-  const saved = localStorage.getItem('theme');
-  const isDark = saved === 'dark';
-  body.classList.add(isDark ? 'theme-dark' : 'theme-light');
-
-  // 2) Función para actualizar el icono y tooltip
-  function updateIcon() {
-    if (body.classList.contains('theme-light')) {
-      icon.classList.replace('bi-lightbulb', 'bi-lightbulb-fill');
-      btn.title = 'Cambiar a modo oscuro';
-    } else {
-      icon.classList.replace('bi-lightbulb-fill', 'bi-lightbulb');
-      btn.title = 'Cambiar a modo claro';
-    }
-  }
-  updateIcon();
-
-  // 3) Al clicar, alterna clases y guarda en localStorage
-  btn.addEventListener('click', () => {
-    body.classList.toggle('theme-light');
-    body.classList.toggle('theme-dark');
-    localStorage.setItem(
-      'theme',
-      body.classList.contains('theme-dark') ? 'dark' : 'light'
-    );
-    updateIcon();
-  });
-});
-
 
 // -------------------------------------
 // 2. Mostrar u ocultar la contraseña
@@ -45,49 +7,17 @@ document.addEventListener('DOMContentLoaded', function () {
   const passwordInput = document.getElementById('password');
   const toggleIcon = document.getElementById('togglePassword');
 
-  // Cambiar el tipo de la contraseña (de "password" a "text" y viceversa)
-  toggleIcon.addEventListener('click', function () {
-    const isPassword = passwordInput.type === 'password';
-    passwordInput.type = isPassword ? 'text' : 'password';
-    // Cambiar el icono (ojo abierto/cerrado)
-    this.classList.toggle('bi-eye');
-    this.classList.toggle('bi-eye-slash');
-  });
+  if (toggleIcon && passwordInput) {
+    toggleIcon.addEventListener('click', function () {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      this.classList.toggle('bi-eye');
+      this.classList.toggle('bi-eye-slash');
+    });
+  }
 });
 
 
-// -------------------------------------
-// 3. Mostrar campos de alerta según categoría seleccionada
-// -------------------------------------
-
-document.addEventListener('DOMContentLoaded', function () {
-  const categorySelect = document.getElementById('categoryId');
-  console.log('categorySelect:', categorySelect); // Depuración
-  
-  if (!categorySelect) {
-    console.error('El elemento con id="categoryId" no se encontró en el DOM.');
-    return;
-  }
-
-  const alertFields = document.querySelectorAll('.alert-only');
-  
-  // Función para mostrar u ocultar los campos de alerta
-  function toggleAlertFields() {
-    const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-    const categoryName = selectedOption.getAttribute('data-name');
-    console.log('Categoría seleccionada:', categoryName);
-
-    if (categoryName && categoryName.trim().toLowerCase() === 'alerta') {
-      alertFields.forEach(el => el.style.display = 'block');
-    } else {
-      alertFields.forEach(el => el.style.display = 'none');
-    }
-  }
-
-  // Event listener para el cambio de categoría
-  categorySelect.addEventListener('change', toggleAlertFields);
-  toggleAlertFields(); // Llamar para inicializar la visibilidad de los campos
-});
 
 // -------------------------------------
 // 4. Vista previa de la imagen de perfil
@@ -106,6 +36,8 @@ function previewProfileImage(event) {
 
 function updateCarouselArrows(carouselId, prevBtnId, nextBtnId) {
   const carouselEl = document.querySelector(carouselId);
+  if (!carouselEl) return; 
+
   const carousel = bootstrap.Carousel.getInstance(carouselEl) 
                   || new bootstrap.Carousel(carouselEl, { interval: false });
 
@@ -179,192 +111,93 @@ if (crearEventoModal) {
 // -------------------------------------
 // 6.2 Modales de Editar Evento 
 // -------------------------------------
-
-document.querySelectorAll('[id^="drop-area-edit-"]').forEach((dropArea) => {
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('[id^="drop-area-edit-"]').forEach((dropArea) => {
   const id = dropArea.id.split('drop-area-edit-')[1];
   const imageInput = document.getElementById(`image-edit-${id}`);
   const previewImg = document.getElementById(`preview-edit-${id}`);
   const dropPlaceholder = document.getElementById(`drop-placeholder-edit-${id}`);
+  const modal = dropArea.closest('.modal'); 
 
+  // Click en dropArea abre input
   dropArea.addEventListener('click', () => {
     imageInput.click();
   });
 
+  // Cargar imagen y previsualizar
   imageInput.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = () => {
         previewImg.src = reader.result;
-        dropPlaceholder.classList.add('d-none');
+        dropPlaceholder?.classList.add('d-none');
+      };
+      reader.readAsDataURL(file);
+    }
+  });
+
+  // Restaurar imagen original al cerrar el modal
+  if (modal) {
+    modal.addEventListener('hidden.bs.modal', () => {
+      // Restaurar imagen original
+      const originalSrc = previewImg.dataset.originalSrc;
+      if (originalSrc) previewImg.src = originalSrc;
+
+      // Mostrar placeholder si es necesario
+      if (dropPlaceholder && !originalSrc) {
+        dropPlaceholder.classList.remove('d-none');
+      }
+
+      // Limpiar input de archivo
+      imageInput.value = '';
+    });
+  }
+});
+});
+
+
+
+
+
+// -------------------------------------
+// FUNCIONES DE EDICIÓN DE PERFIL 
+
+// Previsualizar imagen al seleccionar archivo
+document.querySelectorAll('input.overlay-input').forEach(input => {
+  const preview = document.getElementById(input.dataset.previewId);
+  if (!preview) return;
+
+  // Guardar la imagen original si aún no está guardada
+  if (!preview.dataset.originalSrc) {
+    preview.dataset.originalSrc = preview.src;
+  }
+
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        preview.src = e.target.result;
       };
       reader.readAsDataURL(file);
     }
   });
 });
 
-// -------------------------------------
-// 6.3 Modales de Editar perfil 
-// -------------------------------------
-
-document.querySelectorAll('input.overlay-input').forEach(input => {
-  const preview = document.getElementById(input.dataset.previewId);
-  if (!preview) return;
-
-  input.addEventListener('change', () => {
-    if (input.files && input.files[0]) {
-      const reader = new FileReader();
-      reader.onload = e => { preview.src = e.target.result; };
-      reader.readAsDataURL(input.files[0]);
-    }
-  });
-});
-
-const modal = document.getElementById('editarPerfilModal');
-if (modal) {
+// Restaurar imagen original si se cierra el modal sin guardar
+document.querySelectorAll('.modal').forEach(modal => {
   modal.addEventListener('hidden.bs.modal', () => {
-    const input  = modal.querySelector('input.overlay-input');
-    const preview= modal.querySelector('img#preview-user-image');
-    if (input)   input.value = '';
-    if (preview) preview.src = preview.dataset.originalSrc || '#';
-  });
-}
-
-
-
-
-
-// -------------------------------------
-// 7. Inicialización de mapa y geolocalización
-// -------------------------------------
-let map = L.map('map-form').setView([-30.9059, -55.5501], 13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap'
-}).addTo(map);
-// Variable para guardar el marcador
-let marker;
-// Función que usa Nominatim para geocodificar una dirección
-function geocodeAddress() {
-  const address = document.getElementById('address').value;
-
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`)
-    .then(response => response.json())
-    .then(data => {
-      if (data && data.length > 0) {
-        const lat = data[0].lat;
-        const lon = data[0].lon;
-
-        // Eliminar marcador anterior si existe
-        if (marker) map.removeLayer(marker);
-
-        // Crear un nuevo marcador arrastrable
-        marker = L.marker([lat, lon], { draggable: true }).addTo(map)
-          .bindPopup('Ubicación encontrada').openPopup();
-
-        // Centrar el mapa
-        map.setView([lat, lon], 15);
-
-        // Establecer coordenadas en campos ocultos
-        document.getElementById('latitude').value = lat;
-        document.getElementById('longitude').value = lon;
-
-        // Actualizar coordenadas si se arrastra el marcador
-        marker.on('dragend', function (e) {
-          const newLatLng = e.target.getLatLng();
-          document.getElementById('latitude').value = newLatLng.lat;
-          document.getElementById('longitude').value = newLatLng.lng;
-        });
-
-      } else {
-        alert('Dirección no encontrada.');
-      }
-    })
-    .catch(err => {
-      alert('Error al buscar la dirección');
-      console.error(err);
-    });
-}
-
-
-// -------------------------------------
-// 7.1. Inicialización de mapa y geolocalización en Event edit
-// -------------------------------------
-function initEditMap(eventId) {
-  console.log("Ejecutando initEditMap para evento:", eventId);
-
-  const mapDiv = document.getElementById("map-edit-" + eventId);
-  const lat = parseFloat(document.getElementById("latitude-edit-" + eventId).value);
-  const lon = parseFloat(document.getElementById("longitude-edit-" + eventId).value);
-
-  if (!mapDiv) {
-    console.error("No se encontró el div del mapa.");
-    return;
-  }
-
-  // Si ya existe un mapa en ese div, eliminarlo
-  if (mapDiv._leaflet_id) {
-    mapDiv._leaflet_id = null;    // elimina el id de leaflet en el div
-    mapDiv.innerHTML = "";        // limpia el contenido del div
-  }
-
-  const map = L.map(mapDiv).setView([lat, lon], 13);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
-
-  L.marker([lat, lon]).addTo(map).bindPopup('Ubicación del evento').openPopup();
-
-
-  // 👇 Marcador arrastrable
-  const marker = L.marker([lat, lon], { draggable: true }).addTo(map)
-    .bindPopup('Ubicación del evento').openPopup();
-
-  // 👇 Actualiza los campos ocultos al arrastrar el marcador
-  marker.on('dragend', function (e) {
-    const newLatLng = e.target.getLatLng();
-    document.getElementById("latitude-edit-" + eventId).value = newLatLng.lat;
-    document.getElementById("longitude-edit-" + eventId).value = newLatLng.lng;
-  });
-  setTimeout(() => {
-    map.invalidateSize();
-  }, 0);
-}
-function geocodeAddressEdit(eventId) {
-  const addressInput = document.getElementById("address-edit-" + eventId);
-  const latInput = document.getElementById("latitude-edit-" + eventId);
-  const lonInput = document.getElementById("longitude-edit-" + eventId);
-  const addressDisplay = document.getElementById("event-address-edit-" + eventId);
-
-  fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addressInput.value)}`)
-    .then(response => response.json())
-    .then(data => {
-      if (data && data.length > 0) {
-        const lat = parseFloat(data[0].lat);
-        const lon = parseFloat(data[0].lon);
-        latInput.value = lat;
-        lonInput.value = lon;
-        if (addressDisplay) addressDisplay.innerText = addressInput.value;
-        initEditMap(eventId);
-      }
-    });
-}
-document.addEventListener('DOMContentLoaded', () => {
-  const modals = document.querySelectorAll('[id^="editarEventoModal__"]');
-
-  modals.forEach(modal => {
-    const eventId = modal.id.split('__')[1];
-
-    modal.addEventListener('shown.bs.modal', () => {
-      initEditMap(eventId);
+    modal.querySelectorAll('input.overlay-input').forEach(input => input.value = '');
+    modal.querySelectorAll('img[data-original-src]').forEach(img => {
+      img.src = img.dataset.originalSrc; 
     });
   });
 });
 
 
 // -------------------------------------
-// 8. Drag & Drop para seleccionar imagen
-// -------------------------------------
+// GESTIONA EL DRAG AND DROP PARA SELECCIONAR IMAGEN 
 
 const dropArea = document.getElementById('drop-area');
 const inputImage = document.getElementById('image');
@@ -381,7 +214,7 @@ dropArea.addEventListener('dragleave', () => {
   dropArea.classList.remove('bg-light');
 });
 
-// Soltar archivo: asignarlo al input
+// Soltar archivo
 dropArea.addEventListener('drop', (e) => {
   e.preventDefault();
   dropArea.classList.remove('bg-light');
@@ -416,7 +249,7 @@ dropArea.addEventListener('drop', e => {
 });
 
 
-// Mostrar vista previa de la imagen seleccionada
+// MUESTRA LA VISTA PREVIA DE LA IMAGEN SELECCIONADA
 function handleFile() {
   const file = fileInput.files[0];
   if (file && file.type.startsWith('image/')) {
@@ -436,24 +269,55 @@ function handleFile() {
 }
 
 // -------------------------------------
-// 8.1 Respuesta a comentarios
-// -------------------------------------
-function toggleReplyForm(link) {
-    const replyForm = link.nextElementSibling;
-    if (replyForm.style.display === 'none' || replyForm.style.display === '') {
-      replyForm.style.display = 'block';
-    } else {
-      replyForm.style.display = 'none';
-    }
-  }
-  
+// 9. TOOLTIPS PARA LAS COLUMNAS DE LAS TABLAS 
 
-// -------------------------------------
-// 9. Inicialización de tooltips para las columnas de las tablas
-// -------------------------------------
 document.addEventListener("DOMContentLoaded", function () {
     const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
     tooltipTriggerList.forEach(function (tooltipTriggerEl) {
       new bootstrap.Tooltip(tooltipTriggerEl)
     })
+});
+
+// --------------------------------------
+// MUESTRA REDES SOCIALES EN COMPARTIR EVENTO (EVENT.HTML)
+
+function toggleSocialRow(event) {
+    event.preventDefault();
+    const row = document.getElementById("socialRow");
+    row.classList.toggle("d-none");
+  }
+
+// ABRE EL COMMENT / REPLAY FORM
+function toggleCommentForm() {
+  const commentForm = document.querySelector(".comment-form");
+  if (commentForm) {
+    commentForm.style.display = commentForm.style.display === "none" ? "block" : "none";
+  }
+}
+
+function toggleReplyForm(link) {
+  const replyForm = link.nextElementSibling;
+  if (replyForm.style.display === 'none' || replyForm.style.display === '') {
+    replyForm.style.display = 'block';
+  } else {
+    replyForm.style.display = 'none';
+  }
+}
+
+// --------------------------------------
+// ABRE SIDEBAR EN USER-HOME
+// --------------------------------------  
+const openSidebarBtn = document.getElementById('openSidebarBtn');
+const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+if (openSidebarBtn) {
+  openSidebarBtn.addEventListener('click', function () {
+    document.getElementById('sidebarNoticias').classList.add('open');
   });
+}
+
+if (closeSidebarBtn) {
+  closeSidebarBtn.addEventListener('click', function () {
+    document.getElementById('sidebarNoticias').classList.remove('open');
+  });
+}

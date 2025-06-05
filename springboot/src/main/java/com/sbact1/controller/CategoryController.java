@@ -1,12 +1,11 @@
 package com.sbact1.controller;
 
+import java.security.Principal;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -52,7 +51,7 @@ public class CategoryController {
 
     // Muestra todos los eventos que pertenecen a una categoría específica
     @GetMapping("/{id}/events")
-    public String eventsByCategory(@PathVariable Long id, Model model) {
+    public String eventsByCategory(@PathVariable Long id, Model model, Principal principal) {
         List<Category> categories = categoryRepository.findAll();
 
         var category = categoryRepository.findById(id);
@@ -63,15 +62,12 @@ public class CategoryController {
         model.addAttribute("category", category.get());
         model.addAttribute("events", eventRepository.findByCategoryId(id));
 
-        // Obtiene el usuario autenticado, si existe
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated()) {
-            String email = auth.getName();
-            User user = userRepository.findByEmail(email);
-            model.addAttribute("user", user);
-        } else {
-            model.addAttribute("user", null);
+        // Obtener el usuario 
+        if (principal != null) {
+            Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
+            optionalUser.ifPresent(user -> model.addAttribute("user", user));
         }
+
         return "category/events_by_category"; 
     }
 

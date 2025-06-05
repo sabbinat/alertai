@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-<meta charset="UTF-8">
-<title>AlertAi - Eventos</title>
-  <!-- BOOTSTRAP   -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlertAi - Contacto</title>
+   <!-- BOOTSTRAP   -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
@@ -13,13 +14,16 @@
   <!-- CSS PERSONALIZADO -->
   <link rel="stylesheet" th:href="@{/css/user.css}">
   <link rel="stylesheet" th:href="@{/css/theme.css}">
-  <link rel="stylesheet" th:href="@{/css/event.css}">
 
   <!-- FAVICON (ICON DE LA PÁGINA) -->
   <link rel="icon" type="image/png" href="/img/icon-nav.png">
 
+  <!-- LEAFLET (MAPA)  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 </head>
 <body>
+
   <!-- MENÚ -->
   <header>
     <nav class="navbar-user sticky-top">
@@ -64,7 +68,7 @@
       <div class="nav-right">
         <!-- SI EL USUARIO HA INICIADO SESIÓN -->
         <div class="user-menu" th:if="${user != null}">
-          <img th:src="${user.image != null} ? @{/uploads/icons/} + ${user.image} : @{/images/default-profile.png}">
+          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.png'" alt="Foto usuario">
           <span class="username">
             <span sec:authorize="!hasRole('ADMIN')" th:text="${user.name}"></span>
           </span>
@@ -103,13 +107,13 @@
         </div>
 
         <!-- SI EL USUARIO NO HA INICIADO SESIÓN -->
-        <div class="guest-menu d-flex" th:unless="${user != null}">
+        <div class="guest-menu" th:unless="${user != null}">
           <a href="#" class="btn btn-signin-account" data-bs-toggle="modal" data-bs-target="#loginModal">Entrar</a>
           <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#RegisterModal">Crear cuenta</a>
 
 
           <!-- CAMBIAR THEME OCURO/CLARO -->
-          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
             <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
           </button>
         </div>
@@ -117,196 +121,57 @@
     </nav>
   </header>
 
-  <section class="event-banner">
-    <h2>Descubre todo lo que sucede y está por suceder</h2>
-  </section>
+  <!-- CONTENIDO DE CONTACTO -->
+  <section class="banner-contact py-5  text-center">
+    <h1>Contáctanos</h1>
+    <p>¿Tenés alguna sugerencia, duda o querés reportar un problema? ¡Estamos para ayudarte!</p>
 
-  <!-- EVENTOS -->
-  <div class="content-events">
-    <div th:each="entry : ${eventsByCategory}" th:if="${entry.value != null and !entry.value.isEmpty()}" 
-      th:with="size=${entry.value.size()}, slides=${T(java.lang.Math).ceil(size / 4.0).intValue()}" th:id="'carousel' + ${entry.key.replaceAll(' ', '')}" class="carousel slide overflow-hidden mb-5 p-5">
-
-      <!-- TÍTULO -->
-      <div class="sub-title mt-5"><h5 th:text="${entry.key}" class="mb-3"></h5></div>
-
-      <!-- CARRUSEL DE EVENTOS -->
-      <div class="carousel-inner px-4 mt-5">
-        <div th:each="idx : ${#numbers.sequence(0, slides - 1)}" class="carousel-item" th:classappend="${idx == 0} ? ' active'">
-          <div class="row g-3">
-            <div class="col-12 col-md-3" th:each="event : ${entry.value.subList(idx * 4, (idx + 1) * 4 <= size ? (idx + 1) * 4 : size)}">
-              <a th:href="@{/event/{id}(id=${event.id})}">
-                <div class="event-card">
-                  <img th:src="(${event.image} != null) ? @{/uploads/events/} + ${event.image} : @{/img/default-event.jpeg}" 
-                      alt="Foto evento" class="img-fluid" />
-                  <h5 th:text="${event.name}" class="event-name mt-2"></h5>
-                  <p th:text="${event.description}" class="event-desc text-truncate-multiline"></p>
-                </div>
-              </a>
-            </div>
-          </div>
-        </div>
+    <div class="row">
+      <div class="col-md-8 contact-form">
+        <form action="#" method="post">
+          <input type="text" class="form-control muted" placeholder="Nombre completo">
+          <input type="email" class="form-control muted" placeholder="Correo electrónico" required>
+          <input type="text" class="form-control muted" placeholder="Asunto">
+          <textarea class="form-control muted" placeholder="Deja tu mensaje aquí..."></textarea>
+          <button type="submit">Enviar</button>
+        </form>
       </div>
 
-      <!-- BOTONES-->
-      <button class="carousel-control-prev" type="button" 
-              th:attr="data-bs-target='#carousel' + ${entry.key.replaceAll(' ', '')}" data-bs-slide="prev">
-        <i class="bi bi-chevron-left fs-4"></i>
-        <span class="visually-hidden">Anterior</span>
-      </button>
-      <button class="carousel-control-next" type="button" 
-              th:attr="data-bs-target='#carousel' + ${entry.key.replaceAll(' ', '')}" data-bs-slide="next">
-        <i class="bi bi-chevron-right fs-4"></i>
-        <span class="visually-hidden">Siguiente</span>
-      </button>
+      <div class="col-md-4 contact-info">
+        <div class="info-card-1 p-1 mb-2">
+          <p><i class="bi bi-telephone me-2"></i><strong>Teléfono:</strong> (+598) 099 123 456</p>
+        </div>
+        <div class="info-card-2 p-1 mb-2">
+          <p><i class="bi bi-envelope-at me-2"></i><strong>Correo:</strong> contacto@alertai.uy</p>
+        </div>
+        <div class="info-card-3 p-1">
+          <p><i class="bi bi-geo-alt me-2"></i><strong>Ubicación:</strong> IFSul, Câmpus Santana do Livramento</p>
+        </div>
+      </div>
     </div>
-  </div>
+    
+    
+
+  </section>
 
   <!-- FOOTER -->
-  <footer class="footer py-4 mt-5">
+  <footer class="footer py-4 mt-auto">
     <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
       <!-- Derechos reservados -->
-      <p class="mb-0" th:text="#{footer.rights_reserved}">
+      <p class="mb-0 small" th:text="#{footer.rights_reserved}">
         &copy; 2025 AlertAi. Todos los derechos reservados.
       </p>
 
       <!-- Redes sociales -->
       <div class="footer-links mb-3 mb-md-0">
-        <a href="#" class="me-3" aria-label="Facebook"><i class="bi bi-facebook fs-5"></i></a>
-        <a href="#" class="me-3" aria-label="Twitter"><i class="bi bi-twitter fs-5"></i></a>
-        <a href="#" class="me-3" aria-label="Instagram"><i class="bi bi-instagram fs-5"></i></a>
-        <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
+        <a href="#" class="text-white me-3" aria-label="Facebook"><i class="bi bi-facebook fs-5"></i></a>
+        <a href="#" class="text-white me-3" aria-label="Twitter"><i class="bi bi-twitter fs-5"></i></a>
+        <a href="#" class="text-white me-3" aria-label="Instagram"><i class="bi bi-instagram fs-5"></i></a>
+        <a href="#" class="text-white" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
       </div>
     </div>
   </footer>
-    
 
-  <!-- MODALES -->
-  
-  <!-- INICIAR SESIÓN -->
-  <div class="modal fade texto-chico" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-body p-5">
-          <div class="text-center">
-            <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
-            <p class="muted">Elige la forma de ingresar</p>
-          </div>
-
-            <div class="d-grid text-center">
-              <a href="/oauth2/authorization/google" class="btn btn-primary texto-chico" style="background-color: #4285F4;">
-                <i class="bi bi-google mx-2"></i> Ingresar con Google
-              </a>
-            </div>
-
-            <div class="text-center my-3 muted">O</div>
-
-            <form th:action="@{/userLogin}" method="post">
-              <div class="mb-3">
-                  <input type="email" name="username" class="form-control" placeholder="Correo electrónico" required>
-              </div>
-              <div class="mb-3 position-relative small">
-                <input type="password" name="password" id="password" class="form-control small" placeholder="Contraseña" required>
-                <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;"></i>
-              </div>                
-              <div class="mb-3 d-flex justify-content-between align-items-center">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
-                  <label class="form-check-label small" for="remember-me">Recuérdame</label>
-                </div>
-                <a href="#" class="text-decoration-none small">¿Olvidaste la contraseña?</a>
-              </div>
-              <div class="d-grid mb-2">
-                <button type="submit" class="btn btn-sumit texto-chico">Entrar</button>
-              </div>
-
-              <p class="text-center mt-4 small texto-chico">
-                Este sitio está protegido por reCAPTCHA Enterprise y se aplica la 
-                <strong>Política de Privacidad</strong> y los 
-                <strong>Términos de Servicios de Google</strong>.
-              </p>
-              <hr class="mt-3">
-
-              <div class="text-center mt-3 texto-chico">
-                <p>¿Es tu primera vez en AlertAi?
-                  <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal"><strong>Regístrate.</strong></a>
-                </p>
-              </div>
-            </form>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- CREAR CUENTA -->
-  <div class="modal fade texto-chico" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-body p-5">
-          <div th:if="${msg}" class="alert alert-info" th:text="${msg}"></div>
-
-          <div class="text-center">
-            <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
-            <p class="text-claro">Crea una cuenta </p>
-          </div>
-
-          <form th:action="@{/saveUser}" method="post">
-            <div class="mb-2">
-                <input type="text" name="name" class="form-control" placeholder="Nombre completo" required>
-            </div>
-            <div class="mb-2">
-              <input type="text" name="username" class="form-control" placeholder="Usuario" required>
-            </div>
-            <div class="mb-2">
-                <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required>
-            </div>
-            <div class="mb-2">
-                <input type="tel" name="phone" class="form-control" placeholder="Teléfono" required>
-            </div>
-            <div class="mb-2">
-                <input type="text" name="country" class="form-control" placeholder="País" required>
-            </div>
-            <div class="mb-2">
-                <input type="text" name="document" class="form-control" placeholder="Documento" required>
-            </div>
-            <div class="mb-2">
-                <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
-            </div>
-
-            <div class="d-flex mt-4">
-              <input class="form-check-input" type="checkbox" id="accept" name="accept">
-              <p class="ms-2">
-                Acepto los 
-                <strong>Términos de Uso</strong> y el 
-                <strong>Aviso de Privacidad</strong> de AlertAi.
-              </p>
-            </div>
-            
-
-            <div class="d-grid mb-2">
-                <button type="submit" class="btn btn-sumit texto-chico">Crear cuenta</button>
-            </div>
-
-            <div class="d-grid text-center">
-              <div class="text-center my-1 text-claro">O</div>
-      
-              <a href="/oauth2/authorization/google" class="btn btn-primary texto-chico" style="background-color: #4285F4;">
-                <i class="bi bi-google mx-2"></i> Ingresar con Google
-              </a>
-            </div>
-              
-              <hr class="mt-3">
-  
-              <div class="text-center mt-3">
-                <p>¿Ya formas parte de AlertAi?
-                  <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal"><strong>Iniciar sesión.</strong></a>
-                </p>
-              </div>
-          </form>
-        </div>
-        
-
-      </div>
-    </div>
-  </div>
   <!--CONFIGURACIÓN DE USUARIO-->
   <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
@@ -421,11 +286,149 @@
       </div>
     </div>
   </div>
-  
+  <!-- INICIAR SESIÓN -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-login-size">
+      <div class="modal-content">
+        <div class="modal-body p-5">
+          <div class="text-center">
+            <div th:if="${param.error}" class="alert alert-danger text-center small" role="alert">
+                Correo o contraseña incorrectos. Intenta nuevamente.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success text-center small" role="alert">
+                Has cerrado sesión exitosamente.
+            </div>
+
+            <h4 class="fw-bold">Iniciar sesión</h4>
+          </div>
+
+          <div class="d-grid text-center mt-4">
+            <a href="/oauth2/authorization/google" class="btn btn-primary">
+              <i class="bi bi-google mx-2"></i> Ingresar con Google
+            </a>
+          </div>
+
+          <div class="text-center my-3 muted">O</div>
+
+          <form th:action="@{/userLogin}" method="post">
+            <div class="mb-3">
+                <input type="email" name="username" class="form-control" placeholder="Correo electrónico" required>
+            </div>
+            <div class="mb-3 position-relative small">
+              <input type="password" name="password" id="password" class="form-control small" placeholder="Contraseña" required>
+              <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;"></i>
+            </div>                
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
+                <label class="form-check-label small" for="remember-me">Recuérdame</label>
+              </div>
+              <a href="/forgot-password" class="small">¿Olvidaste la contraseña?</a>
+            </div>
+            <div class="sumit mt-2">
+              <button type="submit" class="btn btn-sumit">Entrar</button>
+            </div>
+
+            <p class="text-center mt-4 small">
+              Este sitio está protegido por reCAPTCHA Enterprise y se aplica la 
+              <strong>Política de Privacidad</strong> y los 
+              <strong>Términos de Servicios de Google</strong>.
+            </p>
+            <hr class="mt-3">
+
+            <div class="text-center mt-3 small">
+              <p>¿Es tu primera vez en AlertAi?
+                <a href="register" class="ms-2"><strong>Regístrate.</strong></a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- CREAR CUENTA -->
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-register-size">
+      <div class="modal-content">
+        <div class="modal-body p-5">
+          <div th:if="${msg}" class="alert alert-info" th:text="${msg}"></div>
+      
+          <div class="text-center mb-4">
+            <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
+          </div>
+      
+          <form th:action="@{/saveUser}" method="post">
+            <div class="mb-2">
+              <input type="text" name="name" class="form-control" placeholder="Nombre completo" required>
+            </div>
+            <div class="mb-2">
+            <input type="text" name="username" class="form-control" placeholder="Usuario" required>
+            </div>
+            <div class="mb-2">
+              <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required>
+            </div>
+            <div class="mb-2">
+              <input type="text" name="country" class="form-control" placeholder="País" required>
+            </div>
+            <div class="position-relative">
+              <input type="password" name="password" id="password" class="form-control pe-5"
+                placeholder="Contraseña"
+                minlength="8"
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,}"
+                title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
+                required>
+
+              <!-- Ícono para mostrar/ocultar contraseña -->
+              <i id="togglePassword"
+                class="bi bi-eye-slash position-absolute top-50 translate-middle-y"
+                style="right: 2.5rem; cursor: pointer;"></i>
+
+              <!-- Ícono de información -->
+              <i class="bi bi-info-circle-fill position-absolute top-50 end-0 translate-middle-y me-2 text-secondary"
+                data-bs-toggle="tooltip"
+                data-bs-placement="left"
+                title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
+                style="cursor: pointer;"></i>
+            </div>
+
+            <!-- TÉRMINOS DE USO -->
+            <div class="form-check d-flex align-items-center mt-4">
+              <input class="form-check-input mt-0" type="checkbox" id="accept" name="accept">
+              <label class="form-check-label ms-2 small" for="accept">
+                Acepto los <strong>Términos de Uso</strong> y el <strong>Aviso de Privacidad</strong> de AlertAi.
+              </label>
+            </div>
+
+            <!-- BOTÓN SUMIT -->
+            <div class="sumit mb-2 mt-3">
+              <button type="submit" class="btn btn-sumit">Continuar</button>
+            </div>
+      
+            <div class="d-grid text-center">
+              <div class="text-center my-1">O</div>
+          
+              <a href="/oauth2/authorization/google" class="btn btn-primary">
+                <i class="bi bi-google mx-2"></i> Ingresar con Google
+              </a>
+            </div>
+            
+            <hr class="mt-3">
+      
+            <div class="text-center mt-3 small">
+              <p>¿Ya formas parte de AlertAi?
+              <a href="signin" class="ms-2"><strong>Iniciar sesión.</strong></a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/theme.js}"></script>
 
 </body>
 </html>

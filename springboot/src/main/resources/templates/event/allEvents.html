@@ -1,9 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
 <meta charset="UTF-8">
-<title th:text="'AlertAi - ' + ${category.name}">AlertAi - Categoría</title>
+<title>AlertAi - Eventos</title>
   <!-- BOOTSTRAP   -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -11,15 +10,20 @@
   <!-- FONT AWESOM  -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
-    <!-- CSS PERSONALIZADO -->
+  <!-- CSS PERSONALIZADO -->
   <link rel="stylesheet" th:href="@{/css/user.css}">
   <link rel="stylesheet" th:href="@{/css/theme.css}">
   <link rel="stylesheet" th:href="@{/css/event.css}">
-  <!-- FAVICON -->
+
+  <!-- FAVICON (ICON DE LA PÁGINA) -->
   <link rel="icon" type="image/png" href="/img/icon-nav.png">
+
+  <!-- LEAFLET (MAPA)  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
 </head>
 <body>
-
   <!-- MENÚ -->
   <header>
     <nav class="navbar-user sticky-top">
@@ -35,7 +39,7 @@
 
       <!-- MENÚ -->
       <div class="nav-left">
-        <a th:href="${user != null} ? @{/user/home} : @{/}" th:text="#{profile.home}">Inicio</a>
+        <a th:href="@{/user/home}" th:text="#{profile.home}">Inicio</a>
         <a th:text="#{profile.category}">Categorías</a>
         <div class="dropdown">
           <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -103,89 +107,92 @@
         </div>
 
         <!-- SI EL USUARIO NO HA INICIADO SESIÓN -->
-        <div class="guest-menu " th:unless="${user != null}">
+        <div class="guest-menu" th:unless="${user != null}">
           <a href="#" class="btn btn-signin-account" data-bs-toggle="modal" data-bs-target="#loginModal">Entrar</a>
           <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#RegisterModal">Crear cuenta</a>
 
 
           <!-- CAMBIAR THEME OCURO/CLARO -->
-          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
             <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
           </button>
         </div>
       </div>
     </nav>
   </header>
-  
-  <!--BANNER DEL EVENTO -->
-  <section class="event-banner">  
-    <h2 th:text="'Eventos de ' + ${category.name}"></h2>
+
+  <!-- BANNER -->
+  <section class="event-banner">
+    <h2>Descubre todo lo que sucede y está por suceder</h2>
   </section>
 
-  <!-- CONTENIDO DE CATEGORÍAS -->
-  <section class="container m-0 p-0">
-    <div class="row">
-      <!-- LISTA DE CATEGORÍAS EXISTENTES -->
-      <div class="col-sm-12 col-md-4">
-        <div class="list-categories sticky-top">
-          <h4 class="mb-3 hover-bg-title">Categorías</h4>
-          <ul class="list-unstyled">
-            <li th:each="category : ${categories}" class="mb-2">
-              <a th:href="@{'/category/' + ${category.id} + '/events'}" th:text="${category.name}" class="text-decoration-none d-block py-1 px-2 rounded hover-bg"></a>
-              <hr style="color: #717885;">
-            </li>
-          </ul>
-        </div>
+  <!-- EVENTOS -->
+  <div class="content-events">
+    <!-- FILTRO POR CATEGORÍA -->
+    <div class="filter-container mb-3 d-flex justify-content-between">
+      <div class="category-links d-flex flex-wrap align-items-center">
+        <p class="filter-label me-3 mb-0"><i class="bi bi-funnel me-2"></i><span>Filtros</span></p>
+        <a th:href="@{/event/allEvents(name=${name})}" class="me-2" th:classappend="${categoriaId} == null ? 'active' : ''">
+          Todo
+        </a>
+        <th:block th:each="cat : ${categories}">
+          <a th:href="@{/event/allEvents(categoriaId=${cat.id})}" class="me-2" th:classappend="${categoriaId} == ${cat.id} ? 'active' : ''"
+            th:text="${cat.name}">
+          </a>
+        </th:block>
       </div>
 
-      <!-- CONTENIDO DE LA CATEGORÍA SELECCIONADA -->
-      <div class="col-sm-12 col-md-8 ps-5 mt-5">
-
-        <!-- CUANDO NO HAY EVENTOS -->
-        <div th:if="${#lists.isEmpty(events)}" class="d-flex justify-content-center align-items-center">
-          <p>No hay eventos en esta categoría.</p>
-        </div>
-
-        <!-- CUANDO HAY EVENTOS -->
-        <div th:each="event : ${events}" class="mb-4 d-flex justify-content-center align-items-center flex-column">
-            <div class="event-info">
-              <!--EVENTO-->
-              <a th:href="@{/event/{id}(id=${event.id})}" class="text-decoration-none">
-                <div class="event-cat-content row p-3">
-                  <!-- INFORMACIÓN DEL EVENTO -->
-                  <div class="col-12 col-md-8 d-flex flex-column justify-content-center">
-                    <h4 th:text="${event.name}" >Evento</h4>
-                    <p th:text="${event.description}" style="font-size: 1rem; text-align: justify; hyphens: auto;">Descripción del evento</p>
-                    <div class="event-time-ubic">
-                      <div class="d-flex">
-                        <p style="font-size: 0.9rem;">
-                          <i class="bi bi-calendar-event me-1"></i>
-                          <span th:utext="#{event.rangeHtml(${event.startDate}, ${event.endDate})}"></span>
-                        </p>                            
-                      </div>
-                      <p style="font-size: 0.9rem;">
-                        <i class="bi bi-geo-alt me-1"></i>
-                        <span th:text="${event.location.address}" style="color: #7699df;"></span>
-                      </p>
-                    </div>                
-                  </div>
-          
-                  <!-- IMAGEN DEL EVENTO -->
-                  <div class="col-12 col-md-4 d-flex justify-content-center">
-                    <div class="event-cat-img">
-                      <img th:src="${event.image != null} ? '/uploads/events/' + ${event.image} : '/img/default-event.jpeg'" alt="Foto evento" class="img-fluid rounded" />
-                    </div>
-                  </div>
-                </div>
-              </a>
-            </div>
-        </div>
+      <!-- BOTÓN DE CREAR EVENTO -->
+      <div class="d-flex align-items-center">
+        <a href="#" class="btn-plus" data-bs-toggle="modal"
+          th:attr="data-bs-target=${#authorization.expression('isAuthenticated()') ? '#crearEventoModal' : '#loginModal'}">
+          <i class="bi bi-plus"></i> 
+        </a>
       </div>
     </div>
-  </section>
-   
+
+    <!-- EVENTOS -->
+    <div class="row p-4 m-0">
+      <div class="col-12" th:if="${events.empty}">
+        <div class="alert text-center" role="alert">
+            No se encontraron eventos con el filtro seleccionado.
+        </div>
+      </div>
+
+      <div class="col-12 col-md-3" th:each="event : ${events}">
+        <a th:href="@{/event/{id}(id=${event.id})}">
+          <div class="all-event-card">
+            <img th:src="${event.image != null} ? '/uploads/events/' + ${event.image} : '/img/default-event.jpeg'" alt="Foto evento" class="img-fluid" />
+            <p th:text="${event.category.name}" class="muted"></p>
+            <h5 th:text="${event.name}" class="event-name mt-2"></h5>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- PAGINACIÓN -->
+    <div th:if="${totalPages > 1}">
+      <ul class="pagination justify-content-center mt-4">
+        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+          <a class="page-link" th:href="@{/event/allEvents(page=${currentPage - 1}, name=${name}, categoriaId=${categoriaId})}">Anterior</a>
+        </li>
+
+        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+            th:classappend="${i == currentPage} ? 'active'">
+          <a class="page-link"
+            th:href="@{/event/allEvents(page=${i}, name=${name}, categoriaId=${categoriaId})}"
+            th:text="${i + 1}">1</a>
+        </li>
+
+        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+          <a class="page-link" th:href="@{/event/allEvents(page=${currentPage + 1}, name=${name}, categoriaId=${categoriaId})}">Siguiente</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+
   <!-- FOOTER -->
-  <footer class="footer py-4 mt-auto">
+  <footer class="footer py-4 mt-5">
     <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
       <!-- Derechos reservados -->
       <p class="mb-0" th:text="#{footer.rights_reserved}">
@@ -201,9 +208,10 @@
       </div>
     </div>
   </footer>
+    
 
-  <!-- MODAL -->
-
+  <!-- MODALES -->
+  
   <!-- INICIAR SESIÓN -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog custom-login-size">
@@ -342,11 +350,85 @@
       </div>
     </div>
   </div>
+  <!-- CREAR EVENTO -->
+  <div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-3">
+        <form th:action="@{/event/save}" method="post" th:object="${eventDto}" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title" id="crearEventoModalLabel" style="font-size: 1rem;">Crear evento</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" style="font-size: 0.8rem;"></button>
+          </div>          
+          <div class="modal-body">
+            <div class="row">
+              <!-- AQUÍ VA LA IMAGEN DEL EVENTO-->
+              <div class="col-12 col-md-4 d-flex flex-column">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                  <div id="drop-area" class="p-2 border border-secondary rounded d-flex flex-column align-items-center justify-content-center text-center h-100" style="cursor: pointer;">
+                    <div id="drop-placeholder" class="d-flex flex-column align-items-center">
+                      <i class="bi bi-image" style="font-size: 1rem;"></i>
+                      <p class="mt-2 mb-0" style="font-size: 0.8rem;">Arrastra una imagen aquí o haz clic para seleccionar</p>
+                    </div>
+                    <input type="file" id="image" name="image" accept="image/*" class="d-none">
+                    <img id="preview" src="#" alt="Vista previa" class="img-fluid d-none h-100" />
+                  </div>
+                </div>
+              </div>
+              <!--DATOS DE EVENTO-->
+              <div class="col-12 col-md-8">
+                <div class="mb-3">
+                  <input type="text" class="form-control" id="name" name="name" required placeholder="Título" th:placeholder="#{form.title}">
+                </div>
+                <div class="mb-3">
+                  <textarea class="form-control" id="description" rows="3" name="description" required placeholder="Descripción" th:placeholder="#{form.description}"></textarea>
+                </div>
+                <div class="mb-3">
+                  <input type="text" class="form-control" id="contact" name="contact" required placeholder="Contacto">
+                </div>
+                <div class="mb-3 d-flex">
+                  <input type="date" class="form-control" id="startDate" name="startDate" required/>
+                  <p class="mx-2 my-auto">hasta</p>
+                  <input type="date" class="form-control" id="endDate" name="endDate" />
+                </div>
+                <div class="mb-3 d-flex">
+                  <input type="time" class="form-control me-2" id="time" name="time" required th:placeholder="#{form.time}"/>
+                  <select name="categoryId" id="categoryId" class="form-select" required style="background-color: transparent; color: inherit;" 
+                    aria-label="Selecciona una categoría">
 
+                    <!-- Opción por defecto, deshabilitada y oculta en la lista -->
+                    <option value="" disabled selected hidden> [[#{form.select_category}]]</option>
+
+                    <!-- Opciones dinámicas desde el modelo -->
+                    <th:block th:each="cat : ${categories}">
+                      <option th:value="${cat.id}" th:text="${cat.name}" th:attr="data-name=${cat.name}"></option>
+                    </th:block>
+                  </select>
+                </div>
+                <div class="mb-3 d-flex">
+                  <input type="text" class="form-control" id="address" name="location.address" placeholder="Dirección" />
+                  <input type="hidden" id="latitude" name="location.latitude" />
+                  <input type="hidden" id="longitude" name="location.longitude" />
+                  <button type="button" class="btn btn-sumit ms-2" onclick="geocodeAddress()">Buscar</button>
+                </div>
+                <!--Mapa-->
+                <div id="map-form" style="height: 200px; width: 100%;" class="rounded shadow-sm"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn" th:text="#{profile.create}">Crear evento</button>
+          </div>        
+        </form>
+      </div> 
+    </div>
+  </div>
+  
+
+  <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-  <script th:src="@{/js/script.js}"></script>
   <script th:src="@{/js/theme.js}"></script>
-
-
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/geo_maps.js}"></script>
 </body>
 </html>

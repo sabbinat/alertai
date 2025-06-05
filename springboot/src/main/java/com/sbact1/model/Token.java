@@ -14,7 +14,7 @@ import lombok.Setter;
 @Entity
 @Setter
 @Getter
-public class VerificationToken {
+public class Token {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -28,5 +28,8 @@ public class VerificationToken {
 
     // Fecha y hora de expiración del token, después de la cual el token ya no es válido
     private LocalDateTime expiryDate;
+
+    private String purpose; // "verify" o "reset"
+
 }
 

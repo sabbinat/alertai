@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-<title>AlertAi - Perfil</title>
+<title>AlertAi - Evento</title>
   <!-- BOOTSTRAP   -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -54,6 +54,7 @@
         <a href="/contact" th:text="#{profile.contact}">Contacto</a>
         <a href="/help" th:text="#{profile.help}">Ayuda</a>
       </div>
+      
     
       <!-- BUSCADOR -->
       <div class="search-bar">
@@ -67,7 +68,7 @@
       <div class="nav-right">
         <!-- SI EL USUARIO HA INICIADO SESIÓN -->
         <div class="user-menu" th:if="${user != null}">
-          <img th:src="${user.image != null} ? @{/uploads/icons/} + ${user.image} : @{/images/default-profile.png}">
+          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.png'" alt="Foto usuario">
           <span class="username">
             <span sec:authorize="!hasRole('ADMIN')" th:text="${user.name}"></span>
           </span>
@@ -106,7 +107,7 @@
         </div>
 
         <!-- SI EL USUARIO NO HA INICIADO SESIÓN -->
-        <div class="guest-menu d-flex" th:unless="${user != null}">
+        <div class="guest-menu " th:unless="${user != null}">
           <a href="#" class="btn btn-signin-account" data-bs-toggle="modal" data-bs-target="#loginModal">Entrar</a>
           <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#RegisterModal">Crear cuenta</a>
 
@@ -126,6 +127,7 @@
     <p><span th:text="${formattedDate}"></span> a las <span th:text="${event.time}"></span></p>  
   </section>
 
+  <!-- CONTENIDO DEL EVENTO -->
   <section class="content-event row">
     <!-- MENSAJES DE DENUNCIAR EVENTO -->
     <div th:if="${success}" class="alert alert-success alert-dismissible fade show mx-4 my-3" role="alert">
@@ -138,47 +140,66 @@
       <span th:text="${error}">Mensaje de error</span>
       <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
-
     
     <!--CATEGORÍA DEL EVENTO-->
-    <p class=" mb-1 mt-4">
+    <p class="mb-1 mt-4">
       <span class="mx-1">|</span>
-      <span>Inicio</span>
+      <a th:href="${user != null} ? @{/user/home} : @{/}" th:text="#{profile.home}"><span>Inicio</span></a>
       <span class="mx-1">|</span>
       <span th:text="${event.category.name}" class="category-name">Categoría</span>
     </p>
 
-
     <hr class="mt-3">
 
+    <!-- INFORMACIÓN DEL EVENTO -->
     <div class="p-4">
       <!--AUTOR DEL EVENTO-->
       <div class="autor">
         <p th:text="${event.user.name}"></p>
-        <!-- Opcioón de denuncia -->
+
+        <!-- Condicional según si el usuario actual es el autor -->
         <div class="dropdown">
-          <button class="btn btn-link p-0" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+          <button class="btn p-0" type="button" id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
             <i class="bi bi-three-dots-vertical"></i>
           </button>
+
           <ul class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-            <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#reportModal" style="font-size: 0.8rem;">
-              Denunciar evento de <span th:text="${event.user.username}"></span></a></li>
+            <!-- Si el usuario está logueado y es el autor del evento -->
+            <li th:if="${user != null and user.id == event.user.id}">
+              <a class="dropdown-item d-flex align-items-center gap-2" th:href="@{/event/edit/{id}(id=${event.id})}">Editar</a>
+            </li>
+            <li th:if="${user != null and user.id == event.user.id}">
+              <form th:action="@{/event/delete/{id}(id=${event.id})}" method="post" th:object="${event}"
+                    onsubmit="return confirm('¿Estás seguro de que quieres eliminar este evento?');">
+                <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
+                  Eliminar
+                </button>
+              </form>
+            </li>
+
+            <!-- Si NO es el autor o es invitado -->
+            <li th:if="${user == null or user.id != event.user.id}">
+              <a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#reportModal" style="font-size: 0.8rem;">
+                Denunciar evento de <span th:text="${event.user.username}"></span>
+              </a>
+            </li>
           </ul>
         </div>
-      </div>  
+      </div>
       
       <!--CONTENIDO -->
-      <div class="row mt-5">
+      <div class="row mt-3">
         <!--INFO DEL EVENTO (DESC, FECHA, HORA, IMG)-->
         <div class="col-12 col-md-8 px-4">
           <div class="event-content mb-5">
-            <div style="flex: 1;">
+            <div class="event-body">
               <div class="row">
-                <p th:text="${event.description}"></p>
-                <p class="muted mb-2"><span>Comunicarse a </span> <strong>rockinpark@contacto.com</strong></p>
-                <hr>
-
-                <div class="col-12 col-md-8">
+                <div class="col-md-12 mb-2">
+                  <p th:text="${event.description}" style="text-align: justify;"></p>
+                  <p class="muted mb-2" style="font-size: 0.95rem;"><strong>Contacto:</strong> <span th:text="${event.contact}"></span></p>
+                </div>
+                
+                <div class="col-12 col-md-8 mt-3">
                   <!-- Vista previa del mapa -->
                   <div class="map-preview-container" onclick="showMap()">
                     <img src="/img/map-placeholder.svg" alt="Vista previa del mapa">
@@ -187,42 +208,62 @@
                   <!-- Mapa real -->
                   <div id="map-view"></div> 
                 </div>
-                <div class="col-md-4 col-sm-12 d-flex flex-column align-items-center">
-                  <div>
-                    <h5 style="font-size: 1rem;">Ubicación</h5>
+                <div class="col-md-4 col-sm-12 d-flex flex-column align-items-center mt-3">
+                  <div class="p-2">
+                    <h5 style="font-size: 1rem;"><i class="bi bi-geo-alt me-2"></i>Ubicación</h5>
                     <p id="event-address" th:text="${event.location.address}" class="mb-2 muted"></p>
                     <hr style="margin-top: 30px; margin-bottom: 30px;">
-                    <h5 style="font-size: 1rem;">Fecha</h5>
+                    <h5 style="font-size: 1rem;"><i class="bi bi-calendar-event me-2"></i>Fecha</h5>
                     <p class="muted"><span th:text="${formattedDate}"></span> a las 
                     <span th:text="${event.time}">.</span></p>
                   </div>
-                  
                 </div>
               </div>
             </div>
           </div>
+          <hr>
           <!--COMENTARIOS-->
           <div class="comment-section mb-5">
+            <!-- SI EL USUARIO ESTA LOGUEADO -->
             <div th:if="${user != null}">
-              <!-- Formulario para usuario logueado -->
-              <form method="post" th:action="@{/event/{id}/comentario(id=${event.id})}">
-                <div class="d-flex gap-3" style="position: relative; width: 600px;">
-                  <textarea name="content" class="form-control" placeholder="Escribe tu comentario aquí..." 
-                    style="background-color: transparent; resize: none; width: 100%; padding-right: 70px;" required></textarea>
-                  <button type="submit" class="btn small-button" 
-                    style="position: absolute; right: 10px; top: 10px; border: none; background-color: #6c6d6f; color: white; font-size: 0.8em; padding: 5px 10px;">
-                    Enviar
-                  </button>
+              <!-- BOTONES DE COMENTAR Y COMPARTIR -->
+              <div class="d-flex align-items-center" style="gap: 20px;">
+                <!-- BOTÓN COMENTAR -->
+                <a href="#" onclick="toggleCommentForm(this); return false;" style="font-size: 0.9rem; color: #4285F4; text-decoration: none;">Comentar</a>
+                <!-- BOTÓN COMPARTIR Y REDES -->
+                <div class="d-flex align-items-center" style="gap: 10px;">
+                  <a href="#" onclick="toggleSocialRow(event)" style="font-size: 0.9rem; color: #4285F4; text-decoration: none;">Compartir</a>
+                  <div id="socialRow" class="d-flex align-items-center d-none" style="gap: 8px;">
+                    <a href="#" aria-label="Facebook"><i class="bi bi-facebook fs-5"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="bi bi-twitter fs-5"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="bi bi-instagram fs-5"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
+                  </div>
                 </div>
-              </form>
-            </div>
+              </div>
 
-            <!-- Mensaje para usuario no logueado -->
+              <!-- FORMULARIO DE COMENTARIO APARTE -->
+              <div class="comment-form mt-2" style="display: none;">
+                <div th:if="${user != null}">
+                  <form method="post" th:action="@{/event/{id}/comentario(id=${event.id})}">
+                    <div class="d-flex gap-3" style="position: relative; max-width: 600px;">
+                      <textarea name="content" class="form-control" placeholder="Escribe tu comentario aquí..."
+                        style="background-color: transparent; resize: none; width: 100%; padding-right: 70px;" required></textarea>
+                      <button type="submit" class="btn small-button"
+                        style="position: absolute; right: 10px; top: 10px; border: none; background-color: #6c6d6f; color: white; font-size: 0.8em; padding: 5px 10px;">
+                        Enviar
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+            
+            <!-- MENSAJE PARA USUARIO NO LOGUEADO -->
             <div th:unless="${user != null}">
               <p>Debes <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal"><em style="color: #4285F4;">iniciar sesión</em></a> para comentar.</p>
             </div>
           
-            <hr>
             <!-- SECCIÓN DE COMENTARIOS -->
             <div class="existing-comments mt-5">
               <div th:each="comment : ${event.comments}" th:if="${comment.parent == null}">
@@ -259,9 +300,8 @@
                       </div>
                     </div>
 
-                    <p th:text="${comment.content}" class="muted" style="font-size: 0.8rem;">Contenido del comentario</p>
+                    <p th:text="${comment.content}" class="muted" style="font-size: 0.9rem;">Contenido del comentario</p>
                     <a href="#" onclick="toggleReplyForm(this); return false;" style="font-size: 0.8rem; color: #4285F4; text-decoration: none;">Responder</a>
-
                     <!-- Formulario para responder a un comentario hijo -->
                     <div class="reply-form mt-2" style="display: none; margin-left: 25px;">
                       <div th:if="${user != null}">
@@ -305,7 +345,7 @@
                             </ul>
                           </div>
                         </div>
-                        <p th:text="${response.content}" class="muted" style="font-size: 0.8rem; margin-left: 35px;">Contenido de la respuesta</p>                      
+                        <p th:text="${response.content}" class="muted" style="font-size: 0.9rem; margin-left: 35px;">Contenido de la respuesta</p>                      
                       </div>
                     </div>
                   </div>
@@ -318,8 +358,8 @@
         
         <!--COLUMNA PARA LA IMG-->
         <div class="col-12 col-md-4 px-4">
-        <div th:if="${event.image != null and !event.image.isEmpty()}" style="display: flex; align-items: center; margin-inline: 30px; background-color: #6065ce; padding: 3px; border-radius: 5px;">
-            <img th:src="@{'/uploads/events/' + ${event.image}}" class="img-fluid rounded" alt="Imagen del evento" style="width: 100%; height: 400px;">
+          <div th:if="${event.image != null and !event.image.isEmpty()}" style="display: flex; justify-content: center; align-items: center; border-radius: 5px;">
+            <img th:src="@{'/uploads/events/' + ${event.image}}" class="img-fluid rounded" style="width: 280px; height: 350px;">
           </div>
         </div>
       </div>
@@ -359,7 +399,6 @@
         </div>
         <div class="modal-body">
           <fieldset>
-            <legend>Selecciona una razón</legend>
             <div th:each="reason : ${reportReasons}" class="form-check">
               <input class="form-check-input" 
                     type="radio" 
@@ -381,127 +420,140 @@
   </div>
   </div>
   <!-- INICIAR SESIÓN -->
-  <div class="modal fade texto-chico" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-login-size">
       <div class="modal-content">
         <div class="modal-body p-5">
           <div class="text-center">
-            <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
-            <p class="muted">Elige la forma de ingresar</p>
-          </div>
-
-            <div class="d-grid text-center">
-              <a href="/oauth2/authorization/google" class="btn btn-primary texto-chico" style="background-color: #4285F4;">
-                <i class="bi bi-google mx-2"></i> Ingresar con Google
-              </a>
+            <div th:if="${param.error}" class="alert alert-danger text-center small" role="alert">
+                Correo o contraseña incorrectos. Intenta nuevamente.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success text-center small" role="alert">
+                Has cerrado sesión exitosamente.
             </div>
 
-            <div class="text-center my-3 muted">O</div>
+            <h4 class="fw-bold">Iniciar sesión</h4>
+          </div>
 
-            <form th:action="@{/userLogin}" method="post">
-              <div class="mb-3">
-                  <input type="email" name="username" class="form-control" placeholder="Correo electrónico" required>
-              </div>
-              <div class="mb-3 position-relative small">
-                <input type="password" name="password" id="password" class="form-control small" placeholder="Contraseña" required>
-                <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;"></i>
-              </div>                
-              <div class="mb-3 d-flex justify-content-between align-items-center">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
-                  <label class="form-check-label small" for="remember-me">Recuérdame</label>
-                </div>
-                <a href="#" class="text-decoration-none small">¿Olvidaste la contraseña?</a>
-              </div>
-              <div class="d-grid mb-2">
-                <button type="submit" class="btn btn-sumit texto-chico">Entrar</button>
-              </div>
+          <div class="d-grid text-center mt-4">
+            <a href="/oauth2/authorization/google" class="btn btn-primary">
+              <i class="bi bi-google mx-2"></i> Ingresar con Google
+            </a>
+          </div>
 
-              <p class="text-center mt-4 small texto-chico">
-                Este sitio está protegido por reCAPTCHA Enterprise y se aplica la 
-                <strong>Política de Privacidad</strong> y los 
-                <strong>Términos de Servicios de Google</strong>.
+          <div class="text-center my-3 muted">O</div>
+
+          <form th:action="@{/userLogin}" method="post">
+            <div class="mb-3">
+                <input type="email" name="username" class="form-control" placeholder="Correo electrónico" required>
+            </div>
+            <div class="mb-3 position-relative small">
+              <input type="password" name="password" id="password" class="form-control small" placeholder="Contraseña" required>
+              <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;"></i>
+            </div>                
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
+                <label class="form-check-label small" for="remember-me">Recuérdame</label>
+              </div>
+              <a href="/forgot-password" class="small">¿Olvidaste la contraseña?</a>
+            </div>
+            <div class="sumit mt-2">
+              <button type="submit" class="btn btn-sumit">Entrar</button>
+            </div>
+
+            <p class="text-center mt-4 small">
+              Este sitio está protegido por reCAPTCHA Enterprise y se aplica la 
+              <strong>Política de Privacidad</strong> y los 
+              <strong>Términos de Servicios de Google</strong>.
+            </p>
+            <hr class="mt-3">
+
+            <div class="text-center mt-3 small">
+              <p>¿Es tu primera vez en AlertAi?
+                <a href="register" class="ms-2"><strong>Regístrate.</strong></a>
               </p>
-              <hr class="mt-3">
-
-              <div class="text-center mt-3 texto-chico">
-                <p>¿Es tu primera vez en AlertAi?
-                  <a href="#" data-bs-toggle="modal" data-bs-target="#registerModal"><strong>Regístrate.</strong></a>
-                </p>
-              </div>
-            </form>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
   <!-- CREAR CUENTA -->
-  <div class="modal fade texto-chico" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-register-size">
       <div class="modal-content">
         <div class="modal-body p-5">
           <div th:if="${msg}" class="alert alert-info" th:text="${msg}"></div>
-
-          <div class="text-center">
+      
+          <div class="text-center mb-4">
             <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
-            <p class="text-claro">Crea una cuenta </p>
           </div>
-
+      
           <form th:action="@{/saveUser}" method="post">
             <div class="mb-2">
-                <input type="text" name="name" class="form-control" placeholder="Nombre completo" required>
+              <input type="text" name="name" class="form-control" placeholder="Nombre completo" required>
             </div>
             <div class="mb-2">
-              <input type="text" name="username" class="form-control" placeholder="Usuario" required>
+            <input type="text" name="username" class="form-control" placeholder="Usuario" required>
             </div>
             <div class="mb-2">
-                <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required>
+              <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required>
             </div>
             <div class="mb-2">
-                <input type="tel" name="phone" class="form-control" placeholder="Teléfono" required>
+              <input type="text" name="country" class="form-control" placeholder="País" required>
             </div>
-            <div class="mb-2">
-                <input type="text" name="country" class="form-control" placeholder="País" required>
-            </div>
-            <div class="mb-2">
-                <input type="text" name="document" class="form-control" placeholder="Documento" required>
-            </div>
-            <div class="mb-2">
-                <input type="password" name="password" class="form-control" placeholder="Contraseña" required>
+            <div class="position-relative">
+              <input type="password" name="password" id="password" class="form-control pe-5"
+                placeholder="Contraseña"
+                minlength="8"
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,}"
+                title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
+                required>
+
+              <!-- Ícono para mostrar/ocultar contraseña -->
+              <i id="togglePassword"
+                class="bi bi-eye-slash position-absolute top-50 translate-middle-y"
+                style="right: 2.5rem; cursor: pointer;"></i>
+
+              <!-- Ícono de información -->
+              <i class="bi bi-info-circle-fill position-absolute top-50 end-0 translate-middle-y me-2 text-secondary"
+                data-bs-toggle="tooltip"
+                data-bs-placement="left"
+                title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
+                style="cursor: pointer;"></i>
             </div>
 
-            <div class="d-flex mt-4">
-              <input class="form-check-input" type="checkbox" id="accept" name="accept">
-              <p class="ms-2">
-                Acepto los 
-                <strong>Términos de Uso</strong> y el 
-                <strong>Aviso de Privacidad</strong> de AlertAi.
-              </p>
-            </div>
-            
-
-            <div class="d-grid mb-2">
-                <button type="submit" class="btn btn-sumit texto-chico">Crear cuenta</button>
+            <!-- TÉRMINOS DE USO -->
+            <div class="form-check d-flex align-items-center mt-4">
+              <input class="form-check-input mt-0" type="checkbox" id="accept" name="accept">
+              <label class="form-check-label ms-2 small" for="accept">
+                Acepto los <strong>Términos de Uso</strong> y el <strong>Aviso de Privacidad</strong> de AlertAi.
+              </label>
             </div>
 
-            <div class="d-grid text-center">
-              <div class="text-center my-1 text-claro">O</div>
+            <!-- BOTÓN SUMIT -->
+            <div class="sumit mb-2 mt-3">
+              <button type="submit" class="btn btn-sumit">Continuar</button>
+            </div>
       
-              <a href="/oauth2/authorization/google" class="btn btn-primary texto-chico" style="background-color: #4285F4;">
+            <div class="d-grid text-center">
+              <div class="text-center my-1">O</div>
+          
+              <a href="/oauth2/authorization/google" class="btn btn-primary">
                 <i class="bi bi-google mx-2"></i> Ingresar con Google
               </a>
             </div>
-              
-              <hr class="mt-3">
-  
-              <div class="text-center mt-3">
-                <p>¿Ya formas parte de AlertAi?
-                  <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal"><strong>Iniciar sesión.</strong></a>
-                </p>
-              </div>
+            
+            <hr class="mt-3">
+      
+            <div class="text-center mt-3 small">
+              <p>¿Ya formas parte de AlertAi?
+              <a href="signin" class="ms-2"><strong>Iniciar sesión.</strong></a>
+              </p>
+            </div>
           </form>
         </div>
-        
-
       </div>
     </div>
   </div>
@@ -623,9 +675,9 @@
    <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/script.js}"></script>
-
- <script th:inline="javascript">
-/*<![CDATA[*/
+  <script th:src="@{/js/theme.js}"></script>
+  <script th:inline="javascript">
+  /*<![CDATA[*/
   let latitude = /*[[${event.location.latitude}]]*/ 0;
   let longitude = /*[[${event.location.longitude}]]*/ 0;
 
