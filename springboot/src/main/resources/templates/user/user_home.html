@@ -67,7 +67,7 @@
       <!-- MENÚ DEL USUARIO -->
       <div class="nav-right">
         <div class="user-menu">
-          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.png'" alt="Foto usuario">
+          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'" alt="Foto usuario">
           <span class="username">
             <span sec:authorize="hasRole('ADMIN')" th:text="${user.name}"></span>
             <span sec:authorize="!hasRole('ADMIN')" th:text="${user.name}"></span>
@@ -211,7 +211,7 @@
               <div class="d-flex align-items-center justify-content-between">
                 <!-- USUARIO DE ALERTA -->
                 <div class="d-flex align-items-center">
-                  <img th:src="${alert.user.image != null} ? @{'/uploads/icons/' + ${alert.user.image}} : @{/img/icon-default.png}" class="rounded-circle me-2" style="width: 20px; height: 20px; object-fit: cover;" />
+                  <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'" alt="Foto usuario" class="rounded-circle me-2" style="width: 20px; height: 20px; object-fit: cover;" />
                   <span th:text="${alert.user.name}" style="font-size: 0.7rem;"></span>
                 </div>
                 <!-- FECHA DE ALERTA -->

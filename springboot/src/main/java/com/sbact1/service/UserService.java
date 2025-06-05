@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sbact1.model.User;
 import com.sbact1.repository.UserRepository;
+import com.sbact1.repository.EventRepository;
 import com.sbact1.repository.TokenRepository;
 
 import jakarta.servlet.http.HttpSession;
@@ -28,6 +30,7 @@ public class UserService {
 	@Autowired private BCryptPasswordEncoder passwordEncoder;
 	@Autowired private UserRepository userRepository;
 	@Autowired private TokenRepository tokenRepository;
+	@Autowired private EventRepository eventRepository;
 
 	// Método para guardar un nuevo usuario en la base de datos
 	public User saveUser(User user) {
@@ -88,8 +91,24 @@ public class UserService {
 	public void eliminarUsuario(Integer userId) {
 		// Primero elimina los tokens de verificación asociados
 		tokenRepository.deleteByUserId(userId); 
+		// Luego elimina los eventos asociados
+    	eventRepository.deleteByUserId(userId);
 		//Luego elimina el usuario
 		userRepository.deleteById(userId);      
+	}
+
+	public boolean cambiarPassword(String email, String currentPassword, String newPassword) {
+		Optional<User> optionalUser = userRepository.findByEmail(email);
+		if (optionalUser.isPresent()) {
+			User user = optionalUser.get();
+			if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
+				return false;
+			}
+			user.setPassword(passwordEncoder.encode(newPassword));
+			userRepository.save(user);
+			return true;
+		}
+		return false;
 	}
 
 

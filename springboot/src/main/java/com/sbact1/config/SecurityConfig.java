@@ -55,7 +55,7 @@ public class SecurityConfig {
         http.csrf(csrf -> csrf.disable()) // Desactiva CSRF para facilitar pruebas 
             .authorizeHttpRequests(requests -> requests
                 // Usuarios con rol ADMIN pueden eliminar usuarios
-                .requestMatchers("/user/eliminar/**").hasRole("ADMIN") 
+                .requestMatchers("/user/eliminar/**").authenticated()
                 // Acceso a rutas administrativas solo para ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 // Acceso a rutas de usuario tanto para USER como para ADMIN

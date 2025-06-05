@@ -319,22 +319,22 @@
       
           <form th:action="@{/saveUser}" method="post">
             <div class="mb-2">
-              <input type="text" name="name" class="form-control" placeholder="Nombre completo" required>
+              <input type="text" name="name" class="form-control muted" placeholder="Nombre completo" required>
             </div>
             <div class="mb-2">
-            <input type="text" name="username" class="form-control" placeholder="Usuario" required>
+            <input type="text" name="username" class="form-control muted" placeholder="Usuario" required>
             </div>
             <div class="mb-2">
-              <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required>
+              <input type="email" name="email" class="form-control muted" placeholder="Correo electrónico" required>
             </div>
             <div class="mb-2">
-              <input type="text" name="country" class="form-control" placeholder="País" required>
+              <input type="text" name="country" class="form-control muted" placeholder="País" required>
             </div>
             <div class="position-relative">
-              <input type="password" name="password" id="password" class="form-control pe-5"
+              <input type="password" name="password" id="password" class="form-control pe-5 muted"
                 placeholder="Contraseña"
                 minlength="8"
-                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,}"
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}"
                 title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
                 required>
 

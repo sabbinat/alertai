@@ -7,9 +7,21 @@ document.addEventListener('DOMContentLoaded', () => {
   if (createMapDiv) {
     const createMap = L.map('map-form').setView([-30.9059, -55.5501], 13);
 
+    createMapDiv._leaflet_map_instance = createMap;
+
+
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(createMap);
+
+    // Fuerza ajuste cuando se muestra el modal
+    const modalCrear = document.getElementById('crearEventoModal');
+    modalCrear.addEventListener('shown.bs.modal', function () {
+      if (createMapDiv._leaflet_map_instance) {
+        createMapDiv._leaflet_map_instance.invalidateSize();
+      }
+    });
+
 
     let marker;
 

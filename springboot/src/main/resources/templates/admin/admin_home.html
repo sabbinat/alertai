@@ -57,7 +57,7 @@
       <!-- MENÚ DEL USUARIO -->
       <div class="nav-right">
         <div class="user-menu">
-          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.png'" alt="Foto usuario">
+          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'" alt="Foto usuario">
           <span class="username">
             <span sec:authorize="hasRole('ADMIN')" th:text="${user.name}"></span>
           </span>
@@ -189,7 +189,7 @@
             <div class="dashboard-card-report">
               <div th:each="report, iterStat : ${reports}" th:if="${iterStat.index} < 5" style="font-size: 0.8rem;">
                 <div class="mb-3 card-report">
-                  <img class="me-2" th:src="${report.user.image != null} ? @{/uploads/icons/} + ${report.user.image} : @{/images/default-profile.png}" alt="" style="width: 20px; height: 20px; border-radius: 50px; background-color: aqua;">
+                  <img class="me-2" th:src="${report.user.image != null} ? '/uploads/icons/' + ${report.user.image} : '/img/icon-default.jpg'" alt="" style="width: 20px; height: 20px; border-radius: 50px; background-color: aqua;">
                   <strong th:text="${report.user.name}"></strong>
                   <span> denunció </span>
                   <strong th:text="${report.event.name}"></strong>
@@ -247,10 +247,10 @@
               <!-- FOTO DE PERFIL -->
               <div class="col-12 col-md-6 modal-user-photo text-center position-relative mx-auto">
                 <!-- Imagen actual -->
-                <img id="preview-user-image"
-                  th:src="@{'/uploads/icons/' + ${user.image}}"
-                  data-original-src="@{'/uploads/icons/' + ${user.image}}"
-                  src="#" class="img-fluid">
+                <img id="preview-user-image" 
+                  th:src="@{${user.image} != null ? '/uploads/icons/' + ${user.image} : '/img/icon-default.png'}" 
+                  data-original-src="@{${user.image} != null ? '/uploads/icons/' + ${user.image} : '/img/icon-default.png'}" 
+                  src="#" class="img-fluid" alt="Foto usuario">
 
                 <input type="file" id="image" name="imageFile" class="overlay-input" data-preview-id="preview-user-image">
 

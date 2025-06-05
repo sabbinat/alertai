@@ -2,14 +2,16 @@
 
 :root {
   --body-night: #121212;
-  --third-night: #999bb6;
+  --secondary-night: #222222;
+  --third-night: #3b3b3b;
   --fourth-night: #1c1c1c;
   --text-night: #ffffff;
   --text-muted-night: #aeaeae;
   --card-shadow-night: #0000000d;
   --card-bg-night: #454545;
   
-  --body-light: #e0e0e0;
+  --body-light: #efefef;
+  --secondary-light: #dadada;
   --third-light: #b2bec9;
   --fourth-light: #d3d3d3;
   --text-light: #000000;
@@ -160,7 +162,6 @@
 .child-comment {
   font-size: 0.7em;
   margin-left: 50px; 
-  color: gray; 
 }
 .small-button {
   font-size: 0.8em;
@@ -176,8 +177,9 @@
 .dropdown .btn::after {
   display: none !important;
 }
-
-
+.dropdown .btn {
+  color: inherit;
+}
 
 /* EVENTOS POR CATEGORÍA */
 

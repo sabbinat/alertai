@@ -34,6 +34,8 @@ import com.sbact1.repository.UserRepository;
 import com.sbact1.service.SettingService;
 import com.sbact1.service.UserService;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Controller
 @RequestMapping("/user")
 public class UserController {
@@ -141,7 +143,7 @@ public class UserController {
 
     // Actualiza los datos del perfil del usuario, incluyendo imagen
     @PostMapping("/update")
-    public String updateProfile(@ModelAttribute("user") User updatedUser, @RequestParam("imageFile") MultipartFile imageFile, Principal principal) {
+    public String updateProfile(@ModelAttribute("user") User updatedUser, @RequestParam(value = "imageFile", required = false) MultipartFile imageFile, Principal principal) {
         userService.updateUserProfile(updatedUser, imageFile, principal.getName());
         
         Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
@@ -210,14 +212,42 @@ public class UserController {
 
     // Elimina un usuario, solo si no tiene eventos o comentarios asociados
     @GetMapping("/eliminar/{id}")
-    public String eliminar(@PathVariable Integer id, RedirectAttributes msg){
-        Optional<User> categoria = userRepository.findById(id); 
-        if(categoria.isEmpty()) {
-            msg.addFlashAttribute("errorEliminar", "No puedes eliminar este usuario porque tiene eventos o comentarios registrados.");
-            return "redirect:/admin/users/";
+    public String eliminarUsuario(@PathVariable Integer id, RedirectAttributes msg){
+        try {
+            userService.eliminarUsuario(id);
+            msg.addFlashAttribute("sucessoEliminar", "Usuario eliminado exitosamente!");
+        } catch (EntityNotFoundException e) {
+            msg.addFlashAttribute("errorEliminar", "Usuario no encontrado");
+            return "redirect:/signin";
+        } catch (IllegalStateException e) {
+            msg.addFlashAttribute("errorEliminar", e.getMessage());
+            return "redirect:/user/profile"; // o donde tenga sentido
         }
-        userService.eliminarUsuario(id); 
-        msg.addFlashAttribute("sucessoEliminar", "Usuario eliminado exitosamente!");
-        return "redirect:/admin/users/";
+        return "redirect:/signin";
     }
+
+
+
+    @PostMapping("/change-password")
+    public String cambiarPassword(@RequestParam String currentPassword,
+                                @RequestParam String newPassword,
+                                @RequestParam String confirmPassword,
+                                Principal principal,
+                                RedirectAttributes redirectAttributes) {
+
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("error", "Las contraseñas no coinciden.");
+            return "redirect:/user/profile";
+        }
+
+        boolean result = userService.cambiarPassword(principal.getName(), currentPassword, newPassword);
+        if (!result) {
+            redirectAttributes.addFlashAttribute("error", "La contraseña actual es incorrecta.");
+        } else {
+            redirectAttributes.addFlashAttribute("success", "Contraseña actualizada correctamente.");
+        }
+
+        return "redirect:/user/profile";
+    }
+
 }

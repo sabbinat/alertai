@@ -333,12 +333,6 @@
 
 
 /* ACCIONES*/
-.btn-icon {
-  background: transparent;
-  border: none;
-  color: inherit;
-  padding: 0.25rem;
-}
 .dropdown .btn-sm {
   color: inherit;
   border-radius: 0.5rem;

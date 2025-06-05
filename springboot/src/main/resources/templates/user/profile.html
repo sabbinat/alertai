@@ -68,7 +68,7 @@
       <!-- MENÚ DEL USUARIO -->
       <div class="nav-right">
         <div class="user-menu">
-          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.png'" alt="Foto usuario">
+          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'" alt="Foto usuario">
           <span class="username">
             <span sec:authorize="hasRole('ADMIN')" th:text="${user.name}"></span>
             <span sec:authorize="!hasRole('ADMIN')" th:text="${user.name}"></span>
@@ -113,7 +113,7 @@
   <!-- PERFIL DEL USUARIO -->
   <section class="profile">
     <div class="profile-pic">
-      <img th:src="${user.image != null} ? @{/uploads/icons/} + ${user.image} : @{/images/default-profile.png}" class="card-img-top" alt="Imagen de perfil">
+      <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'" alt="Foto usuario" class="card-img-top">
     </div>
     <!-- INFORMACIÓN DEL USUARIO -->
     <div class="profile-info">
@@ -197,8 +197,8 @@
 
                         <!-- Usuario y fecha -->
                         <div class="d-flex align-items-center muted small mb-1">
-                          <img th:src="${user.image != null} ? @{/uploads/icons/} + ${user.image} : @{/images/default-profile.png}"
-                              alt="Usuario" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+                          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'" alt="Foto usuario"
+                              class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
                           <span th:text="${user.name}" class="me-2">Nombre</span>
                           <span>&middot;</span>
                           <span class="ms-2" th:text="${event.timeAgo}">hace 2 horas</span>
@@ -359,9 +359,9 @@
               <div class="col-12 col-md-6 modal-user-photo text-center position-relative mx-auto">
                 <!-- Imagen actual -->
                 <img id="preview-user-image" 
-                  th:src="@{'/uploads/icons/' + ${user.image}}" 
-                  data-original-src="@{'/uploads/icons/' + ${user.image}}" 
-                  src="#" class="img-fluid">
+                  th:src="@{${user.image} != null ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'}" 
+                  data-original-src="@{${user.image} != null ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'}" 
+                  src="#" class="img-fluid" alt="Foto usuario">
 
                 <input type="file" id="image-profile" name="imageFile" class="overlay-input" data-preview-id="preview-user-image">
 
@@ -503,7 +503,11 @@
                 <p class="muted" style="font-size: 0.95rem;">Elimina permanentemente tus datos y todo lo asociado a tu cuenta</p>
               </div>
             
-              <button type="button" class="btn btn-danger" style="width: 300px;" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">Eliminar cuenta</button>
+              <a th:href="@{/user/eliminar/{id}(id=${user.id})}" class="btn btn-sm bg-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este usuario?');">
+                  <i class="bi bi-trash"></i> Eliminar cuenta
+              </a>
+
+
             </div>
           </div>
 
@@ -523,49 +527,31 @@
           <h5 class="modal-title" id="cambiarPasswordModalLabel">Cambiar contraseña</h5>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
         </div>
-        <form th:action="@{/user/changePassword}" method="post">
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="currentPassword" class="form-label">Contraseña actual</label>
-              <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+        <div class="modal-body p-3">
+          <!-- CAMBIAR CONTRASEÑA -->
+          <form th:action="@{/user/change-password}" method="post">
+            <div class="mb-2">
+              <label>Contraseña actual</label>
+              <input type="password" class="form-control muted" name="currentPassword" required>
             </div>
-            <div class="mb-3">
-              <label for="newPassword" class="form-label">Nueva contraseña</label>
-              <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+            <div class="mb-2">
+              <label>Nueva contraseña</label>
+              <input type="password" class="form-control muted" name="newPassword" required>
             </div>
-            <div class="mb-3">
-              <label for="confirmNewPassword" class="form-label">Confirmar nueva contraseña</label>
-              <input type="password" class="form-control" id="confirmNewPassword" name="confirmNewPassword" required>
+            <div class="mb-2">
+              <label>Confirmar nueva contraseña</label>
+              <input type="password" class="form-control muted" name="confirmPassword" required>
             </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-primary">Actualizar contraseña</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  <!-- CONFIRMACIÓN PARA ELIMINAR CUENTA -->
-  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar eliminación</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <p>¿Estás seguro que deseas eliminar tu cuenta? Esta acción no se puede deshacer.</p>
-        </div>
-        <div class="modal-footer">
-          <form th:action="@{/user/delete}" method="post">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn btn-danger">Eliminar cuenta</button>
+            <div class="sumit">
+              <button type="submit" class="btn btn-sumit">Cambiar</button>
+            </div>
           </form>
         </div>
+        
       </div>
     </div>
   </div>
+ 
 
   
   <!-- JS -->

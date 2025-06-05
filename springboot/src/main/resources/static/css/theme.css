@@ -135,7 +135,9 @@ body.theme-dark {
 
 
 /* MODAL */
-
+.modal-dialog{
+  width: 100%;
+}
 .theme-light .modal-content {
   width: 100%;
   border-radius: 24px;
@@ -172,7 +174,7 @@ body.theme-dark {
 .theme-dark .form-control,
 .theme-dark .form-control:focus,
 .theme-dark .form-select{
-  background-color: #ffffff0d;
+  background-color: #2f2f2f;
 }
 .theme-dark select option {
   background-color: #2c2f36;
@@ -280,8 +282,8 @@ body.theme-dark {
   color: #bab9b9;
 }
 .theme-dark input:-webkit-autofill {
-  background-color: #ffffff0d !important;
-  -webkit-box-shadow: 0 0 0 1000px #111 inset !important;
+  background-color: #2f2f2f !important;
+  -webkit-box-shadow: 0 0 0 1000px #2f2f2f inset !important;
   -webkit-text-fill-color: var(--text-night) !important;
 }
 

@@ -88,15 +88,6 @@ html, body {
   gap: 1rem;
   align-items: center;
 }
-.btn {
-  cursor: pointer;
-  font-weight: 600;
-  border-radius: 4px;
-  padding: 0.5rem 1rem;
-  border: none;
-  transition: background-color 0.3s ease, color 0.3s ease;
-  font-size: 1rem;
-}
 .theme-dark .btn-login {
   background-color: white;
   color: #111;
@@ -470,7 +461,7 @@ html, body {
 }
 .back-link:hover span {
   transform: translateX(5px); 
-  border-bottom: 1px solid blue;
+  border-bottom: 1px solid var(--verde-medio);
 }
 
 
@@ -479,4 +470,15 @@ html, body {
 }
 .custom-register-size{
   max-width: 600px;
+}
+
+
+/* LOGIN */
+.forgot-password{
+  display: inline-block;
+  transition: transform 0.3s ease;
+}
+.forgot-password:hover {
+  transform: translateX(-5px); 
+  border-bottom: 1px solid var(--verde-medio);
 }

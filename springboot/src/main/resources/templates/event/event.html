@@ -68,7 +68,7 @@
       <div class="nav-right">
         <!-- SI EL USUARIO HA INICIADO SESIÓN -->
         <div class="user-menu" th:if="${user != null}">
-          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.png'" alt="Foto usuario">
+          <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'" alt="Foto usuario">
           <span class="username">
             <span sec:authorize="!hasRole('ADMIN')" th:text="${user.name}"></span>
           </span>
@@ -153,7 +153,7 @@
 
     <!-- INFORMACIÓN DEL EVENTO -->
     <div class="p-4">
-      <!--AUTOR DEL EVENTO-->
+      <!-- AUTOR DEL EVENTO / DROPDOWN-->
       <div class="autor">
         <p th:text="${event.user.name}"></p>
 
@@ -187,9 +187,9 @@
         </div>
       </div>
       
-      <!--CONTENIDO -->
+      <!-- CONTENIDO -->
       <div class="row mt-3">
-        <!--INFO DEL EVENTO (DESC, FECHA, HORA, IMG)-->
+        <!-- INFO DEL EVENTO (DESC, FECHA, HORA, IMG) -->
         <div class="col-12 col-md-8 px-4">
           <div class="event-content mb-5">
             <div class="event-body">
@@ -222,6 +222,7 @@
             </div>
           </div>
           <hr>
+
           <!--COMENTARIOS-->
           <div class="comment-section mb-5">
             <!-- SI EL USUARIO ESTA LOGUEADO -->
@@ -242,13 +243,13 @@
                 </div>
               </div>
 
-              <!-- FORMULARIO DE COMENTARIO APARTE -->
+              <!-- FORMULARIO DE COMENTARIO -->
               <div class="comment-form mt-2" style="display: none;">
                 <div th:if="${user != null}">
                   <form method="post" th:action="@{/event/{id}/comentario(id=${event.id})}">
-                    <div class="d-flex gap-3" style="position: relative; max-width: 600px;">
-                      <textarea name="content" class="form-control" placeholder="Escribe tu comentario aquí..."
-                        style="background-color: transparent; resize: none; width: 100%; padding-right: 70px;" required></textarea>
+                    <div class="d-flex gap-3 shadow-sm" style="position: relative; max-width: 600px;">
+                      <textarea name="content" class="form-control muted" placeholder="Escribe tu comentario aquí..."
+                        style="resize: none; width: 100%; padding-right: 70px;" required></textarea>
                       <button type="submit" class="btn small-button"
                         style="position: absolute; right: 10px; top: 10px; border: none; background-color: #6c6d6f; color: white; font-size: 0.8em; padding: 5px 10px;">
                         Enviar
@@ -271,7 +272,7 @@
                 <div class="d-flex">
                   <!-- Columna izquierda: avatar + línea que crece hasta el final -->
                   <div class="d-flex flex-column align-items-center me-3">
-                    <img th:src="${comment.user.image != null} ? @{/uploads/icons/} + ${comment.user.image} : @{/images/default-profile.png}"
+                    <img th:src="${comment.user.image != null} ? '/uploads/icons/' + ${comment.user.image} : '/img/icon-default.jpg'"
                         alt="Foto del usuario"
                         style="width: 30px; height: 30px; border-radius: 50%;">
                     <!-- La línea ahora abarca todo lo que esté en la columna derecha -->
@@ -308,11 +309,11 @@
                         <form th:action="@{/event/{id}/comentario(id=${event.id})}" method="post">
                           <input type="hidden" name="parentId" th:value="${comment.id}" />
                           <div class="d-flex align-items-center">
-                            <img th:src="${user.image != null} ? @{/uploads/icons/} + ${user.image} : @{/images/default-profile.png}" alt="Foto del usuario" style="width: 25px; height: 25px; border-radius: 50%; margin-right: 10px;">
+                            <img th:src="${user.image != null} ? '/uploads/icons/'' + ${user.image} : '/img/icon-default.jpg'" alt="Foto del usuario" style="width: 25px; height: 25px; border-radius: 50%; margin-right: 10px;">
                             <!--DIV DE COMENTARIO-->
-                            <div class="d-flex gap-3 border rounded" style="position: relative; width: 600px; height: 50px; border: 1px solid #4285F4;">
-                              <textarea name="content" class="form-control" placeholder="Responder..." 
-                                style="background-color: transparent; resize: none; border: none; width: 100%; padding-right: 70px; font-size: 0.7rem;" required></textarea>
+                            <div class="d-flex gap-3 shadow-sm rounded" style="position: relative; width: 600px; height: 50px;">
+                              <textarea name="content" class="form-control muted" placeholder="Responder..." 
+                                style="resize: none; width: 100%; padding-right: 70px; font-size: 0.7rem;" required></textarea>
                               <button type="submit" class="btn small-button" 
                                 style="position: absolute; right: 10px; top: 10px; border: none; background-color: #6c6d6f; color: white; font-size: 0.7em; padding: 5px 10px;">
                                 Enviar
@@ -328,13 +329,13 @@
                       <div th:each="response : ${comment.responses}" class="response-container mb-3">
                         <div class="d-flex justify-content-between">
                           <div class="d-flex align-items-center justify-content-center">
-                            <img th:src="${response.user.image != null} ? @{/uploads/icons/} + ${response.user.image} : @{/images/default-profile.png}" alt="Foto del usuario" style="width: 25px; height: 25px; border-radius: 50%; margin-right: 10px;">
+                            <img th:src="${response.user.image != null} ? '/uploads/icons/' + ${response.user.image} : '/img/icon-default.jpg'" alt="Foto del usuario" style="width: 25px; height: 25px; border-radius: 50%; margin-right: 10px;">
                             <strong th:text="${response.user.name}" style="font-size: 0.8rem;">Nombre del usuario</strong>
                           </div>
                           <div class="dropdown" th:if="${user != null and response.user.id == user.id}">
                             <button class="btn btn-sm" type="button" data-bs-toggle="dropdown" aria-expanded="false"
-                                    style="background-color: transparent; border: none; font-size: 1.2rem;">
-                              ...
+                                    style="background-color: transparent; border: none;">
+                              <i class="bi bi-three-dots-vertical"></i>
                             </button>
                             <ul class="dropdown-menu">
                               <li>
@@ -445,10 +446,10 @@
 
           <form th:action="@{/userLogin}" method="post">
             <div class="mb-3">
-                <input type="email" name="username" class="form-control" placeholder="Correo electrónico" required>
+                <input type="email" name="username" class="form-control muted" placeholder="Correo electrónico" required>
             </div>
             <div class="mb-3 position-relative small">
-              <input type="password" name="password" id="password" class="form-control small" placeholder="Contraseña" required>
+              <input type="password" name="password" id="password" class="form-control muted" placeholder="Contraseña" required>
               <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;"></i>
             </div>                
             <div class="mb-3 d-flex justify-content-between align-items-center">
@@ -492,22 +493,22 @@
       
           <form th:action="@{/saveUser}" method="post">
             <div class="mb-2">
-              <input type="text" name="name" class="form-control" placeholder="Nombre completo" required>
+              <input type="text" name="name" class="form-control muted" placeholder="Nombre completo" required>
             </div>
             <div class="mb-2">
-            <input type="text" name="username" class="form-control" placeholder="Usuario" required>
+            <input type="text" name="username" class="form-control muted" placeholder="Usuario" required>
             </div>
             <div class="mb-2">
-              <input type="email" name="email" class="form-control" placeholder="Correo electrónico" required>
+              <input type="email" name="email" class="form-control muted" placeholder="Correo electrónico" required>
             </div>
             <div class="mb-2">
-              <input type="text" name="country" class="form-control" placeholder="País" required>
+              <input type="text" name="country" class="form-control muted" placeholder="País" required>
             </div>
             <div class="position-relative">
-              <input type="password" name="password" id="password" class="form-control pe-5"
+              <input type="password" name="password" id="password" class="form-control pe-5 muted"
                 placeholder="Contraseña"
                 minlength="8"
-                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,}"
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}"
                 title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
                 required>
 
