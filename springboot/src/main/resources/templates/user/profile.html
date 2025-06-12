@@ -41,17 +41,6 @@
       <!-- MENÚ -->
       <div class="nav-left">
         <a th:href="@{/user/home}" th:text="#{profile.home}">Inicio</a>
-        <a th:text="#{profile.category}">Categorías</a>
-        <div class="dropdown">
-          <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-chevron-down"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end custom-dropdown">
-            <li th:each="category : ${categories}">
-              <a class="dropdown-item" th:href="@{'/category/' + ${category.id} + '/events'}" th:text="${category.name}"></a>
-            </li>
-          </ul>
-        </div>
         <a th:href="@{/event/allEvents}">Eventos</a>
         <a href="/contact" th:text="#{profile.contact}">Contacto</a>
         <a href="/help" th:text="#{profile.help}">Ayuda</a>
@@ -120,10 +109,10 @@
       <div class="d-flex justify-content-between">
         <p>
           <span th:text="${user.name}" style="font-size: 2rem; font-weight: 700;" class="me-2">Nombre</span>  
-          (</span><span th:text="${user.username}" style="font-size: 0.8;" class="muted">Usuario</span>)
+          (<span th:text="${user.username}" style="font-size: 0.8;" class="muted">Usuario</span>)
         </p>
         <div class="me-4 d-flex">
-          <button type="button" class=" icono-redondo me-3" data-bs-toggle="modal" data-bs-target="#settingsModal" title="Configuración">
+          <button type="button" class=" icono-redondo me-3" data-bs-toggle="modal" data-bs-target="#settingsModal" title="Configuración" sec:authorize="hasRole('USER')">
             <i class="bi bi-gear"></i>
           </button>
         </div>
@@ -211,7 +200,7 @@
                         <div class="muted small d-flex justify-content-between">
                           <span>
                             <i class="bi bi-calendar-event me-1"></i>
-                            <span th:utext="#{event.rangeHtml(${event.formattedStartDate}, ${event.formattedEndDate})}"></span>
+                            <span th:utext="#{event.rangeHtml(${event.startDate}, ${event.endDate})}"></span>
                           </span>
                           <span class="ms-3">
                             <i class="bi bi-geo-alt me-1"></i>
@@ -401,7 +390,7 @@
       </div>
     </div>
   </div>
-  <!--CONFIGURACIÓN DE USUARIO-->
+  <!-- CONFIGURACIÓN -->
   <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
       <div class="modal-content settings-container shadow-lg border-0 rounded-4">
@@ -503,9 +492,11 @@
                 <p class="muted" style="font-size: 0.95rem;">Elimina permanentemente tus datos y todo lo asociado a tu cuenta</p>
               </div>
             
-              <a th:href="@{/user/eliminar/{id}(id=${user.id})}" class="btn btn-sm bg-danger" onclick="return confirm('¿Estás seguro de que deseas eliminar este usuario?');">
-                  <i class="bi bi-trash"></i> Eliminar cuenta
-              </a>
+              <!-- Botón que abre el modal -->
+            <button type="button" class="btn btn-sm bg-danger" data-bs-toggle="modal" data-bs-target="#confirmarEliminacionModal">
+              <i class="bi bi-trash"></i> Eliminar cuenta
+            </button>
+
 
 
             </div>
@@ -551,6 +542,34 @@
       </div>
     </div>
   </div>
+  <!-- CONFIRMACIÓN PARA ELIMINAR CUENTA -->
+  <div class="modal fade" id="confirmarEliminacionModal" tabindex="-1" aria-labelledby="confirmarEliminacionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-4 border-danger border-2">
+        <div class="modal-header bg-danger rounded-top-4">
+          <h5 class="modal-title d-flex align-items-center" id="confirmarEliminacionLabel">
+            <svg xmlns="http://www.w3.org/2000/svg" class="me-2" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8.982 1.566a1.5 1.5 0 0 0-2.964 0L.165 13.233A1.5 1.5 0 0 0 1.5 15.5h13a1.5 1.5 0 0 0 1.335-2.267L8.982 1.566zm-1.482-.933a.5.5 0 0 1 .964 0l5.853 11.667a.5.5 0 0 1-.447.7H2.13a.5.5 0 0 1-.447-.7L7.5 0.633zM8 5a.5.5 0 0 1 .5.5v3.5a.5.5 0 0 1-1 0V5.5A.5.5 0 0 1 8 5zm.002 6a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0z"/>
+            </svg>
+            Confirmar eliminación de cuenta
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro de que deseas eliminar tu cuenta? <em>Esta acción es irreversible</em> <br><br>
+            Se te enviará un correo para confirmar la eliminación.</p>
+        </div>
+        <div class="modal-footer">
+          <form th:action="@{/user/solicitar-eliminacion}" method="post" class="d-flex justify-content-end">
+            <input type="hidden" name="userId" th:value="${user.id}" />
+              <button type="button" class="btn btn-secondary me-2" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-primary">Confirmar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
  
 
   

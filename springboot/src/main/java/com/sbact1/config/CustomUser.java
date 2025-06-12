@@ -2,7 +2,6 @@ package com.sbact1.config;
 
 import java.util.Arrays;
 import java.util.Collection;
-
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -33,6 +32,7 @@ public class CustomUser implements UserDetails {
 		// Se devuelve una lista que contiene esa autoridad
 		return Arrays.asList(authority);
 	}
+
 
 	/**
 	 * Devuelve la contraseña del usuario (cifrada en la base de datos).

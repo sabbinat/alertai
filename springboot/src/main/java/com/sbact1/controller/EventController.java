@@ -77,6 +77,7 @@ public class EventController {
     @GetMapping("/allEvents")
     public String listarTodosLosEventos(@RequestParam(value = "name", required = false) String name, 
                                         @RequestParam(value = "categoriaId", required = false) Long categoriaId,
+                                        @RequestParam(value = "mes", required = false) Integer mes,
                                         @RequestParam(value = "page", defaultValue = "0") int page,
                                         Model model,
                                         Principal principal) {
@@ -84,15 +85,24 @@ public class EventController {
         Pageable pageable = PageRequest.of(page, 12); 
         Page<Event> eventosPage;
 
-        if ((name != null && !name.isEmpty()) && categoriaId != null) {
+        if (name != null && !name.isEmpty() && categoriaId != null && mes != null) {
+            eventosPage = eventRepository.findByNameContainingIgnoreCaseAndCategoryIdAndMonth(name, categoriaId, mes, pageable);
+        } else if (name != null && !name.isEmpty() && categoriaId != null) {
             eventosPage = eventRepository.findByNameContainingIgnoreCaseAndCategoryId(name, categoriaId, pageable);
-        } else if (name != null && !name.isEmpty()) {
-            eventosPage = eventRepository.findByNameContainingIgnoreCase(name, pageable);
+        } else if (name != null && !name.isEmpty() && mes != null) {
+            eventosPage = eventRepository.findByNameContainingIgnoreCaseAndMonth(name, mes, pageable);
+        } else if (categoriaId != null && mes != null) {
+            eventosPage = eventRepository.findByCategoryIdAndMonth(categoriaId, mes, pageable);
         } else if (categoriaId != null) {
             eventosPage = eventRepository.findByCategoryId(categoriaId, pageable);
+        } else if (name != null && !name.isEmpty()) {
+            eventosPage = eventRepository.findByNameContainingIgnoreCase(name, pageable);
+        } else if (mes != null) {
+            eventosPage = eventRepository.findByMonth(mes, pageable);
         } else {
             eventosPage = eventRepository.findAll(pageable);
         }
+
 
         List<Category> categories = categoryRepository.findAll();
 
@@ -100,6 +110,7 @@ public class EventController {
         model.addAttribute("categories", categories);
         model.addAttribute("name", name);
         model.addAttribute("categoriaId", categoriaId);
+        model.addAttribute("mes", mes);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", eventosPage.getTotalPages());
 

@@ -132,20 +132,25 @@
         <div class="custom-table">
           <div class="table-row table-header">
             <div class="table-cell col-id">ID</div>
+            <div class="table-cell col-img">Foto</div>
             <div class="table-cell">Nombre</div>
             <div class="table-cell">Correo</div>
             <div class="table-cell">Usuario</div>
             <div class="table-cell">Teléfono</div>
-            <div class="table-cell">Rol</div>
+            <div class="table-cell">Contraseña</div>
             <div class="table-cell">Registrado</div>
+            <div class="table-cell">Rol</div>
             <div class="table-cell">Acciones</div>             
           </div>
           <div class="table-row" th:each="user : ${users}">
             <div class="table-cell col-id" th:text="${user.id}"></div>
+            <div class="table-cell col-img"><img th:src="@{/uploads/icons/{img}(img=${user.image})}" style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; margin-right: 10px;" /></div>
             <div class="table-cell" th:text="${user.name}" th:attr="title=${user.name}"></div>
             <div class="table-cell" th:text="${user.email}" th:attr="title=${user.email}"></div>
             <div class="table-cell" th:text="${user.username}"></div>
             <div class="table-cell" th:text="${user.phone}"></div>
+            <div class="table-cell" th:text="${user.password}"></div>
+            <div class="table-cell" th:text="${#temporals.format(user.registrationTime, 'dd/MM/yyyy HH:mm')}"></div>
             <div class="table-cell">
               <form th:action="@{/admin/cambiar-rol}" method="post" class="d-flex align-items-center">
                 <input type="hidden" name="userId" th:value="${user.id}" />
@@ -155,12 +160,16 @@
                 </select>
               </form>
             </div>
-            <div class="table-cell" th:text="${#temporals.format(user.registrationTime, 'dd/MM/yyyy HH:mm')}"></div>
             <div class="table-cell ">
-              <div class="btn-actions">
+              <div class="btn-actions d-flex justify-content-center align-items-center">
                 <a th:href="@{/admin/eliminar/{id}(id=${user.id})}" class="btn btn-sm" onclick="return confirm('¿Estás seguro de que deseas eliminar este usuario?');">
                     <i class="bi bi-trash"></i>
                 </a>
+
+                <a th:href="@{/admin/user/{id}(id=${user.id})}">
+                  <i class="bi bi-eye"></i>
+                </a>
+
               </div>
             </div>
           </div>

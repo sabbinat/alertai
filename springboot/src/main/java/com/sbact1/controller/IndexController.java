@@ -91,7 +91,7 @@ public class IndexController {
             model.addAttribute("calendarEvents", "[]");
         }
 
-        return "/general/index";
+        return "index";
     }
 
     //Método que permite realizar búsquedas en el sitio, ya sea por usuario, categoría o evento

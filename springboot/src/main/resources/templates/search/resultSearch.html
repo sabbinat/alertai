@@ -39,17 +39,6 @@
       <!-- MENÚ -->
       <div class="nav-left">
         <a th:href="${user != null} ? @{/user/home} : @{/}" th:text="#{profile.home}">Inicio</a>
-        <a th:text="#{profile.category}">Categorías</a>
-        <div class="dropdown">
-          <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-chevron-down"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end custom-dropdown">
-            <li th:each="category : ${categories}">
-              <a class="dropdown-item" th:href="@{'/category/' + ${category.id} + '/events'}" th:text="${category.name}"></a>
-            </li>
-          </ul>
-        </div>
         <a th:href="@{/event/allEvents}">Eventos</a>
         <a href="/contact" th:text="#{profile.contact}">Contacto</a>
         <a href="/help" th:text="#{profile.help}">Ayuda</a>

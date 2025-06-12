@@ -10,6 +10,8 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.sbact1.repository.UserRepository;
+
 /**
  * Clase de configuración de seguridad de Spring Security.
  */
@@ -19,7 +21,7 @@ public class SecurityConfig {
 
 	@Autowired
 	public CustomAuthSucessHandler sucessHandler; // Manejador personalizado que se ejecuta después de un login exitoso
-
+    @Autowired public UserRepository userRepository;
     /**
      * Se utiliza para cifrar las contraseñas antes de compararlas con la base de datos.
      */
@@ -50,6 +52,7 @@ public class SecurityConfig {
     /**
      * Define las reglas de acceso y el comportamiento del login.
      */
+
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) // Desactiva CSRF para facilitar pruebas 
@@ -81,4 +84,6 @@ public class SecurityConfig {
 
         return http.build(); 
     }
+
+    
 }

@@ -19,29 +19,21 @@
   <div class="modal-dialog" style="width: 550px;">
     <div class="modal-content">
       <div class="modal-body p-5">
+        <a href="/" class="back-link"><p><i class="bi bi-arrow-left-short me-2"></i><span>Atrás</span></p></a>
+
         <!-- MENSAJES -->
         <div class="text-center">
-          <!-- Mensaje de error al fallar el login -->
-          <div th:if="${param.error}" class="alert alert-danger text-center small" role="alert">
+          <h4 class="fw-bold mb-3">Iniciar sesión</h4>
+           <!-- Mensaje de error al fallar el login -->
+          <div th:if="${param.error}" class="alert text-center small" style="color: red;" role="alert">
               Correo o contraseña incorrectos. Intenta nuevamente.
           </div>
 
           <!-- Mensaje al cerrar sesión correctamente -->
-          <div th:if="${param.logout}" class="alert alert-success text-center small" role="alert">
+          <div th:if="${param.logout}" class="alert text-center small" style="color: green;" role="alert">
               Has cerrado sesión exitosamente.
           </div>
-
-          <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
-          <p class="muted">Elige la forma de ingresar</p>
         </div>
-
-        <div class="d-grid text-center">
-          <a href="/oauth2/authorization/google" class="btn btn-primary">
-            <i class="bi bi-google mx-2"></i> Ingresar con Google
-          </a>
-        </div>
-
-        <div class="text-center my-3 muted">O</div>
 
         <form th:action="@{/userLogin}" method="post">
           <div class="mb-3">

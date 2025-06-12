@@ -40,22 +40,11 @@
       <!-- MENÚ -->
       <div class="nav-left">
         <a th:href="@{/user/home}" th:text="#{profile.home}">Inicio</a>
-        <a th:text="#{profile.category}">Categorías</a>
-        <div class="dropdown">
-          <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-chevron-down"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end custom-dropdown">
-            <li th:each="category : ${categories}">
-              <a class="dropdown-item" th:href="@{'/category/' + ${category.id} + '/events'}" th:text="${category.name}"></a>
-            </li>
-          </ul>
-        </div>
         <a th:href="@{/event/allEvents}">Eventos</a>
         <a href="/contact" th:text="#{profile.contact}">Contacto</a>
-        <a href="/help" th:text="#{profile.help}">Ayuda</a>
+        <a href="/help" th:text="#{profile.help}" class="active">Ayuda</a>
       </div>
-    
+
       <!-- BUSCADOR -->
       <div class="search-bar">
         <form action="/search" method="get" id="searchForm" class="search-form" role="search">
@@ -63,7 +52,7 @@
           <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
         </form>
       </div>
-    
+
       <!-- MENÚ DEL USUARIO -->
       <div class="nav-right">
         <!-- SI EL USUARIO HA INICIADO SESIÓN -->
@@ -125,7 +114,7 @@
   <section class="banner-contact py-5 text-center">
     <h1 class="text-center">Ayuda - Preguntas frecuentes</h1>
     <p class="text-center muted">¿Tenés dudas sobre cómo usar AlertaAi? Acá respondemos las consultas más comunes.</p>
-  
+
     <div class="faq-container">
       <div class="accordion" id="faqAccordion">
         <div class="accordion-item">
@@ -214,120 +203,7 @@
     </div>
   </footer>
 
-  <!--CONFIGURACIÓN DE USUARIO-->
-  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content settings-container shadow-lg border-0 rounded-4">
-        <div class="modal-header rounded-top-4">
-          <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}">Configuración de Usuario</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <form th:action="@{/user/settings}" method="post">
-            <input type="hidden" name="redirectTo" th:value="${redirectTo}" />
-  
-            <!-- Idioma -->
-            <div class="mb-5 d-flex align-items-center">
-              <label for="language" class="form-label fw-bold me-2" th:text="#{settings.language}">Idioma: </label>
-              <select name="language" id="language" class="form-select shadow-sm rounded-3">
-                <option value="es" th:selected="${#locale.language == 'es'}">Español</option>
-                <option value="pt" th:selected="${#locale.language == 'pt'}">Portugués</option>
-              </select>
-            </div>
-  
-            <!-- Preferencias -->
-            <div class="mb-4">
-              <h6 class="fw-bold mb-3" th:text="#{homepage.preferences}">Preferencias de notificación</h6>
-              <p class="fst-italic small">
-                Selecciona las categorías de eventos sobre las que deseas recibir notificaciones y novedades.
-              </p>
-              <div class="d-flex justify-content-center">
-                <div class="form-check" th:each="cat : ${categories}">
-                  <input class="form-check-input" type="checkbox"
-                         th:id="'cat-' + ${cat.id}"
-                         th:name="categoriaIds"
-                         th:value="${cat.id}"
-                         th:checked="${user.notificaciones.contains(cat)}">
-                  <label class="form-check-label me-4" th:for="'cat-' + ${cat.id}" th:text="${cat.name}"></label>
-                </div>
-              </div>
-            </div>
-
-            <!-- CAMBIO DE CONTRASEÑA -->
-            <div class="mt-3">
-              <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#changePasswordModal">
-                Cambiar contraseña
-              </button>
-            </div>
-
-            <!-- ELIMINAR CUENTA -->
-            <div class="mt-4">
-              <button type="button" class="btn" data-bs-toggle="modal" data-bs-target="#deleteAccountModal">
-                <i class="bi bi-trash"></i> Eliminar mi cuenta
-              </button>
-            </div>
-
-            <!-- Botones -->
-            <div class="modal-footer d-flex justify-content-center border-top-0 pt-4">
-              <button type="button" class="btn px-4" data-bs-dismiss="modal">Cerrar</button>
-              <button type="submit" class="btn px-4" th:text="#{settings.save}">Guardar cambios</button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- MODAL CAMBIAR CONTRASEÑA -->
-  <div class="modal fade" id="changePasswordModal" tabindex="-1" aria-labelledby="changePasswordModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content shadow-sm border-0 rounded-4">
-        <div class="modal-header rounded-top-4">
-          <h5 class="modal-title" id="changePasswordModalLabel">Cambiar Contraseña</h5>
-          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <form th:action="@{/user/change-password}" method="post">
-          <div class="modal-body">
-            <div class="mb-3">
-              <label for="currentPassword" class="form-label">Contraseña actual</label>
-              <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
-            </div>
-            <div class="mb-3">
-              <label for="newPassword" class="form-label">Nueva contraseña</label>
-              <input type="password" class="form-control" id="newPassword" name="newPassword" required>
-            </div>
-            <div class="mb-3">
-              <label for="confirmPassword" class="form-label">Confirmar nueva contraseña</label>
-              <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" required>
-            </div>
-          </div>
-          <div class="modal-footer border-top-0">
-            <button type="button" class="btn" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn">Guardar contraseña</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-  <!-- MODAL DE ELIMINAR CUENTA -->
-  <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="deleteAccountModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content shadow-lg border-0 rounded-4">
-        <div class="modal-header rounded-top-4">
-          <h5 class="modal-title" id="deleteAccountModalLabel">¿Eliminar cuenta?</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-        </div>
-        <div class="modal-body">
-          <p>¿Estás segura/o de que deseas eliminar tu cuenta? Esta acción no se puede deshacer.</p>
-        </div>
-        <div class="modal-footer border-top-0">
-          <form th:action="@{/user/delete}" method="post">
-            <button type="button" class="btn" data-bs-dismiss="modal">Cancelar</button>
-            <button type="submit" class="btn">Sí, eliminar cuenta</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- MODAL -->
   <!-- INICIAR SESIÓN -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog custom-login-size">
@@ -359,21 +235,21 @@
             <div class="mb-3 position-relative small">
               <input type="password" name="password" id="password" class="form-control muted" placeholder="Contraseña" required>
               <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;"></i>
-            </div>                
+            </div>
             <div class="mb-3 d-flex justify-content-between align-items-center">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
                 <label class="form-check-label small" for="remember-me">Recuérdame</label>
               </div>
-              <a href="/forgot-password" class="small">¿Olvidaste la contraseña?</a>
+              <a href="/forgot-password" class="small forgot-password">¿Olvidaste la contraseña?</a>
             </div>
             <div class="sumit mt-2">
               <button type="submit" class="btn btn-sumit">Entrar</button>
             </div>
 
             <p class="text-center mt-4 small">
-              Este sitio está protegido por reCAPTCHA Enterprise y se aplica la 
-              <strong>Política de Privacidad</strong> y los 
+              Este sitio está protegido por reCAPTCHA Enterprise y se aplica la
+              <strong>Política de Privacidad</strong> y los
               <strong>Términos de Servicios de Google</strong>.
             </p>
             <hr class="mt-3">
@@ -394,11 +270,11 @@
       <div class="modal-content">
         <div class="modal-body p-5">
           <div th:if="${msg}" class="alert alert-info" th:text="${msg}"></div>
-      
+
           <div class="text-center mb-4">
             <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
           </div>
-      
+
           <form th:action="@{/saveUser}" method="post">
             <div class="mb-2">
               <input type="text" name="name" class="form-control muted" placeholder="Nombre completo" required>
@@ -445,17 +321,17 @@
             <div class="sumit mb-2 mt-3">
               <button type="submit" class="btn btn-sumit">Continuar</button>
             </div>
-      
+
             <div class="d-grid text-center">
               <div class="text-center my-1">O</div>
-          
+
               <a href="/oauth2/authorization/google" class="btn btn-primary">
                 <i class="bi bi-google mx-2"></i> Ingresar con Google
               </a>
             </div>
-            
+
             <hr class="mt-3">
-      
+
             <div class="text-center mt-3 small">
               <p>¿Ya formas parte de AlertAi?
               <a href="signin" class="ms-2"><strong>Iniciar sesión.</strong></a>

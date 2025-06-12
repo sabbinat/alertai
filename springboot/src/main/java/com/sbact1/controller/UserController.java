@@ -1,7 +1,9 @@
 package com.sbact1.controller;
 
 
+import java.io.UnsupportedEncodingException;
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -10,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +30,17 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import com.sbact1.dto.EventDto;
 import com.sbact1.model.Category;
 import com.sbact1.model.Event;
+import com.sbact1.model.Token;
 import com.sbact1.model.User;
 import com.sbact1.repository.CategoryRepository;
 import com.sbact1.repository.EventRepository;
+import com.sbact1.repository.TokenRepository;
 import com.sbact1.repository.UserRepository;
 import com.sbact1.service.SettingService;
 import com.sbact1.service.UserService;
+import com.sbact1.service.EmailService;
 
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 
 @Controller
@@ -43,8 +50,10 @@ public class UserController {
     @Autowired private UserRepository userRepository;
     @Autowired private CategoryRepository categoryRepository;
     @Autowired private EventRepository eventRepository;
-    @Autowired private UserService userService;
     @Autowired private SettingService settingService;
+    @Autowired private TokenRepository tokenRepository;
+    @Autowired private EmailService emailService;
+    @Autowired private UserService userService;
     
     // Método que se ejecuta antes de cada petición para agregar el usuario logueado al modelo
     @ModelAttribute
@@ -226,6 +235,70 @@ public class UserController {
         return "redirect:/signin";
     }
 
+    @PostMapping("/solicitar-eliminacion")
+    public String solicitarEliminacion(Principal principal, RedirectAttributes redirectAttributes) {
+        Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
+
+        if (optionalUser.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorEliminar", "Usuario no encontrado.");
+            return "redirect:/signin";
+        }
+
+        User user = optionalUser.get();
+        String token = UUID.randomUUID().toString();
+
+        Token deleteToken = new Token();
+        deleteToken.setToken(token);
+        deleteToken.setUser(user);
+        deleteToken.setExpiryDate(LocalDateTime.now().plusHours(1));
+        tokenRepository.save(deleteToken);
+
+        String enlace = "http://localhost:8080/user/confirmar-eliminacion?token=" + token;
+
+        try {
+            emailService.enviarCorreo(user.getEmail(), "Confirmación para eliminar tu cuenta",
+                "Haz clic en el siguiente enlace para confirmar la eliminación de tu cuenta: <br><a href='" + enlace + "'>Eliminar cuenta</a>");
+            redirectAttributes.addFlashAttribute("successEliminar", "Se envió un enlace de confirmación a tu correo.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorEliminar", "Error al enviar correo de confirmación.");
+        }
+
+        return "redirect:/user/profile";
+    }
+
+    @GetMapping("/confirmar-eliminacion")
+    public String confirmarEliminacion(@RequestParam("token") String token, RedirectAttributes redirectAttributes) {
+        Optional<Token> optionalToken = tokenRepository.findByToken(token);
+
+        if (optionalToken.isEmpty() || optionalToken.get().getExpiryDate().isBefore(LocalDateTime.now())) {
+            redirectAttributes.addFlashAttribute("errorEliminar", "Token inválido o expirado.");
+            return "redirect:/signin";
+        }
+
+        User user = optionalToken.get().getUser();
+        tokenRepository.delete(optionalToken.get());
+
+        userService.eliminarUsuario(user.getId());
+        redirectAttributes.addFlashAttribute("sucessoEliminar", "Tu cuenta ha sido eliminada exitosamente.");
+
+        return "redirect:/signin";
+    }
+
+    @PostMapping("/enviarConsulta")
+    public String enviarConsulta(
+            @RequestParam String name,
+            @RequestParam String email,
+            @RequestParam String asunto,
+            @RequestParam String message,
+            Model model) {
+        try {
+            emailService.enviarDudaUsuario(name, email, asunto, message);
+            model.addAttribute("exito", "Tu mensaje fue enviado con éxito.");
+        } catch (MessagingException | UnsupportedEncodingException e) {
+            model.addAttribute("error", "Hubo un problema al enviar el mensaje.");
+        }
+        return "/general/contact"; 
+    }
 
 
     @PostMapping("/change-password")

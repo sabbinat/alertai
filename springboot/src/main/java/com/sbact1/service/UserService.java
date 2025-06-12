@@ -34,10 +34,13 @@ public class UserService {
 
 	// Método para guardar un nuevo usuario en la base de datos
 	public User saveUser(User user) {
+		 if (userRepository.existsByEmail(user.getEmail())) {
+			throw new IllegalStateException("Email ya en uso");
+		}
 		// Codifica la contraseña antes de guardarla
 		String password=passwordEncoder.encode(user.getPassword());
 		user.setPassword(password);
-		user.setRole("ROLE_USER"); // asigna el rol por defecto
+		user.setRole("ROLE_USER"); 
 		User newuser = userRepository.save(user);
 		
 		return newuser;
@@ -110,7 +113,4 @@ public class UserService {
 		}
 		return false;
 	}
-
-
-
 }

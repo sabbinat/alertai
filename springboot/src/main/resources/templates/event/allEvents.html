@@ -40,18 +40,7 @@
       <!-- MENÚ -->
       <div class="nav-left">
         <a th:href="@{/user/home}" th:text="#{profile.home}">Inicio</a>
-        <a th:text="#{profile.category}">Categorías</a>
-        <div class="dropdown">
-          <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="fas fa-chevron-down"></i>
-          </button>
-          <ul class="dropdown-menu dropdown-menu-end custom-dropdown">
-            <li th:each="category : ${categories}">
-              <a class="dropdown-item" th:href="@{'/category/' + ${category.id} + '/events'}" th:text="${category.name}"></a>
-            </li>
-          </ul>
-        </div>
-        <a th:href="@{/event/allEvents}">Eventos</a>
+        <a th:href="@{/event/allEvents}" class="active">Eventos</a>
         <a href="/contact" th:text="#{profile.contact}">Contacto</a>
         <a href="/help" th:text="#{profile.help}">Ayuda</a>
       </div>
@@ -128,19 +117,39 @@
 
   <!-- EVENTOS -->
   <div class="content-events">
-    <!-- FILTRO POR CATEGORÍA -->
+    <!-- FILTRO POR CATEGORÍA Y MES-->
     <div class="filter-container mb-3 d-flex justify-content-between">
-      <div class="category-links d-flex flex-wrap align-items-center">
+      <div class="d-flex ">
         <p class="filter-label me-3 mb-0"><i class="bi bi-funnel me-2"></i><span>Filtros</span></p>
-        <a th:href="@{/event/allEvents(name=${name})}" class="me-2" th:classappend="${categoriaId} == null ? 'active' : ''">
-          Todo
-        </a>
-        <th:block th:each="cat : ${categories}">
-          <a th:href="@{/event/allEvents(categoriaId=${cat.id})}" class="me-2" th:classappend="${categoriaId} == ${cat.id} ? 'active' : ''"
-            th:text="${cat.name}">
-          </a>
-        </th:block>
+
+        <form method="get" th:action="@{/event/allEvents}" class="d-flex align-items-center">
+          <!-- Filtro por nombre -->
+          <input type="hidden" name="name" th:value="${name}">
+
+          <!-- Filtro por categoría -->
+          <label for="categoriaId" class="me-2">Categoría:</label>
+          <select class="form-select me-3" name="categoriaId" id="categoriaId" onchange="this.form.submit()">
+            <option th:value="''" th:selected="${categoriaId == null}" hidden>Todas</option>
+            <option th:each="cat : ${categories}"
+                    th:value="${cat.id}"
+                    th:text="${cat.name}"
+                    th:selected="${categoriaId == cat.id}">
+            </option>
+          </select>
+
+          <!-- Filtro por mes -->
+          <label for="mes" class="me-2">Mes:</label>
+          <select class="form-select me-3" name="mes" id="mes" onchange="this.form.submit()">
+            <option th:value="''" th:selected="${mes == null}" hidden>Todos</option>
+            <option th:each="i : ${#numbers.sequence(1,12)}"
+                    th:value="${i}"
+                    th:text="${#strings.capitalize(#dates.format(#dates.create(0,i,1), 'MMMM'))}"
+                    th:selected="${mes == i}">
+            </option>
+          </select>
+        </form>
       </div>
+
 
       <!-- BOTÓN DE CREAR EVENTO -->
       <div class="d-flex align-items-center">
@@ -163,7 +172,10 @@
         <a th:href="@{/event/{id}(id=${event.id})}">
           <div class="all-event-card">
             <img th:src="${event.image != null} ? '/uploads/events/' + ${event.image} : '/img/default-event.jpeg'" alt="Foto evento" class="img-fluid" />
-            <p th:text="${event.category.name}" class="muted"></p>
+            <div class="d-flex justify-content-between align-items-center">
+              <p th:text="${event.category.name}" class="muted"></p> 
+              <p th:text="${event.timeAgo}" class="muted">hace 2 horas</span>
+            </div>
             <h5 th:text="${event.name}" class="event-name mt-2"></h5>
           </div>
         </a>
@@ -225,16 +237,8 @@
                 Has cerrado sesión exitosamente.
             </div>
 
-            <h4 class="fw-bold">Iniciar sesión</h4>
+            <h4 class="fw-bold mb-5">Iniciar sesión</h4>
           </div>
-
-          <div class="d-grid text-center mt-4">
-            <a href="/oauth2/authorization/google" class="btn btn-primary">
-              <i class="bi bi-google mx-2"></i> Ingresar con Google
-            </a>
-          </div>
-
-          <div class="text-center my-3 muted">O</div>
 
           <form th:action="@{/userLogin}" method="post">
             <div class="mb-3">
@@ -249,7 +253,7 @@
                 <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
                 <label class="form-check-label small" for="remember-me">Recuérdame</label>
               </div>
-              <a href="/forgot-password" class="small">¿Olvidaste la contraseña?</a>
+              <a href="/forgot-password" class="small forgot-password">¿Olvidaste la contraseña?</a>
             </div>
             <div class="sumit mt-2">
               <button type="submit" class="btn btn-sumit">Entrar</button>
@@ -281,9 +285,10 @@
       
           <div class="text-center mb-4">
             <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
+            <p class="muted mb-3">Crea tu cuenta</p>
           </div>
       
-          <form th:action="@{/saveUser}" method="post">
+          <form th:action="@{/register}" method="post">
             <div class="mb-2">
               <input type="text" name="name" class="form-control muted" placeholder="Nombre completo" required>
             </div>
@@ -294,8 +299,13 @@
               <input type="email" name="email" class="form-control muted" placeholder="Correo electrónico" required>
             </div>
             <div class="mb-2">
-              <input type="text" name="country" class="form-control muted" placeholder="País" required>
+              <select name="country" class="form-select muted" required>
+                <option value="" hidden>País</option>
+                <option value="Uruguay">Uruguay</option>
+                <option value="Brasil">Brasil</option>
+              </select>
             </div>
+
             <div class="position-relative">
               <input type="password" name="password" id="password" class="form-control pe-5 muted"
                 placeholder="Contraseña"
@@ -306,15 +316,8 @@
 
               <!-- Ícono para mostrar/ocultar contraseña -->
               <i id="togglePassword"
-                class="bi bi-eye-slash position-absolute top-50 translate-middle-y"
-                style="right: 2.5rem; cursor: pointer;"></i>
-
-              <!-- Ícono de información -->
-              <i class="bi bi-info-circle-fill position-absolute top-50 end-0 translate-middle-y me-2 text-secondary"
-                data-bs-toggle="tooltip"
-                data-bs-placement="left"
-                title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
-                style="cursor: pointer;"></i>
+                class="bi bi-eye-slash position-absolute top-50 translate-middle-y text-secondary"
+                style="right: 1rem; cursor: pointer;"></i>
             </div>
 
             <!-- TÉRMINOS DE USO -->
@@ -328,14 +331,6 @@
             <!-- BOTÓN SUMIT -->
             <div class="sumit mb-2 mt-3">
               <button type="submit" class="btn btn-sumit">Continuar</button>
-            </div>
-      
-            <div class="d-grid text-center">
-              <div class="text-center my-1">O</div>
-          
-              <a href="/oauth2/authorization/google" class="btn btn-primary">
-                <i class="bi bi-google mx-2"></i> Ingresar con Google
-              </a>
             </div>
             
             <hr class="mt-3">

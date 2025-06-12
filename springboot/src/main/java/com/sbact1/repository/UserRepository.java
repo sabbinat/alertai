@@ -14,13 +14,13 @@ import org.springframework.data.domain.Pageable;
 public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByEmail(String email);
 	long count();
-    public List<User> findByNotificacionesContaining(Category category);
-    public Optional<User> findByNameIgnoreCase(String query);
-    public List<User> findByNameContainingIgnoreCase(String query);
-    public List<User> findTop5ByOrderByRegistrationTimeDesc();
-    public List<User> findByRole(String rolFiltro);
-
+    List<User> findByNotificacionesContaining(Category category);
+    Optional<User> findByNameIgnoreCase(String query);
+    List<User> findByNameContainingIgnoreCase(String query);
+    List<User> findTop5ByOrderByRegistrationTimeDesc();
+    List<User> findByRole(String rolFiltro);
     Page<User> findByRole(String role, Pageable pageable);
-    public boolean existsByEmail(String email);
+    boolean existsByEmail(String email);
+    boolean existsByUsername(String candidate);
 
 }

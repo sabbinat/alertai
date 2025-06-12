@@ -19,7 +19,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -127,12 +126,11 @@ public class EventService {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Evento no encontrado"));
 
-        Optional<User> optionalUser = userRepository.findByEmail(username);
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        boolean isOwner = event.getUser().getEmail().equals(username);
-        boolean isAdmin = optionalUser
-                .map(user -> "ROLE_ADMIN".equals(user.getRole()))
-                .orElse(false);
+        boolean isOwner = event.getUser() != null && event.getUser().getEmail().equals(username);
+        boolean isAdmin = user.getRole() != null && user.getRole().contains("ROLE_ADMIN");
 
         if (isOwner || isAdmin) {
             eventRepository.deleteById(id);
@@ -141,11 +139,6 @@ public class EventService {
         }
     }
 
-    //Devuelve una lista con todos los eventos.
-    public List<Event> getAllEvents() {
-        return eventRepository.findAll();
-    }
-    
     //Busca un evento por su ID.
     public Event getEventById(Long id) {
         return eventRepository.findById(id)

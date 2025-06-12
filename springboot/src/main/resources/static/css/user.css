@@ -383,6 +383,7 @@ color: #333;
   padding: 0.75rem;
   border-radius: 10px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  resize: none;
 }
 .contact-form form button{
   background-color: var(--verde-medio);
@@ -420,7 +421,7 @@ color: #333;
   text-align: center;
   border-radius: 10px;
   color: var(--verde-oscuro-boton);
-   display: flex;
+  display: flex;
   justify-content: center;
   align-items: center;
 }  
@@ -431,7 +432,7 @@ color: #333;
   text-align: center;
   border-radius: 10px;
   color: var(--verde-oscuro-boton);
-   display: flex;
+  display: flex;
   justify-content: center;
   align-items: center;
 }

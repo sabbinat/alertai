@@ -168,7 +168,7 @@ public class AdminController {
 
 	//Método para eliminar usuario
 	@GetMapping("/eliminar/{id}")
-	public String eliminarUsuario(@PathVariable Integer id, RedirectAttributes msg){
+	public String eliminarUsuario(@PathVariable Integer id, RedirectAttributes msg){ 
 	    Optional<User> categoria = userRepository.findById(id); 
 	    if(categoria.isEmpty()) {
 	        msg.addFlashAttribute("errorEliminar", "Ususario no encontrado");
@@ -179,7 +179,7 @@ public class AdminController {
 	    return "redirect:/admin/users";
 	}
 
-	@PostMapping("/user/cambiar-rol")
+	@PostMapping("/cambiar-rol")
 	public String cambiarRol(@RequestParam Integer userId, @RequestParam String newRole) {
 		Optional<User> userOptional = userRepository.findById(userId);
 		if (userOptional.isPresent()) {
@@ -187,7 +187,7 @@ public class AdminController {
 			user.setRole(newRole); 
 			userRepository.save(user);
 		}
-		return "redirect:/admin/admin_listUser"; 
+		return "redirect:/admin/users"; 
 	}
 
 	@GetMapping("/reports")
@@ -271,8 +271,16 @@ public class AdminController {
 	@GetMapping("/allCategories")
 	public String listCategories(Model model, Principal principal) {
 		List<Category> categories = categoryRepository.findAll();
-		model.addAttribute("categories", categories);
+		// Obtener la cantidad de eventos para cada categoría
+		Map<Long, Long> eventCountByCategory = new HashMap<>();
 
+		for (Category category : categories) {
+			long count = eventRepository.countByCategoryId(category.getId());
+			eventCountByCategory.put(category.getId(), count);
+		}
+
+		model.addAttribute("categories", categories);
+		model.addAttribute("eventCountByCategory", eventCountByCategory);
 		return "admin/admin_allCategories";
 	}
 

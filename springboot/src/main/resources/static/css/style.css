@@ -224,9 +224,13 @@ html, body {
 
 /* SECCIÓN - PROGRAMACI[ON DEL MES  */
 
-.monthly-program-section {
+.theme-dark .monthly-program-section {
   padding: 4rem;
   background-image: linear-gradient(to bottom, var(--verde-medio), var(--body-night) 30%);
+}
+.theme-light .monthly-program-section {
+  padding: 4rem;
+  background-image: linear-gradient(to bottom, var(--verde-medio), var(--body-light) 30%);
 }
 .monthly-program-section h3 {
   font-weight: 900;

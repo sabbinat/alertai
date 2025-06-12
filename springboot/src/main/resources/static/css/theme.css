@@ -49,7 +49,6 @@ a{
 }
 .text-truncate-multiline:hover {
   overflow: visible;
-  background-color: #f8f9fa;
   color: #000;
   z-index: 10;
   position: relative;
@@ -156,6 +155,17 @@ body.theme-dark {
 }
 .theme-dark .btn-close {
   filter: invert(100%); 
+}
+
+.theme-dark .btn-primary,
+.theme-dark .btn-secondary{
+  background-color: var(--third-night);
+  color: var(--blanco);
+}
+.theme-dark .btn-primary:hover,
+.theme-dark .btn-secondary:hover{
+  background-color: red;
+  color: var(--negro);
 }
 
 /* FORM-CONTROL */

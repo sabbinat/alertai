@@ -1,13 +1,10 @@
 package com.sbact1.controller;
 
-import java.security.Principal;
-import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -19,7 +16,6 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.sbact1.dto.CategoryDto;  
 import com.sbact1.model.Category;
-import com.sbact1.model.User;
 import com.sbact1.repository.CategoryRepository;
 import com.sbact1.repository.EventRepository;
 import com.sbact1.repository.UserRepository;
@@ -47,28 +43,6 @@ public class CategoryController {
         categoryRepository.save(category);
 
         return "redirect:/admin/allCategories";
-    }
-
-    // Muestra todos los eventos que pertenecen a una categoría específica
-    @GetMapping("/{id}/events")
-    public String eventsByCategory(@PathVariable Long id, Model model, Principal principal) {
-        List<Category> categories = categoryRepository.findAll();
-
-        var category = categoryRepository.findById(id);
-        if (category.isEmpty()) return "redirect:/category/list";
-
-        // Agrega los datos necesarios al modelo para la vista
-        model.addAttribute("categories", categories);
-        model.addAttribute("category", category.get());
-        model.addAttribute("events", eventRepository.findByCategoryId(id));
-
-        // Obtener el usuario 
-        if (principal != null) {
-            Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
-            optionalUser.ifPresent(user -> model.addAttribute("user", user));
-        }
-
-        return "category/events_by_category"; 
     }
 
     // Muestra el formulario de edición para una categoría existente

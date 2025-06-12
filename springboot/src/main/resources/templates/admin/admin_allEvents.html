@@ -141,27 +141,33 @@
       <div class="custom-table">
         <div class="table-row table-header">
           <div class="table-cell col-id">ID</div>
+          <div class="table-cell col-img">Imagen</div>
           <div class="table-cell">Título</div>
           <div class="table-cell">Autor</div>
           <div class="table-cell">Categoría</div>
           <div class="table-cell">Descripción</div>
-          <div class="table-cell">Inicio</div>
-          <div class="table-cell">Fin</div>
-          <div class="table-cell">Hora</div>
+          <div class="table-cell col-date">Inicio</div>
+          <div class="table-cell col-date">Fin</div>
+          <div class="table-cell col-date">Hora</div>
+          <div class="table-cell col-address">Ubicación</div>
+          <div class="table-cell col-date">Publicado</div>
           <div class="table-cell">Acciones</div>             
         </div>
         <div class="table-row" th:each="event : ${eventos}">
           <div class="table-cell col-id" th:text="${event.id}"></div>
+          <div class="table-cell col-img"><img th:src="@{/uploads/events/{img}(img=${event.image})}" alt="" style="width: 50px; height: 50px; border-radius: 5px;"></div>
           <div class="table-cell" th:text="${event.name}"  th:attr="title=${event.name}" data-bs-toggle="tooltip"></div>
           <div class="table-cell" th:text="${event.user.name}"  th:attr="title=${event.user.name}" data-bs-toggle="tooltip"></div>
           <div class="table-cell" th:text="${event.category.name}"></div>
           <div class="table-cell" th:text="${#strings.abbreviate(event.description, 40)}" th:attr="title=${event.description}" data-bs-toggle="tooltip">
           </div>
-          <div class="table-cell" th:text="${event.startDate}"></div>
-          <div class="table-cell" th:text="${event.endDate}"></div>
-          <div class="table-cell" th:text="${event.time}"></div>
+          <div class="table-cell col-date" th:text="${event.startDate}"></div>
+          <div class="table-cell col-date" th:text="${event.endDate}"></div>
+          <div class="table-cell col-date" th:text="${event.time}"></div>
+          <div class="table cell col-address" th:text="${event.location.address}" th:attr="title=${event.location.address}" data-bs-toggle="tooltip"></div>
+          <div class="table-cell col-date" th:text="${event.timeAgo}"></div>
           <div class="table-cell">
-            <div class="btn-actions d-flex">
+            <div class="btn-actions d-flex justify-content-center align-items-center">
               <form th:action="@{/event/delete/{id}(id=${event.id})}" method="post" th:id="'deleteForm_' + ${event.id}">
                 <button type="submit" class="btn " 
                         onclick="return confirm('¿Seguro que deseas eliminar este evento?')">

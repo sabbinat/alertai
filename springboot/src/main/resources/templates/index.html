@@ -51,6 +51,7 @@
     </div>    
   </div>
 
+  <!-- CONTENIDO DE INDEX -->
   <div class="scroll-container">
     <!--BANNER PRINCIPAL-->
     <section class="snap-section fade-section d-flex justify-content-center">
@@ -192,7 +193,10 @@
                       <a th:href="@{/event/{id}(id=${event.id})}" class="event-link text-decoration-none">
                         <div class="event-card">
                           <img th:src="${event.image != null} ? '/uploads/events/' + ${event.image} : '/img/default-event.jpeg'" alt="Foto evento" class="img-fluid" />
-                          <p class="muted" th:text="${event.user.name}"></p>
+                          <div class="d-flex justify-content-between align-items-center">
+                            <p th:text="${event.user.name}" class="muted"></p> 
+                            <p th:text="${event.timeAgo}" class="muted">hace 2 horas</span>
+                          </div>
                           <h5 th:text="${event.name}" class="event-name mt-2"></h5>
                         </div>
                       </a>
@@ -259,23 +263,15 @@
                 Has cerrado sesión exitosamente.
             </div>
 
-            <h4 class="fw-bold">Iniciar sesión</h4>
+            <h4 class="fw-bold mb-5">Iniciar sesión</h4>
           </div>
-
-          <div class="d-grid text-center mt-4">
-            <a href="/oauth2/authorization/google" class="btn btn-primary">
-              <i class="bi bi-google mx-2"></i> Ingresar con Google
-            </a>
-          </div>
-
-          <div class="text-center my-3 muted">O</div>
 
           <form th:action="@{/userLogin}" method="post">
             <div class="mb-3">
-                <input type="email" name="username" class="form-control" placeholder="Correo electrónico" required>
+                <input type="email" name="username" class="form-control muted" placeholder="Correo electrónico" required>
             </div>
             <div class="mb-3 position-relative small">
-              <input type="password" name="password" id="password" class="form-control small" placeholder="Contraseña" required>
+              <input type="password" name="password" id="password" class="form-control muted" placeholder="Contraseña" required>
               <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 end-0 translate-middle-y me-3" style="cursor: pointer;"></i>
             </div>                
             <div class="mb-3 d-flex justify-content-between align-items-center">
@@ -283,7 +279,7 @@
                 <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
                 <label class="form-check-label small" for="remember-me">Recuérdame</label>
               </div>
-              <a href="/forgot-password" class="small">¿Olvidaste la contraseña?</a>
+              <a href="/forgot-password" class="small forgot-password">¿Olvidaste la contraseña?</a>
             </div>
             <div class="sumit mt-2">
               <button type="submit" class="btn btn-sumit">Entrar</button>
@@ -315,9 +311,10 @@
       
           <div class="text-center mb-4">
             <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
+            <p class="muted mb-3">Crea tu cuenta</p>
           </div>
       
-          <form th:action="@{/saveUser}" method="post">
+          <form th:action="@{/register}" method="post">
             <div class="mb-2">
               <input type="text" name="name" class="form-control muted" placeholder="Nombre completo" required>
             </div>
@@ -328,8 +325,13 @@
               <input type="email" name="email" class="form-control muted" placeholder="Correo electrónico" required>
             </div>
             <div class="mb-2">
-              <input type="text" name="country" class="form-control muted" placeholder="País" required>
+              <select name="country" class="form-select muted" required>
+                <option value="" hidden>País</option>
+                <option value="Uruguay">Uruguay</option>
+                <option value="Brasil">Brasil</option>
+              </select>
             </div>
+
             <div class="position-relative">
               <input type="password" name="password" id="password" class="form-control pe-5 muted"
                 placeholder="Contraseña"
@@ -340,15 +342,8 @@
 
               <!-- Ícono para mostrar/ocultar contraseña -->
               <i id="togglePassword"
-                class="bi bi-eye-slash position-absolute top-50 translate-middle-y"
-                style="right: 2.5rem; cursor: pointer;"></i>
-
-              <!-- Ícono de información -->
-              <i class="bi bi-info-circle-fill position-absolute top-50 end-0 translate-middle-y me-2 text-secondary"
-                data-bs-toggle="tooltip"
-                data-bs-placement="left"
-                title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
-                style="cursor: pointer;"></i>
+                class="bi bi-eye-slash position-absolute top-50 translate-middle-y text-secondary"
+                style="right: 1rem; cursor: pointer;"></i>
             </div>
 
             <!-- TÉRMINOS DE USO -->
@@ -362,14 +357,6 @@
             <!-- BOTÓN SUMIT -->
             <div class="sumit mb-2 mt-3">
               <button type="submit" class="btn btn-sumit">Continuar</button>
-            </div>
-      
-            <div class="d-grid text-center">
-              <div class="text-center my-1">O</div>
-          
-              <a href="/oauth2/authorization/google" class="btn btn-primary">
-                <i class="bi bi-google mx-2"></i> Ingresar con Google
-              </a>
             </div>
             
             <hr class="mt-3">

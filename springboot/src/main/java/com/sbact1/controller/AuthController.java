@@ -22,17 +22,18 @@ import com.sbact1.repository.UserRepository;
 import com.sbact1.repository.TokenRepository;
 import com.sbact1.service.EmailService;
 import com.sbact1.service.UserService;
+
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 
 @Controller
-public class HomeController {
+public class AuthController {
     
-    @Autowired private UserService userService;
     @Autowired private UserRepository userRepository;
     @Autowired private EmailService emailService;
     @Autowired private BCryptPasswordEncoder passwordEncoder;
     @Autowired private TokenRepository tokenRepository;
+    @Autowired private UserService userService;
 
     @ModelAttribute
     public void commonUser(Principal p, Model m) {
@@ -55,59 +56,43 @@ public class HomeController {
     }
     
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute @Valid User user, BindingResult result) {
-        if (result.hasErrors()) {
-            return "auth/register";
-        }
+    public String registerUser(@ModelAttribute @Valid User user, BindingResult result, HttpSession session) {
 
-        // Verificar si el correo ya está en uso (opcional pero recomendado)
+        // Verificar si el correo ya está en uso (esto debe ir primero)
         if (userRepository.existsByEmail(user.getEmail())) {
             result.rejectValue("email", "", "Ya existe una cuenta con este correo");
             return "auth/register";
         }
 
-        // Encriptar la contraseña
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        userRepository.save(user);
-        return "auth/successful_registration";
-    }
-
-    // Método para manejar el inicio de sesión
-    @GetMapping("/signin")
-    public String login() {
-        return "auth/login";
-    }
-
-    // Método para guardar el usuario
-    @PostMapping("/saveUser")
-    public String saveUser(@ModelAttribute User user, HttpSession session, Model m) {
-        User u = userService.saveUser(user);
-
-        if (u != null) {
-            session.setAttribute("msg", "Registrado con éxito");
-        } else {
-            session.setAttribute("msg", "Algo salió mal");
+        // Validación de errores
+        if (result.hasErrors()) {
+            return "auth/register";
         }
 
+        // Guardar usuario
+        User savedUser = userService.saveUser(user); // Aquí ya se codifica la contraseña y se asigna el rol
+
+        // Generar token de verificación
         String token = UUID.randomUUID().toString();
+        Token verificationToken = new Token();
+        verificationToken.setToken(token);
+        verificationToken.setUser(user);
+        verificationToken.setExpiryDate(LocalDateTime.now().plusHours(24));
+        verificationToken.setPurpose("verify");
+        tokenRepository.save(verificationToken);
 
-        Token vt = new Token();
-        vt.setToken(token);
-        vt.setUser(user);
-        vt.setExpiryDate(LocalDateTime.now().plusHours(24));
-        tokenRepository.save(vt);
-
+        // Enviar correo con el enlace de verificación
         String link = "http://localhost:8080/confirmar?token=" + token;
         try {
-            emailService.enviarCorreo(user.getEmail(), "Verifica tu cuenta", 
+            emailService.enviarCorreo(savedUser.getEmail(), "Verifica tu cuenta", 
                 "Haz clic aquí para verificar tu cuenta: <a href='" + link + "'>Verificar</a>");
         } catch (Exception e) {
             session.setAttribute("msg", "Hubo un problema al enviar el correo de verificación.");
-            return "auth/register"; 
+            return "auth/register";
         }
 
-        return "redirect:/user/user_home";
+        session.setAttribute("msg", "Registrado con éxito. Revisa tu correo para verificar la cuenta.");
+        return "auth/successful_registration";
     }
 
     // Método para manejar la verificación de la cuenta
@@ -115,8 +100,10 @@ public class HomeController {
     public String confirmarCuenta(@RequestParam("token") String token) {
         Optional<Token> tk = tokenRepository.findByToken(token);
 
-        // Validar si el token está presente y no expiró
-        if (tk.isEmpty() || tk.get().getExpiryDate().isBefore(LocalDateTime.now())) {
+        if (tk.isEmpty() || 
+            tk.get().getExpiryDate().isBefore(LocalDateTime.now()) ||
+            !"verify".equals(tk.get().getPurpose())) {
+
             return "auth/token_invalido";
         }
 
@@ -126,6 +113,11 @@ public class HomeController {
         tokenRepository.delete(tk.get());
 
         return "auth/verificado_exitoso";
+    }
+
+    @GetMapping("/signin")
+    public String login() {
+        return "auth/login";
     }
 
     // Método para manejar la página de ayuda

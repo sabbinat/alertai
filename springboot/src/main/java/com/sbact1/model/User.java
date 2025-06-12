@@ -23,6 +23,9 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Setter
 @Getter
@@ -32,16 +35,15 @@ public class User {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private int id;
 
-	@Column(nullable = false)
+	@Column(nullable = false) //campo obligatorio
 	private boolean enabled = false;
 
-
-	@NotBlank
+	@NotBlank //no debe ser nulo ni vacio 
 	private String name;
 
 	@NotBlank
-	@Email
-	@Column(unique = true)
+	@Email//formato de correo
+	@Column(unique = true)//no se permite duplicar 
 	private String email;
 
 
@@ -50,15 +52,16 @@ public class User {
         regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*]).{8,}$",
         message = "La contraseña debe contener una mayúscula, una minúscula, un número y un símbolo especial"
     )
-	@NotBlank
-	private String password;
+	
+	private String password; //contraseña con validacion de seguridad 
 
 	@Column(nullable = true)
 	private String phone;  
 
 	private String country;
 	private String document;
-	private String role;
+
+	private String role; //rol del user
 
 	@Column(nullable = true)
 	private String image;  
@@ -66,13 +69,13 @@ public class User {
 	private String description;
 
 	@Column(nullable = true, updatable = false)
-	private LocalDateTime registrationTime;  
+	private LocalDateTime registrationTime;  //fecha de registro no editable 	
 
 	@NotBlank
 	@Column(unique = true, nullable = false)
 	private String username;
 
-	@ManyToMany
+	@ManyToMany // Relación muchos a muchos con notificación de categorias 
     @JoinTable(
         name = "user_category",
         joinColumns = @JoinColumn(name = "user_id"),
@@ -80,15 +83,21 @@ public class User {
     )
     private List<Category> notificaciones;
 
+	// Comentarios que ha hecho el usuario
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<Comment> comments;
 
+	// Tokens asosiados 
+	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+	@OnDelete(action = OnDeleteAction.CASCADE)
+	private List<Token> tokens;
+
 	@PrePersist
 	public void prePersist() {
-		this.registrationTime = LocalDateTime.now();  
+		this.registrationTime = LocalDateTime.now();   // Asigna fecha actual al momento de guardar
 	}
 
-	@Transient
+	@Transient // no se guarda en BD
 	public String getTimeAgo() {
 		if (registrationTime == null) return "";
 
@@ -116,6 +125,6 @@ public class User {
 
 	@Override
 	public String toString() {
-		return "User [id=" + id + ", name=" + name + ", password=" + password + ", registrationTime=" + registrationTime + "]";
+		return "User [id=" + id + ", email=" + email + ", registrationTime=" + registrationTime + "]";
 	}
 }

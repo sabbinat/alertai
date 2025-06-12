@@ -119,12 +119,14 @@
         <div class="custom-table">
           <div class="table-row table-header">
             <div class="table-cell col-id">ID</div>
-            <div class="table-cell col-name">Categoría</div>
+            <div class="table-cell text-center">Categoría</div>
+            <div class="table-cell text-center">Eventos</div>
             <div class="table-cell">Acciones</div>              
           </div>
           <div class="table-row" th:each="category : ${categories}">
             <div class="table-cell col-id" th:text="${category.id}"></div>
-            <div class="table-cell col-name" th:text="${category.name}"></div>
+            <div class="table-cell text-center" th:text="${category.name}"></div>
+            <div class="table-cell text-center" th:text="${eventCountByCategory[category.id]}"></div>
             <div class="table-cell">
               <div class="btn-actions d-flex align-items-center">
                 <a data-bs-toggle="modal" th:data-bs-target="'#editModal__' + ${category.id}">
@@ -140,6 +142,8 @@
           </div>
         </div>
       </div>
+
+      
     </div>
   </div>
 
