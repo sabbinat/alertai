@@ -16,20 +16,20 @@ Su enfoque principal es fomentar la participación ciudadana y mejorar la comuni
 
 ## 🚀 Funcionalidades principales
 
-### 🧑‍💼 Para los usuarios:
+### Para los usuarios:
 - Registro y autenticación de cuentas.
 - Creación, edición y eliminación de eventos.
 - Visualización de eventos creados.
 - Gestión del perfil de usuario (actualización de datos personales).
 - Reporte/denuncia de eventos inapropiados.
 
-### 🛠️ Para el administrador:
+### Para el administrador:
 - Dashboard de administración.
 - Gestión de categorías de eventos.
 - Visualización y control de denuncias realizadas por los usuarios.
 - Gestión general de usuarios y eventos.
 
-## 🛠️ Tecnologías utilizadas
+## Tecnologías utilizadas
 
 - Java 21+
 - Spring Boot
@@ -42,7 +42,7 @@ Su enfoque principal es fomentar la participación ciudadana y mejorar la comuni
 - OpenStreetMap – para visualización interactiva de la ubicación de los eventos en el mapa.
 - Leaflet.js – biblioteca JavaScript para mostrar mapas interactivos con OpenStreetMap.
 
-## 🔐 Configuración de Credenciales
+## Configuración de Credenciales
 
 Para que el proyecto funcione correctamente, necesitas un archivo de configuración con las credenciales necesarias:
 
@@ -56,19 +56,18 @@ Para que el proyecto funcione correctamente, necesitas un archivo de configuraci
 🔗 **Guía para generar una contraseña de aplicación en Gmail**:  
 https://myaccount.google.com/apppasswords
 
-## ▶️ Ejecución Local
+## Ejecución Local
 
 1. Asegúrate de tener Java 21 y MySQL instalados.
 2. Clona el proyecto:
    ```bash
    git clone https://github.com/sabbinat/alertai.git
 3. Configura el archivo application-secret.properties como se explicó.
-   Ejecuta el proyecto desde tu IDE o con:
+4. Ejecuta el proyecto desde tu IDE o con:
    ```bash
    mvn spring-boot:run
-4. Accede a la aplicación en: http://localhost:8080
+5. Accede a la aplicación en: http://localhost:8080
 
-📝 Licencia
-Este proyecto se distribuye bajo la licencia MIT. Puedes usarlo libremente siempre que mantengas la atribución a sus autores.
+
 
 
