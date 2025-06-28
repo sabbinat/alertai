@@ -14,7 +14,7 @@ Su enfoque principal es fomentar la participación ciudadana y mejorar la comuni
 - Nicolás Lara - (@niikila)
 - Paula Suarez - (@TainaSuarez)
 
-## 🚀 Funcionalidades principales
+## Funcionalidades principales
 
 ### Para los usuarios:
 - Registro y autenticación de cuentas.
