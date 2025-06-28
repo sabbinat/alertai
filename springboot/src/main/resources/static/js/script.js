@@ -321,3 +321,55 @@ if (closeSidebarBtn) {
     document.getElementById('sidebarNoticias').classList.remove('open');
   });
 }
+
+// --------------------------------------
+// SE ABRE UN CAMPO PARA AGREGAR OTRA CATEGORÍA
+// --------------------------------------  
+document.addEventListener('DOMContentLoaded', function() {
+    const categorySelect = document.getElementById('categoryId');
+    const customCategoryDiv = document.getElementById('customCategoryDiv');
+    const customCategoryInput = document.getElementById('customCategory');
+
+    categorySelect.addEventListener('change', function() {
+      if (this.value === '9') {  // id "Otro"
+        customCategoryDiv.style.display = 'block';
+        customCategoryInput.required = true;
+      } else {
+        customCategoryDiv.style.display = 'none';
+        customCategoryInput.required = false;
+        customCategoryInput.value = '';
+      }
+    });
+  });
+
+
+// --------------------------------------
+// PANEL DE NOTIFICACIONES 
+// --------------------------------------  
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleBtn = document.getElementById("toggleNotifications");
+  const panel = document.getElementById("notificationPanel");
+
+  toggleBtn.addEventListener("click", () => {
+    const isVisible = panel.classList.contains("show");
+    
+    if (isVisible) {
+      panel.classList.remove("show");
+    } else {
+      panel.classList.add("show");
+
+      // Ocultar badge
+      const badge = toggleBtn.querySelector(".badge");
+      if (badge) badge.style.display = "none";
+
+      // Marcar como leídas en el backend
+      fetch("/user/notificaciones/vistas", {
+        method: "POST",
+        headers: {
+          "X-Requested-With": "XMLHttpRequest",
+          "Content-Type": "application/json"
+        }
+      });
+    }
+  });
+});

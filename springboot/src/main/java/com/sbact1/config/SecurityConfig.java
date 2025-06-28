@@ -10,37 +10,51 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
+import com.sbact1.component.CustomAuthSucessHandler;
+import com.sbact1.component.CustomUserDetailsService;
 import com.sbact1.repository.UserRepository;
 
 /**
- * Clase de configuración de seguridad de Spring Security.
- */
+* Configuración de seguridad para la aplicación.
+* 
+* Esta clase define la configuración de seguridad utilizando Spring Security,
+* incluyendo la gestión de autenticación, autorización, codificación de contraseñas,
+* y el manejo de inicio/cierre de sesión personalizado.
+*
+*  Configura un codificador de contraseñas {@link BCryptPasswordEncoder} para proteger las contraseñas de los usuarios.
+*  Define un {@link UserDetailsService} personalizado para cargar los detalles de usuario desde la base de datos.
+*  Establece un {@link DaoAuthenticationProvider} que utiliza el servicio de usuarios y el codificador de contraseñas configurados.
+*  Configura las reglas de acceso a rutas según los roles de usuario (ADMIN, USER) y la autenticación.
+*  Personaliza el formulario de inicio de sesión y el comportamiento de éxito o fallo en la autenticación.
+*  Gestiona el cierre de sesión y redirecciones asociadas.
+* 
+* Las rutas administrativas requieren el rol ADMIN, mientras que las rutas de usuario pueden ser accedidas por usuarios con los roles USER o ADMIN.
+* Algunas rutas requieren autenticación, y otras están abiertas a todos los usuarios.
+* 
+*
+* @see org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
+* @see org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
+* @see org.springframework.security.core.userdetails.UserDetailsService
+*/
 @Configuration 
 @EnableWebSecurity
 public class SecurityConfig {
 
 	@Autowired
-	public CustomAuthSucessHandler sucessHandler; // Manejador personalizado que se ejecuta después de un login exitoso
+	public CustomAuthSucessHandler sucessHandler; 
     @Autowired public UserRepository userRepository;
-    /**
-     * Se utiliza para cifrar las contraseñas antes de compararlas con la base de datos.
-     */
+   
     @Bean
     BCryptPasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
 	}
 
-    /**
-     * Es responsable de cargar los detalles del usuario desde la base de datos.
-     */
+    
     @Bean
     UserDetailsService getDetailsService() {
 		return new CustomUserDetailsService();
 	}
 
-    /**
-     * Usa el servicio de usuarios y el codificador de contraseñas configurados anteriormente.
-     */
     @Bean
     DaoAuthenticationProvider getAuthenticationProvider() {
 		DaoAuthenticationProvider daoAuthenticationProvider = new DaoAuthenticationProvider();
@@ -49,32 +63,22 @@ public class SecurityConfig {
 		return daoAuthenticationProvider;
 	}
 
-    /**
-     * Define las reglas de acceso y el comportamiento del login.
-     */
-
     @Bean
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(csrf -> csrf.disable()) // Desactiva CSRF para facilitar pruebas 
+        http.csrf(csrf -> csrf.disable()) 
             .authorizeHttpRequests(requests -> requests
-                // Usuarios con rol ADMIN pueden eliminar usuarios
                 .requestMatchers("/user/eliminar/**").authenticated()
-                // Acceso a rutas administrativas solo para ADMIN
                 .requestMatchers("/admin/**").hasRole("ADMIN")
-                // Acceso a rutas de usuario tanto para USER como para ADMIN
                 .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")
-                // Solo usuarios autenticados pueden guardar, actualizar o eliminar eventos
                 .requestMatchers("/event/save", "/event/update", "/event/delete").authenticated()
-                // Permitir acceso público a todas las demás rutas
                 .requestMatchers("/**").permitAll()
             )
-            // Configuración de login con formulario personalizado
             .formLogin(login -> login
-                .loginPage("/signin") // Página personalizada de inicio de sesión
-                .loginProcessingUrl("/userLogin") // URL para procesar el login
-                .successHandler(sucessHandler) // Manejador de éxito personalizado
+                .loginPage("/signin") 
+                .loginProcessingUrl("/userLogin") 
+                .successHandler(sucessHandler) 
                 .failureUrl("/signin?error=true")
-                .permitAll() // Permitir acceso a la página de login para todos
+                .permitAll() 
             )
             .logout(logout -> logout
                 .logoutUrl("/logout")

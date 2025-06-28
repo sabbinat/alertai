@@ -3,6 +3,7 @@ package com.sbact1.service;
 import com.sbact1.dto.EventDto;
 import com.sbact1.model.Category;
 import com.sbact1.model.Event;
+import com.sbact1.model.EventStatus;
 import com.sbact1.model.User;
 import com.sbact1.repository.CategoryRepository;
 import com.sbact1.repository.EventRepository;
@@ -23,6 +24,24 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+
+/**
+ * Clase de servicio para gestionar eventos en la aplicación.
+ *
+ * Proporciona métodos para crear, actualizar, eliminar y obtener eventos,
+ * así como para manejar imágenes de eventos, ubicaciones y asociaciones con categorías.
+ * 
+ * - saveEvent: Crea y guarda un nuevo evento utilizando datos de un DTO, un archivo de imagen, el correo del usuario y un ID de categoría.
+ * - updateEvent: Actualiza un evento existente. Solo el creador del evento está autorizado para editarlo.
+ * - deleteEvent: Elimina un evento si el usuario que realiza la solicitud es el propietario o tiene privilegios de administrador.
+ * - getEventById: Recupera un evento por su ID.
+ * - listarEventos: Lista eventos con opción de filtrado por categoría y soporte de paginación.
+ * - findAll: Recupera todos los eventos.
+ * - buscarEventos: Busca eventos filtrados por nombre, categoría y mes, con paginación.
+ * 
+ * Este servicio interactúa con EventRepository, UserRepository y CategoryRepository
+ * para realizar sus operaciones, y garantiza la autorización adecuada y la integridad de los datos.
+ */
 
 @Service
 public class EventService {
@@ -45,6 +64,7 @@ public class EventService {
         event.setTime(dto.getTime());
         event.setDescription(dto.getDescription());
         event.setContact(dto.getContact());
+        event.setStatus(EventStatus.ACTIVO);
 
         // Si se proporciona una imagen, se guarda
         if (imageFile != null && !imageFile.isEmpty()) {
@@ -157,4 +177,9 @@ public class EventService {
     public List<Event> findAll() {
         return eventRepository.findAll();
     }
+
+    public Page<Event> buscarEventos(String nombre, Long categoriaId, Integer mes, Pageable pageable) {
+        return eventRepository.buscarEventosFiltrados(nombre, categoriaId, mes, pageable);
+    }
+
 }

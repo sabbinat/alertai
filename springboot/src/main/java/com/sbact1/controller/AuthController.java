@@ -24,8 +24,26 @@ import com.sbact1.service.EmailService;
 import com.sbact1.service.UserService;
 
 import jakarta.servlet.http.HttpSession;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 
+/** 
+* AuthController maneja la autenticación del usuario, el registro, la verificación de correo electrónico, 
+* Recuperación de contraseña y puntos finales relacionados con la gestión de la cuenta de usuario. 
+* 
+* Funcionalidades principales: 
+* 
+*   Registro de usuarios con verificación por correo electrónico
+*   Iniciar sesión de usuario 
+*   Restablecimiento de contraseña por correo electrónico Token 
+*   Inyección de datos de usuario común para vistas 
+* 
+* Seguridad: 
+* 
+*   Todas las operaciones confidenciales (registro, restablecimiento de contraseña) Use tokens de tiempo limitado 
+*   Las contraseñas están encriptadas antes del almacenamiento 
+* 
+*/
 @Controller
 public class AuthController {
     
@@ -50,11 +68,6 @@ public class AuthController {
         return "auth/register";
     }
 
-    @GetMapping("/successful_registration")
-    public String registroExitoso() {
-        return "auth/successful_registration"; 
-    }
-    
     @PostMapping("/register")
     public String registerUser(@ModelAttribute @Valid User user, BindingResult result, HttpSession session) {
 
@@ -115,38 +128,28 @@ public class AuthController {
         return "auth/verificado_exitoso";
     }
 
+
+    // Panatlla de registro exitoso
+    @GetMapping("/successful_registration")
+    public String registroExitoso() {
+        return "auth/successful_registration"; 
+    }
+    
+    
+    // Método que maneja el login
     @GetMapping("/signin")
     public String login() {
         return "auth/login";
     }
 
-    // Método para manejar la página de ayuda
-    @GetMapping("/help")
-    public String help(Model model, Principal principal) {
-        // Obtener el usuario 
-        if (principal != null) {
-            Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
-            optionalUser.ifPresent(user -> model.addAttribute("user", user));
-        }
-        return "general/help"; 
-    }
 
-    // Método para manejar la página de contacto
-    @GetMapping("/contact")
-    public String contact(Model model, Principal principal) {
-        // Obtener el usuario 
-        if (principal != null) {
-            Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
-            optionalUser.ifPresent(user -> model.addAttribute("user", user));
-        }
-        return "general/contact"; 
-    }
-
+    // Método para recuperar contraseña
     @GetMapping("/forgot-password")
     public String showForgotPasswordForm(Model model) {
         return "auth/forgot-password";
     }
 
+    @Transactional
     @PostMapping("/forgot-password")
     public String processForgotPassword(@RequestParam("email") String email, RedirectAttributes redirectAttributes) {
 
@@ -157,6 +160,9 @@ public class AuthController {
         }
 
         User user = optionalUser.get();
+
+        tokenRepository.deleteByUserId(user.getId());
+
 
         // Crear token
         String token = UUID.randomUUID().toString();
@@ -186,6 +192,8 @@ public class AuthController {
         return "redirect:/forgot-password";
     }
 
+
+    // Método para crear nueva contraseña
     @GetMapping("/reset-password")
     public String showResetPasswordForm(@RequestParam("token") String token, Model model) {
         Optional<Token> optionalToken = tokenRepository.findByToken(token);

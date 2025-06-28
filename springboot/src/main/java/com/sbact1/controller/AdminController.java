@@ -1,46 +1,47 @@
 package com.sbact1.controller;
 
 import java.security.Principal;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sbact1.model.Category;
-import com.sbact1.model.Event;
-import com.sbact1.model.Report;
-import com.sbact1.model.ReportReason;
-import com.sbact1.model.User;
+import com.sbact1.model.*;
 import com.sbact1.repository.CategoryRepository;
 import com.sbact1.repository.EventRepository;
 import com.sbact1.repository.ReportRepository;
 import com.sbact1.repository.UserRepository;
+import com.sbact1.service.EmailService;
 import com.sbact1.service.UserService;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.format.DateTimeFormatter;
 
+/**
+ * Controlador para la administración del sistema.
+ * Proporciona funcionalidades para la gestión de usuarios, eventos, denuncias y categorías.
+ * 
+ * Funcionalidades principales:
+ * 
+ *   Dashboard de administración con estadísticas y últimos registros.
+ *   Gestión de usuarios: listado, filtrado, cambio de rol, eliminación y restablecimiento de contraseña.
+ *   Gestión de denuncias: listado, filtrado, aprobación, rechazo y eliminación de denuncias.
+ *   Gestión de eventos: listado y filtrado de eventos por categoría y estado.
+ *   Gestión de categorías: listado de categorías y conteo de eventos por categoría.
+ * 
+ * Seguridad: Solo accesible para usuarios con rol de administrador.
+ */
 @Controller
 @RequestMapping("/admin")
 public class AdminController {
@@ -50,6 +51,8 @@ public class AdminController {
 	@Autowired private CategoryRepository categoryRepository;
 	@Autowired private UserService userService;
 	@Autowired private EventRepository eventRepository;
+	@Autowired private PasswordEncoder passwordEncoder;
+	@Autowired private EmailService emailService;
 
 	@ModelAttribute
 	public void commonUser(Principal p, Model m) {
@@ -71,8 +74,9 @@ public class AdminController {
 		// Formato para mostrar fechas en español (ej. lunes, 22 mayo 2025)
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("EEEE, dd MMMM yyyy", Locale.forLanguageTag("es"));
 		
-		// Toma los 5 últimos usuarios registrados y formatear sus datos para mostrar
+		// Toma los 4 últimos usuarios registrados y formatear sus datos para mostrar
 		List<Map<String, String>> latestUsersFormatted = users.stream()
+		    .filter(u -> !"ROLE_ADMIN".equals(u.getRole()))
 			.sorted(Comparator.comparing(User::getRegistrationTime).reversed())
 			.limit(4)
 			.map(u -> {
@@ -101,7 +105,10 @@ public class AdminController {
 		model.addAttribute("porcentajeUsuarios", porcentajeUsuarios);
 
 		// Obtiene todas las denuncias y categorías para mostrar en el dashboard
-		List<Report> reports = reportRepository.findAll();
+		List<Report> reports = reportRepository.findAll().stream()
+			.filter(r -> !r.isReviewed()) 
+			.limit(5)
+			.collect(Collectors.toList());
         model.addAttribute("reports", reports);
 
 		List<Category> categories = categoryRepository.findAll();
@@ -139,10 +146,22 @@ public class AdminController {
             model.addAttribute("calendarEvents", "[]");
         }
 
+		long eventosActivos = eventos.stream().filter(e -> e.getStatus() == EventStatus.ACTIVO).count();
+		long eventosInactivos = eventos.stream().filter(e -> e.getStatus() == EventStatus.INACTIVO).count();
+		long eventosDenunciados = eventos.stream().filter(e -> e.getStatus() == EventStatus.DENUNCIADO).count();
+		long eventosRevision = eventos.stream().filter(e -> e.getStatus() == EventStatus.REVISION).count();
+
+		model.addAttribute("eventosActivos", eventosActivos);
+		model.addAttribute("eventosInactivos", eventosInactivos);
+		model.addAttribute("eventosDenunciados", eventosDenunciados);
+		model.addAttribute("eventosRevision", eventosRevision);
+
+
 		return "admin/admin_home";
 	}
 
-	// Muestra lista de usuarios
+
+	// Método que gestiona los usuarios ingresados en el sistema
 	@GetMapping("/users")
 	public String listUsers(@RequestParam(required = false) String rolFiltro, @RequestParam(defaultValue = "0") int page, Model model) {
 
@@ -157,6 +176,14 @@ public class AdminController {
 			usersPage = userRepository.findAll(pageable);
 		}
 
+		// Mapear los resultados a un Map<userId, count>
+		Map<Integer, Long> eventosPorUsuario = eventRepository.countEventsByUser().stream()
+			.collect(Collectors.toMap(
+				row -> (Integer) row[0],
+				row -> (Long) row[1]
+			));
+
+		model.addAttribute("eventosPorUsuario", eventosPorUsuario);
 		model.addAttribute("users", usersPage.getContent());
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", usersPage.getTotalPages());
@@ -166,9 +193,9 @@ public class AdminController {
 		return "admin/admin_listUser";
 	}
 
-	//Método para eliminar usuario
+	// Método que elimina usuario
 	@GetMapping("/eliminar/{id}")
-	public String eliminarUsuario(@PathVariable Integer id, RedirectAttributes msg){ 
+	public String deleteUser(@PathVariable Integer id, RedirectAttributes msg){ 
 	    Optional<User> categoria = userRepository.findById(id); 
 	    if(categoria.isEmpty()) {
 	        msg.addFlashAttribute("errorEliminar", "Ususario no encontrado");
@@ -179,8 +206,9 @@ public class AdminController {
 	    return "redirect:/admin/users";
 	}
 
+	// Método para cambiar el rol de los usuarios
 	@PostMapping("/cambiar-rol")
-	public String cambiarRol(@RequestParam Integer userId, @RequestParam String newRole) {
+	public String changeRole(@RequestParam Integer userId, @RequestParam String newRole) {
 		Optional<User> userOptional = userRepository.findById(userId);
 		if (userOptional.isPresent()) {
 			User user = userOptional.get();
@@ -190,84 +218,159 @@ public class AdminController {
 		return "redirect:/admin/users"; 
 	}
 
-	@GetMapping("/reports")
-	public String listReports(@RequestParam(required = false) ReportReason motivoFiltro, Model model) {
-		List<Report> reports;
-
-		if (motivoFiltro != null) {
-			reports = reportRepository.findByReviewedFalseAndReason(motivoFiltro);
-		} else {
-			reports = reportRepository.findByReviewedFalse();
+	// Método para que el admin cambie la contraseña del usuario
+	@PostMapping("/reset-password")
+	public String resetPassword(@RequestParam int userId, RedirectAttributes redirectAttributes) {
+		Optional<User> optionalUser = userRepository.findById(userId);
+		if (optionalUser.isEmpty()) {
+			redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
+			return "redirect:/admin/users";
 		}
 
-		model.addAttribute("reports", reports);
-		model.addAttribute("motivos", ReportReason.values()); 
-		model.addAttribute("motivoFiltro", motivoFiltro);
+		User user = optionalUser.get();
 
-		return "admin/admin_reports";
-	}
+		// Generar contraseña temporal (puedes cambiar el método por uno más seguro si quieres)
+		String tempPassword = "Temporal123@"; 
+		
+		// Cambiar la contraseña del usuario
+		user.setPassword(passwordEncoder.encode(tempPassword));
+		userRepository.save(user);
 
-	@GetMapping("/reports/handle/{id}")
-	public String handleReport(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-		Report report = reportRepository.findById(id).orElse(null);
-
-		if (report != null) {
-			report.setReviewed(true);
-			reportRepository.save(report);
-			redirectAttributes.addFlashAttribute("success", "Denuncia marcada como revisada.");
-		} else {
-			redirectAttributes.addFlashAttribute("error", "La denuncia no existe.");
+		// Opcional: enviar un correo notificando al usuario sobre la nueva contraseña temporal
+		String subject = "Contraseña restablecida";
+		String content = "<p>Hola " + user.getName() + ",</p>"
+					+ "<p>Tu contraseña ha sido restablecida por un administrador. "
+					+ "Tu nueva contraseña temporal es: <strong>" + tempPassword + "</strong></p>"
+					+ "<p>Por favor, ingresa y cambia tu contraseña.</p>";
+		try {
+			emailService.enviarCorreo(user.getEmail(), subject, content);
+		} catch (Exception e) {
+			// Si falla el email, no bloqueamos la acción pero podemos avisar al admin
+			redirectAttributes.addFlashAttribute("warning", "Contraseña restablecida, pero no se pudo enviar el correo.");
+			return "redirect:/admin/users";
 		}
 
-		return "redirect:/admin/reports";
+		redirectAttributes.addFlashAttribute("success", "Contraseña restablecida y correo enviado al usuario.");
+		return "redirect:/admin/users";
 	}
 
-	@GetMapping("/reports/delete/{id}")
-	public String deleteReport(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-		Optional<Report> reportOptional = reportRepository.findById(id);
-
-		if (reportOptional.isPresent()) {
-			reportRepository.delete(reportOptional.get());
-			redirectAttributes.addFlashAttribute("success", "Denuncia eliminada correctamente.");
-		} else {
-			redirectAttributes.addFlashAttribute("error", "La denuncia no existe.");
-		}
-
-		return "redirect:/admin/reports";
-	}
-
+	// Método que gestiona los eventos
 	@GetMapping("/allEvents")
-	public String listarTodosLosEventos(
-		@RequestParam(value = "name", required = false) String name,
-		@RequestParam(value = "categoriaId", required = false) Long categoriaId,
+	public String listEvents(
+		@RequestParam(required = false) Long categoriaId,
+		@RequestParam(required = false) List<EventStatus> estadosFiltro,
+		@RequestParam(required = false) String name,
 		@RequestParam(value = "page", defaultValue = "0") int page,
 		Model model) {
 
-		Pageable pageable = PageRequest.of(page, 10); 
+		Pageable pageable = PageRequest.of(page, 10);
 		Page<Event> eventosPage;
 
-		if ((name != null && !name.isEmpty()) && categoriaId != null) {
-			eventosPage = eventRepository.findByNameContainingIgnoreCaseAndCategoryId(name, categoriaId, pageable);
-		} else if (name != null && !name.isEmpty()) {
-			eventosPage = eventRepository.findByNameContainingIgnoreCase(name, pageable);
+		if (categoriaId != null && estadosFiltro != null && !estadosFiltro.isEmpty()) {
+			eventosPage = eventRepository.findByCategoryIdAndStatusIn(categoriaId, estadosFiltro, pageable);
 		} else if (categoriaId != null) {
 			eventosPage = eventRepository.findByCategoryId(categoriaId, pageable);
+		} else if (estadosFiltro != null && !estadosFiltro.isEmpty()) {
+			eventosPage = eventRepository.findByStatusIn(estadosFiltro, pageable);
 		} else {
 			eventosPage = eventRepository.findAll(pageable);
 		}
 
-		List<Category> categories = categoryRepository.findAll();
-
 		model.addAttribute("eventos", eventosPage.getContent());
-		model.addAttribute("categories", categories);
-		model.addAttribute("name", name);
+		model.addAttribute("categories", categoryRepository.findAll());
 		model.addAttribute("categoriaId", categoriaId);
+		model.addAttribute("estados", List.of(EventStatus.ACTIVO, EventStatus.INACTIVO));
+		model.addAttribute("estadosFiltro", estadosFiltro);
+		model.addAttribute("EventStatus", EventStatus.class); 
+		model.addAttribute("name", name);
 		model.addAttribute("currentPage", page);
 		model.addAttribute("totalPages", eventosPage.getTotalPages());
 
 		return "admin/admin_allEvents";
 	}
 
+
+	// Métodos que gestionan las denuncias
+	@GetMapping("/reports")
+	public String listReports(
+		@RequestParam(required = false) ReportReason motivoFiltro,
+		@RequestParam(required = false) EventStatus estadoFiltro,
+		Model model) {
+
+		List<Report> reports;
+
+		if (motivoFiltro != null && estadoFiltro != null) {
+			reports = reportRepository.findByReviewedFalseAndReasonAndEventStatus(motivoFiltro, estadoFiltro);
+		} else if (motivoFiltro != null) {
+			reports = reportRepository.findByReviewedFalseAndReason(motivoFiltro);
+		} else if (estadoFiltro != null) {
+			reports = reportRepository.findByReviewedFalseAndEventStatus(estadoFiltro);
+		} else {
+			reports = reportRepository.findByReviewedFalse();
+		}
+
+		Map<Long, Long> reportCounts = reports.stream()
+        .collect(Collectors.groupingBy(r -> r.getEvent().getId(), Collectors.counting()));
+
+		model.addAttribute("reports", reports);
+		model.addAttribute("reportCounts", reportCounts); 
+		model.addAttribute("motivos", ReportReason.values());
+		model.addAttribute("estadoFiltro", estadoFiltro);
+		model.addAttribute("estados", List.of(EventStatus.REVISION, EventStatus.INACTIVO, EventStatus.DENUNCIADO));
+		model.addAttribute("motivoFiltro", motivoFiltro);
+
+		return "admin/admin_reports";
+	}
+
+	// Denuncia revisada y aporbada 
+	@PostMapping("/event/{id}/approve")
+	public String approveEvent(@PathVariable Long id, RedirectAttributes ra) {
+		Event event = eventRepository.findById(id)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
+
+		event.setStatus(EventStatus.ACTIVO);
+		eventRepository.save(event);
+
+		// Marca todas las denuncias del evento como revisadas
+		List<Report> reports = reportRepository.findByEventId(id);
+		for (Report report : reports) {
+			report.setReviewed(true);
+		}
+		reportRepository.saveAll(reports);
+		
+		ra.addFlashAttribute("success", "El evento fue aprobado exitosamente y está disponible para los usuarios.");
+		return "redirect:/admin/reports"; 
+	}
+
+	// Denuncia rechazada
+	@PostMapping("/event/{id}/reject")
+	public String rejectEvent(@PathVariable Long id, RedirectAttributes ra) {
+		Event event = eventRepository.findById(id)
+			.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Evento no encontrado"));
+
+		event.setStatus(EventStatus.INACTIVO);
+		eventRepository.save(event);
+		ra.addFlashAttribute("success", "La revisión fue completada: el evento ha sido rechazado y desactivado.");
+		return "redirect:/admin/reports";
+	}
+
+	// Denuncia eliminada
+	@GetMapping("/reports/delete/{id}")
+	public String deleteReport(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+	 	Optional<Report> reportOptional = reportRepository.findById(id);
+
+	 	if (reportOptional.isPresent()) {
+	 		reportRepository.delete(reportOptional.get());
+	 		redirectAttributes.addFlashAttribute("success", "Denuncia eliminada correctamente.");
+	 	} else {
+	 		redirectAttributes.addFlashAttribute("error", "La denuncia no existe.");
+	 	}
+
+	 	return "redirect:/admin/reports";
+	 }
+
+
+	// Método que gestiona las categorías
 	@GetMapping("/allCategories")
 	public String listCategories(Model model, Principal principal) {
 		List<Category> categories = categoryRepository.findAll();
@@ -282,31 +385,6 @@ public class AdminController {
 		model.addAttribute("categories", categories);
 		model.addAttribute("eventCountByCategory", eventCountByCategory);
 		return "admin/admin_allCategories";
-	}
-
-	@GetMapping("/user/{id}")
-	public String verPerfilUsuarioDesdeAdmin(@PathVariable Integer id, Model model) {
-		Optional<User> userOptional = userRepository.findById(id);
-		if (userOptional.isEmpty()) {
-			return "redirect:/admin/home?error=usuarioNoEncontrado";
-		}
-
-		User user = userOptional.get();
-		model.addAttribute("user", user);
-
-		model.addAttribute("events", eventRepository.findByUser(user));
-
-		List<Category> categories = categoryRepository.findAll();
-		model.addAttribute("categories", categories);
-
-		Map<Long, List<Event>> eventsByCategory = new HashMap<>();
-		for (Category cat : categories) {
-			List<Event> evs = eventRepository.findByUserAndCategoryOrderByStartDateDesc(user, cat);
-			eventsByCategory.put(cat.getId(), evs);
-		}
-		model.addAttribute("eventsByCategory", eventsByCategory);
-
-		return "user/profile";
 	}
 
 

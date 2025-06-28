@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -24,6 +25,33 @@ import com.sbact1.repository.TokenRepository;
 import jakarta.servlet.http.HttpSession;
 import jakarta.transaction.Transactional;
 
+/**
+ * Servicio para la gestión de usuarios en la aplicación.
+ * Proporciona métodos para registrar, actualizar, eliminar usuarios y gestionar sus perfiles.
+ * También maneja la codificación de contraseñas, verificación de email y teléfono, 
+ * y la gestión de imágenes de perfil.
+ *
+ * Funcionalidades principales:
+ * 
+ *   Registrar un nuevo usuario asegurando la unicidad del email y codificando la contraseña.
+ *   Obtener un usuario por su email.
+ *   Remover mensajes de sesión (por ejemplo, mensajes flash).
+ *   Actualizar el perfil del usuario, incluyendo la imagen de perfil y verificación de teléfono.
+ *   Eliminar un usuario de forma transaccional, eliminando también sus tokens y eventos asociados.
+ *   Cambiar la contraseña del usuario validando la contraseña actual.
+ *
+ * Excepciones:
+ * 
+ *   Lanza {@link IllegalStateException} si el email ya está en uso al registrar un usuario.
+ *   Lanza {@link UsernameNotFoundException} si no se encuentra un usuario por email.
+ *   Lanza {@link RuntimeException} si ocurre un error al guardar la imagen de perfil o si el usuario no existe.
+ * 
+ *
+ * Anotaciones:
+ * 
+ *   {@code @Transactional} en la eliminación de usuario para asegurar la atomicidad de la operación.
+ * 
+ */
 @Service
 public class UserService {
 
@@ -46,6 +74,11 @@ public class UserService {
 		return newuser;
 	}
 
+	public User getByEmail(String email) {
+		return userRepository.findByEmail(email)
+			.orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado: " + email));
+	}
+
 	// Método para remover el mensaje de sesión (por ejemplo, después de mostrar un mensaje flash)
 	public void removeSessionMessage() {
 		var requestAttributes = RequestContextHolder.getRequestAttributes();
@@ -59,7 +92,7 @@ public class UserService {
 	}
 
 	// Método para actualizar el perfil del usuario, incluyendo su imagen
-	public void updateUserProfile(User updatedUser, MultipartFile file, String email) {
+	public void updateUserProfile(User updatedUser, MultipartFile file, String email, boolean phoneVerified) {
 		User user = userRepository.findByEmail(email)
 				.orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
@@ -69,7 +102,12 @@ public class UserService {
 		user.setDocument(updatedUser.getDocument());
 		user.setUsername(updatedUser.getUsername());
 		user.setDescription(updatedUser.getDescription());
+		user.setEnabled(user.isEnabled()); 
 
+		if (phoneVerified) {
+        	user.setPhoneVerified(true);
+		}	
+		
 		if (file != null && !file.isEmpty()) {
 			try {
 				String filename = UUID.randomUUID() + "_" + file.getOriginalFilename();
@@ -79,7 +117,6 @@ public class UserService {
 				try (InputStream in = file.getInputStream()) {
 					Files.copy(in, uploadPath.resolve(filename), StandardCopyOption.REPLACE_EXISTING);
 				}
-
 				user.setImage(filename);
 			} catch (IOException e) {
 				throw new RuntimeException("Error al guardar la imagen", e);

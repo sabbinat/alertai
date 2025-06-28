@@ -23,9 +23,6 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 @Entity
 @Setter
 @Getter
@@ -38,12 +35,12 @@ public class User {
 	@Column(nullable = false) //campo obligatorio
 	private boolean enabled = false;
 
-	@NotBlank //no debe ser nulo ni vacio 
+	@NotBlank 
 	private String name;
 
 	@NotBlank
-	@Email//formato de correo
-	@Column(unique = true)//no se permite duplicar 
+	@Email
+	@Column(unique = true)
 	private String email;
 
 
@@ -56,12 +53,14 @@ public class User {
 	private String password; //contraseña con validacion de seguridad 
 
 	@Column(nullable = true)
-	private String phone;  
+	private String phone; 
+	
+	private boolean phoneVerified = false;
 
 	private String country;
 	private String document;
 
-	private String role; //rol del user
+	private String role; // ROLE_USER O ROLE_ADMIN
 
 	@Column(nullable = true)
 	private String image;  
@@ -69,7 +68,7 @@ public class User {
 	private String description;
 
 	@Column(nullable = true, updatable = false)
-	private LocalDateTime registrationTime;  //fecha de registro no editable 	
+	private LocalDateTime registrationTime;  
 
 	@NotBlank
 	@Column(unique = true, nullable = false)
@@ -89,37 +88,42 @@ public class User {
 
 	// Tokens asosiados 
 	@OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-	@OnDelete(action = OnDeleteAction.CASCADE)
 	private List<Token> tokens;
 
 	@PrePersist
 	public void prePersist() {
-		this.registrationTime = LocalDateTime.now();   // Asigna fecha actual al momento de guardar
+		this.registrationTime = LocalDateTime.now();  
 	}
 
-	@Transient // no se guarda en BD
+	@Transient 
 	public String getTimeAgo() {
 		if (registrationTime == null) return "";
 
 		Duration duration = Duration.between(registrationTime, LocalDateTime.now());
 
-		long minutes = duration.toMinutes();
-		long hours = duration.toHours();
-		long days = duration.toDays();
+		long seconds = duration.toSeconds();
+        long minutes = duration.toMinutes();
+        long hours = duration.toHours();
+        long days = duration.toDays();
 
-		if (minutes < 60)
-			return "hace " + minutes + " " + (minutes == 1 ? "minuto" : "minutos");
-		else if (hours < 24)
-			return "hace " + hours + " " + (hours == 1 ? "hora" : "horas");
-		else if (days < 7)
-			return "hace " + days + " " + (days == 1 ? "día" : "días");
-		else if (days < 30) {
-			long weeks = days / 7;
-			return "hace " + weeks + " " + (weeks == 1 ? "semana" : "semanas");
-		} else {
-			long months = days / 30;
-			return "hace " + months + " " + (months == 1 ? "mes" : "meses");
-		}
+        if (seconds < 60)
+            return "hace " + seconds + (seconds == 1 ? " segundo" : " segundos");
+        else if (minutes < 60)
+            return "hace " + minutes + (minutes == 1 ? " minuto" : " minutos");
+        else if (hours < 24)
+            return "hace " + hours + (hours == 1 ? " hora" : " horas");
+        else if (days < 7)
+            return "hace " + days + (days == 1 ? " día" : " días");
+        else if (days < 30) {
+            long weeks = days / 7;
+            return "hace " + weeks + (weeks == 1 ? " semana" : " semanas");
+        } else if (days < 365) {
+            long months = days / 30;
+            return "hace " + months + (months == 1 ? " mes" : " meses");
+        } else {
+            long years = days / 365;
+            return "hace " + years + (years == 1 ? " año" : " años");
+        }
 	}
 
 

@@ -48,8 +48,6 @@ html, body {
   scroll-snap-align: start;
   height: 100vh;
   opacity: 0; 
-  transform: translateY(50px);
-  transition: opacity 1s ease, transform 1s ease;
 }
 .snap-section.visible {
   opacity: 1;
@@ -66,9 +64,9 @@ html, body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0.8rem 1.5rem;
+  padding: 0.5rem 1.5rem;
   z-index: 1000;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.244);
 }
 .theme-dark .nav{
   background-color: var(--body-night);
@@ -151,7 +149,7 @@ html, body {
 }
 .hero-content .cta .btn {
   background-color: var(--verde-medio);
-  color: black;
+  color: #dedbdb;
   padding: 0.75rem 1.5rem;
   border: none;
   border-radius: 0.5rem;
@@ -203,6 +201,7 @@ html, body {
   padding: 0.8rem 3rem 0.8rem 1rem;
   border-radius: 10px;
   border: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 .search-form button {
   position: absolute;
@@ -226,17 +225,23 @@ html, body {
 
 .theme-dark .monthly-program-section {
   padding: 4rem;
-  background-image: linear-gradient(to bottom, var(--verde-medio), var(--body-night) 30%);
+  background-image: linear-gradient(to bottom, var(--verde-medio), var(--body-night) 40%);
 }
 .theme-light .monthly-program-section {
   padding: 4rem;
-  background-image: linear-gradient(to bottom, var(--verde-medio), var(--body-light) 30%);
+  background-image: linear-gradient(to bottom, var(--verde-medio), var(--body-light) 40%);
 }
 .monthly-program-section h3 {
-  font-weight: 900;
+  font-weight: 800;
   font-size: 2.25rem;
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   font-family: "Bebas Neue", sans-serif;
+}
+.theme-dark .monthly-program-section h3 {
+  color: var(--text-night);
+}
+.theme-light .monthly-program-section h3 {
+  color: var(--text-light);
 }
 
 /* CALENDARIO */
@@ -320,6 +325,7 @@ html, body {
 }
 .calendar-days div:hover {
   background-color: var(--verde-oscuro-boton);
+  border-radius: 0.4rem;
   color: var(--blanco);
 }
 .curr-date {
@@ -339,7 +345,7 @@ html, body {
   height: 340px;
   padding: 1rem;
   border-radius: 12px;
-  background-color: #1d1d2b; /* Fallback por si no carga el mapa */
+  background-color: var(--verde-medio); 
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 
@@ -403,18 +409,17 @@ html, body {
 
 /* FILTRO DE CATEGORÍAS */
 
-#categoryTabs {
-  margin-bottom: 2rem;
-  min-width: 0;
-}
-.nav-pills {
+
+.filter-nav {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   min-width: 0;
+  list-style: none;
+  margin-top: 2rem;
 }
-.nav-pills .filter {
-  margin: 0.25rem 0.5rem;
+.filter-nav .filter {
   padding: 0.75rem 1.25rem;
   color: inherit;
   font-weight: 600;
@@ -441,15 +446,16 @@ html, body {
   height: 300px;
   object-fit: cover;
   border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.199);
 }
 .event-card .muted {
   color: #6c757d;
   margin: 10px 0 5px;
-  font-size: 0.9rem;
+  font-size: 0.8rem;
 }
 .event-card .event-name {
   font-weight: bold;
-  font-size: 1.1rem;
+  font-size: 0.9rem;
 }
 
 

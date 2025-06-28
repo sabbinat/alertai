@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-<meta charset="UTF-8">
-<title>AlertAi - Registro exitoso</title>
-  <!-- BOOTSTRAP   -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlertAi - Términos de Uso</title>
+   <!-- BOOTSTRAP   -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
@@ -12,13 +13,13 @@
 
   <!-- CSS PERSONALIZADO -->
   <link rel="stylesheet" th:href="@{/css/user.css}">
-  <link rel="stylesheet" th:href="@{/css/event.css}">
   <link rel="stylesheet" th:href="@{/css/theme.css}">
 
   <!-- FAVICON (ICON DE LA PÁGINA) -->
   <link rel="icon" type="image/png" href="/img/icon-nav.png">
 </head>
 <body>
+
   <!-- MENÚ -->
   <header>
     <nav class="navbar-user sticky-top">
@@ -34,12 +35,12 @@
 
       <!-- MENÚ -->
       <div class="nav-left">
-        <a th:href="${user != null} ? @{/user/home} : @{/}" th:text="#{profile.home}">Inicio</a>
-        <a th:href="@{/event/allEvents}">Eventos</a>
-        <a href="/contact" th:text="#{profile.contact}">Contacto</a>
-        <a href="/help" th:text="#{profile.help}">Ayuda</a>
+        <a th:href="@{/user/home}" th:text="#{profile.home}" class="bottom-inline">Inicio</a>
+        <a th:href="@{/event/allEvents}" class="bottom-inline">Eventos</a>
+        <a href="/contact" th:text="#{profile.contact}" class="bottom-inline">Contacto</a>
+        <a href="/help" th:text="#{profile.help}" class="bottom-inline">Ayuda</a>
       </div>
-    
+
       <!-- BUSCADOR -->
       <div class="search-bar">
         <form action="/search" method="get" id="searchForm" class="search-form" role="search">
@@ -47,14 +48,14 @@
           <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
         </form>
       </div>
-    
+
       <!-- MENÚ DEL USUARIO -->
       <div class="nav-right">
         <!-- SI EL USUARIO HA INICIADO SESIÓN -->
         <div class="user-menu" th:if="${user != null}">
           <img th:src="${user.image != null} ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'" alt="Foto usuario">
           <span class="username">
-            <span sec:authorize="!hasRole('ADMIN')" th:text="${user.name}"></span>
+            <span th:text="${user.name}"></span>
           </span>
 
           <div class="dropdown me-4">
@@ -91,13 +92,13 @@
         </div>
 
         <!-- SI EL USUARIO NO HA INICIADO SESIÓN -->
-        <div class="guest-menu " th:unless="${user != null}">
+        <div class="guest-menu" th:unless="${user != null}">
           <a href="#" class="btn btn-signin-account" data-bs-toggle="modal" data-bs-target="#loginModal">Entrar</a>
-          <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#registerModal">Crear cuenta</a>
+          <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#registerModal" th:text="#{register.create}">Crear cuenta</a>
 
 
           <!-- CAMBIAR THEME OCURO/CLARO -->
-          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
             <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
           </button>
         </div>
@@ -105,23 +106,42 @@
     </nav>
   </header>
 
-  <!--BANNER DEL EVENTO -->
-  <section class="event-banner">
-    <h1 class="mb-3" th:text="#{register.success.title}">Registro exitoso</h1>
-    <p th:text="#{register.success.msg}">Te hemos enviado un correo de verificación. Por favor, revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.</p>
+  <!-- CONTENIDO DE CONTACTO -->
+  <section class="banner-contact py-5 text-center">
+    <h1 class="mb-4" th:text="#{terms.title}">Términos de Uso</h1>
+    <p>
+      <strong th:text="#{terms.last_update.label}">Última actualización:</strong>
+      <span th:text="#{terms.last_update.date}">19 de junio de 2025</span>
+    </p>
+
+    <div class="container d-flex justify-content-center">
+      <div class="text-start" style="max-width: 800px; font-size: 0.9rem;">
+        <p th:text="#{terms.intro}">
+          Al acceder y utilizar esta plataforma...
+        </p>
+
+        <ul>
+          <li><strong th:text="#{terms.usage.label}">Uso adecuado:</strong> <span th:text="#{terms.usage.text}"></span></li>
+          <li><strong th:text="#{terms.content.label}">Contenido:</strong> <span th:text="#{terms.content.text}"></span></li>
+          <li><strong th:text="#{terms.responsibility.label}">Responsabilidad:</strong> <span th:text="#{terms.responsibility.text}"></span></li>
+          <li><strong th:text="#{terms.suspension.label}">Suspensión:</strong> <span th:text="#{terms.suspension.text}"></span></li>
+          <li><strong th:text="#{terms.changes.label}">Modificaciones:</strong> <span th:text="#{terms.changes.text}"></span></li>
+          <li>
+            <strong th:text="#{terms.privacy.label}">Datos personales:</strong>
+            <span th:utext="#{terms.privacy.text}"></span>
+          </li>
+        </ul>
+
+        <p th:utext="#{terms.contact}">
+          Si tienes dudas o comentarios...
+        </p>
+      </div>
+    </div>
   </section>
 
-  <!-- BOTONES DE CORREOS -->
-  <div class="button-container">
-    <a href="https://mail.google.com/" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir Gmail</a>
-    <a href="https://outlook.live.com/mail/" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir Outlook</a>
-    <a href="https://mail.yahoo.com/" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir Yahoo Mail</a>
-    <a href="https://www.icloud.com/mail" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir iCloud Mail</a>
-  </div>
- 
 
   <!-- FOOTER -->
-  <footer class="footer py-4 mt-5 position-absolute bottom-0 w-100">
+  <footer class="footer py-4 mt-auto">
     <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
       <!-- Derechos reservados -->
       <p class="mb-0 small" th:text="#{footer.rights_reserved}">
@@ -146,7 +166,6 @@
 
   <!-- MODAL -->
 
-  
   <!-- INICIAR SESIÓN -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog custom-login-size">
@@ -498,3 +517,6 @@
 
 </body>
 </html>
+
+
+

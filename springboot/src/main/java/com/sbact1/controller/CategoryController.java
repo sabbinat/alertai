@@ -22,6 +22,20 @@ import com.sbact1.repository.UserRepository;
 
 import jakarta.validation.Valid;
 
+/**
+ * Controlador para la gestión de categorías en la aplicación.
+ * Proporciona endpoints para crear, editar y eliminar categorías.
+ * 
+ * Funcionalidades principales:
+ * 
+ *   Guardar una nueva categoría.
+ *   Mostrar el formulario de edición para una categoría existente.
+ *   Procesar la edición de una categoría.
+ *   Eliminar una categoría si no tiene eventos asociados.
+ * 
+ * Las rutas gestionadas por este controlador están bajo el prefijo "/category".
+ * 
+ */
 @Controller
 @RequestMapping("/category")
 public class CategoryController {

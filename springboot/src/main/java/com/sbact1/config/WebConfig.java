@@ -13,10 +13,21 @@ import org.springframework.web.servlet.i18n.LocaleChangeInterceptor;
 import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.LocaleResolver;
 
+/**
+* WebConfig es una clase de configuración que personaliza la configuración de Spring MVC para la aplicación.
+* 
+* Responsabilidades principales:
+* 
+*   Define un bean {@link LocaleResolver} que utiliza cookies para gestionar la configuración regional predeterminada de la aplicación 
+*   Define un bean {@link LocaleChangeInterceptor} que permite cambiar la configuración regional mediante un parámetro de URL (p. ej., ?language=en
+*   Registra el interceptor de cambio de configuración regional para habilitar el cambio de idioma dinámico.
+*   Configura los controladores de recursos para servir archivos estáticos desde el directorio local uploads/ a través de la ruta URL /uploads/**.
+* 
+* Esta configuración habilita la compatibilidad con la internacionalización (i18n) y la gestión de recursos estáticos en la aplicación. 
+*/
 @Configuration  
 public class WebConfig implements WebMvcConfigurer {
 
-    // Define el LocaleResolver que determinará el idioma predeterminado de la aplicación
     @Bean
     public LocaleResolver localeResolver() {
         CookieLocaleResolver clr = new CookieLocaleResolver();
@@ -24,7 +35,6 @@ public class WebConfig implements WebMvcConfigurer {
         return clr;
     }
 
-    // Interceptor que permite cambiar el idioma a través de un parámetro en la URL
     @Bean
     public LocaleChangeInterceptor localeChangeInterceptor() {
         LocaleChangeInterceptor lci = new LocaleChangeInterceptor();
@@ -32,13 +42,11 @@ public class WebConfig implements WebMvcConfigurer {
         return lci;
     }
 
-    // Agrega el interceptor de cambio de idioma al registro de interceptores
     @Override
     public void addInterceptors(@NonNull InterceptorRegistry registry) {
         registry.addInterceptor(localeChangeInterceptor());
     }
 
-    // Configura la ruta de acceso a recursos estáticos (imágenes subidas)
     @Override
     public void addResourceHandlers(@NonNull ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/uploads/**") // URL pública

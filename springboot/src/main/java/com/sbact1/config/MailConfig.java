@@ -20,24 +20,33 @@ public class MailConfig {
     private String password;
 
     /**
-     * Define un bean de JavaMailSender, que es el componente responsable de enviar correos electrónicos.
-     */
+    * Configura y proporciona un bean {@link JavaMailSender} para enviar correos electrónicos mediante el servidor SMTP de Gmail.
+    * Este método configura el remitente del correo con las siguientes propiedades:
+    * 
+    *   Host SMTP: smtp.gmail.com
+    *   Puerto: 587 (TLS/STARTTLS habilitado)
+    *   Nombre de usuario y contraseña para la autenticación
+    *   Habilita la autenticación SMTP y STARTTLS para una comunicación segura
+    *   Habilita el modo de depuración para un registro detallado (útil durante el desarrollo)
+    * 
+    * @return una instancia de {@link JavaMailSender} configurada para enviar correos electrónicos.
+    */
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
 
         // Configura el servidor SMTP de Gmail
         mailSender.setHost("smtp.gmail.com");  
-        mailSender.setPort(587); // Puerto para TLS (STARTTLS)
-        mailSender.setUsername(emailUser);  // Correo desde el que se enviarán los mensajes
-        mailSender.setPassword(password);   // Contraseña 
+        mailSender.setPort(587); 
+        mailSender.setUsername(emailUser); 
+        mailSender.setPassword(password);   
 
         // Configuración adicional para el protocolo SMTP
         Properties props = mailSender.getJavaMailProperties();
-        props.put("mail.transport.protocol", "smtp");  // Protocolo usado
-        props.put("mail.smtp.auth", "true");           // Habilita autenticación SMTP
-        props.put("mail.smtp.starttls.enable", "true"); // Habilita STARTTLS (seguridad cifrada)
-        props.put("mail.debug", "true");  // Muestra información detallada en la consola (para pruebas)
+        props.put("mail.transport.protocol", "smtp");  
+        props.put("mail.smtp.auth", "true");           
+        props.put("mail.smtp.starttls.enable", "true"); 
+        props.put("mail.debug", "true");  
 
         return mailSender;
     }

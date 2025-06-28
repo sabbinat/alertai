@@ -27,6 +27,12 @@
   --blanco: #ffffff;
 }
 
+.h3{
+  font-family: "Bebas neue", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 /*AGREGAR/ACTUALIZAR FOTO DE PERFIL*/
 
 .modal-user-photo {
@@ -221,8 +227,11 @@
   border-radius: 12px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
   transition: scale 0.3s ease;
+  font-size: 0.8rem;
 }
 .dashboard-card-report .card-report:hover {
+    background-color: #f9f9f9;
+
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
   transform: scale(1.02);
 }
@@ -257,7 +266,7 @@
   display: flex;
   flex-direction: column;
   border-radius: 8px;
-  overflow: hidden;
+  overflow-x: hidden;
   font-size: 0.75rem;
 }
 .theme-dark .custom-table {
@@ -297,7 +306,7 @@
   color: var(--text-light);
 }
 .table-cell {
-  flex: 0 0 150px;
+  flex: 0 0 130px;
   padding: 10px;
   word-break: break-word;
   text-align: left;
@@ -323,15 +332,15 @@
   text-align: center;
 }
 .col-count{
-  flex: 0 0 150px;
+  flex: 0 0 100px;
   text-align: center;
 }
 .col-date{
   flex: 0 0 100px;
   text-align: center;
 }
-.col-address{
-  flex: 0 0 180px;
+.col-special {
+  flex: 0 0 150px;
 }
 
 /* BOTONES */
@@ -339,7 +348,7 @@
   font-size: 1.3rem;
   transition: color 0.2s ease;
   color: var(--verde-medio);
-  gap: 15px;
+  gap: 5px;
   cursor: pointer;
 }
 .btn-add {

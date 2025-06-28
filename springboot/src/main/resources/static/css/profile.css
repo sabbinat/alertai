@@ -131,26 +131,28 @@
     width: 220px;
     height: 220px;
     border-radius: 50%;
+    border: 3px solid var(--verde-medio);
     overflow: hidden;
-    border: 2px solid var(--verde-oscuro-boton);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.481);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.341);
 }
 .profile-pic img {
     width: 100%;
     height: 100%;
     object-fit: cover;
 }
+
+/* BOTÓN DE EDITAR PERFIL */
 .edit-pic {
     position: absolute;
     top: 340px; 
     left: 225px; 
     z-index: 10;
-    border: 1px solid #000;
     border-radius: 50%;
     cursor: pointer;
     width: 30px;
     height: 30px;
     background-color: var(--verde-medio);
+    color: #ffffff;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -168,22 +170,81 @@
     width: 30px;
     height: 30px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+    background-color: var(--verde-medio);
+
 }
 .icono-redondo i {
     font-size: 16px; 
     color: #ffffff; 
-}
-.theme-dark .icono-redondo {
-    background-color: var(--verde-petroleo-oscuro);
-}
-.theme-light .icono-redondo {
-    background-color: var(--verde-petroleo-claro);
 }
 
 .icono-redondo:hover {
     background-color: var(--verde-oscuro-boton);
     box-shadow: 0 2px 4px rgba(164, 163, 164, 0.2);
 }
+/* BOTON DE NOTIFICACIONES */
+.notification-panel {
+    position: absolute;
+    top: 40px;
+    right: 50px;
+    width: 300px;
+    max-height: 450px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1000;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateY(-10px);
+}
+.theme-dark .notification-panel {
+    background-color: var(--fourth-night);
+    color: var(--text-night);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.theme-light .notification-panel {
+    background-color: var(--card-bg-light);
+    color: var(--text-light);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.notification-panel.show {
+    opacity: 1;
+    transform: translateY(0);
+    display: block !important;
+}
+.notification-panel h5 {
+    padding: 10px;
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+    background-color: var(--verde-medio);
+    border-radius: 5px;
+}
+
+.notification-block h6 {
+    font-weight: 600;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 4px;
+    margin-bottom: 6px;
+}
+
+.notification-panel ul {
+    padding-left: 1rem;
+    margin-bottom: 12px;
+    list-style: none;
+}
+
+.notification-panel li {
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+.notification-panel a:hover {
+  color: var(--verde-medio);
+  text-decoration: underline;
+}
+
+
+
   
 
 /* INFORMACIÓN DEL PERFIL*/
@@ -204,6 +265,9 @@
 .content-profile {
     margin: 20px;
     box-shadow: 0 0 5px rgba(35, 28, 86, 0.279);
+}
+.theme-light .content-profile{
+    background-color: rgba(253, 253, 253, 0.714);
 }
 
 
@@ -240,6 +304,7 @@
 }
 
 
+/* FILTROS */
 #categoryTabs {
   margin-bottom: 2rem;
   min-width: 0;
@@ -262,11 +327,11 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-/* EVENTOS DEL USUARIO */
 
+/* EVENTOS DEL USUARIO */
 .events-profile {
-    padding: 10px;
-    width: 900px;
+  padding: 10px;
+  max-width: 900px;
 }
 .event-card-profile{
   border-radius: 8px;
@@ -287,13 +352,7 @@
 }  
 
 /* CONTENIDO DE EVENTO*/
-.event-item {
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-.event-item:hover {
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
-  transform: translateY(-4px);
-}
+
 .event-item img {
   transition: filter 0.3s ease;
 }
@@ -399,14 +458,16 @@
   color: inherit;
 }
 .action-icons a:hover {
-transform: scale(1.2);
+  transform: scale(1.2);
 }
 
-/*AGREGAR/ACTUALIZAR FOTO DE PERFIL*/
+/* AGREGAR Y ACTUALIZAR FOTO DE PERFIL */
 
 .modal-user-photo {
   position: relative;
-  display: inline-block;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 .modal-user-photo img {
   width: 250px;
@@ -414,16 +475,17 @@ transform: scale(1.2);
   object-fit: cover;
   border-radius: 50%;
   border: 3px solid #5b5b5b;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  opacity: 0.8;
+  background-color: var(--verde-medio);
 }
 .overlay-input {
-    opacity: 0;
-    position: absolute;
-    width: 100%;
-    height: 50%;
-    top: 0;
-    left: 0;
-    cursor: pointer;
-    z-index: 2;
+  opacity: 0;
+  position: absolute;
+  width: 50%;
+  height: 50%;
+  cursor: pointer;
+  z-index: 2;
 }
 .overlay-button {
   position: absolute;
@@ -433,18 +495,20 @@ transform: scale(1.2);
   height: 60px;
   transform: translate(-50%, -50%);
   z-index: 3;
-  opacity: 0.9;
   pointer-events: none;
   border: none;
-  background-color: var(--negro);
-  color: var(--blanco);
   border-radius: 50%;
   display: flex; 
   align-items: center;
   justify-content: center;
+  background-color: var(--verde-petroleo-claro);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
 }
 .overlay-button i {
-    font-size: 2rem; 
+  font-size: 2rem; 
+  color: var(--verde-medio);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
   
@@ -460,6 +524,54 @@ transform: scale(1.2);
 
 
 
+.drop-area-edit{
+  position: relative;
+  padding: 5px;
+  width: 100%;
+  height: 100%;
+  border: 2px solid var(--verde-medio);
+  border-radius: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.drop-area-edit img{
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 10px;
+  opacity: 0.8;
+  z-index: 1;
+  transition: opacity 0.3s ease;
+}
+.drop-area-edit:hover img {
+  opacity: 0.5;
+  transition: opacity 0.3s ease;
+}
 
+.drop-placeholder-edit{
+  color: var(--verde-medio);
+  position: absolute;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 2;
+  background-color: var(--verde-petroleo-claro);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.366);
+}
+.drop-area-edit i {
+  font-size: 2rem;
+  color: var(--verde-medio);
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.063);
+  transition: color 0.3s ease;
+  cursor: pointer;
+}
+.drop-area-edit i:hover {
+  color: var(--verde-oscuro-boton);
+  transition: color 0.3s ease;
+}
 
-  

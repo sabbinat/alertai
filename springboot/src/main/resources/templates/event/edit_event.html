@@ -33,29 +33,23 @@
           <a href="/user/profile" class="back-link"><p><i class="bi bi-arrow-left-short"></i><span>Atrás</span></p></a>
           <input type="hidden" name="id" th:value="${event.id}" />
 
-
           <div class="row">
             <!--IMAGEN DEL EVENTO-->
             <div class="col-12 col-md-4 d-flex flex-column">
               <div class="flex-grow-1">
                 <div th:id="'drop-area-edit-' + ${event.id}" 
-                  class="p-2 border border-secondary rounded d-flex flex-column align-items-center justify-content-center text-center h-100" 
-                  style="cursor: pointer; position: relative;">
+                  class="drop-area-edit">
 
                   <!-- Placeholder encima de la imagen -->
-                  <div th:id="'drop-placeholder-edit-' + ${event.id}"
-                      class="position-absolute top-0 start-0 w-100 h-100 d-flex flex-column align-items-center justify-content-center"
-                      style="background-color: rgba(56, 56, 56, 0.6); z-index: 2;">
-                    <i class="bi bi-image" style="font-size: 1.2rem;"></i>
-                    <p class="mt-2 mb-0" style="font-size: 0.85rem;">Arrastra una imagen aquí o haz clic para seleccionar</p>
+                  <div th:id="'drop-placeholder-edit-' + ${event.id}" class="drop-placeholder-edit">
+                    <i class="bi bi-camera-fill"></i>
                   </div>
 
                   <!-- Imagen -->
                   <img th:id="'preview-edit-' + ${event.id}" 
                     th:src="@{'/uploads/events/' + ${event.image}}"
                     th:attr="data-original-src=@{'/uploads/events/' + ${event.image}}"
-                    class="img-fluid h-100"
-                    style="object-fit: cover; z-index: 1;">
+                    class="img-fluid">
 
                   <!-- Input -->
                   <input type="file" th:id="'image-edit-' + ${event.id}" name="imageFile" accept="image/*" class="d-none">
@@ -88,20 +82,23 @@
                   </th:block>
                   </select>
               </div>
+              <div class="mb-3" id="customCategoryDiv" style="display:none;">
+                <input type="text" class="form-control muted" id="customCategory" name="customCategory" placeholder="Escribe la categoría" />
+              </div>
               <div class="mb-3 d-flex">
                   <input type="text" th:id="'address-edit-' + ${event.id}" name="location.address" th:value="${event.location.address}" placeholder="Dirección" class="form-control muted me-2" />
                   <input type="hidden" th:id="'latitude-edit-' + ${event.id}" name="location.latitude" th:value="${event.location.latitude}" />
                   <input type="hidden" th:id="'longitude-edit-' + ${event.id}" name="location.longitude" th:value="${event.location.longitude}" />
-                  <button type="button" class="btn btn-sumit" th:onclick="'geocodeAddressEdit(' + ${event.id} + ')'">Buscar</button>
+                  <button type="button" class="btn btn-submit" th:onclick="'geocodeAddressEdit(' + ${event.id} + ')'">Buscar</button>
               </div>
               <!-- Mapa -->
-              <div th:id="'map-edit-' + ${event.id}" th:attr="data-event-id=${event.id}" style="height: 150px; width: 100%;" class="rounded shadow-sm"></div>
+              <div th:id="'map-edit-' + ${event.id}" th:attr="data-event-id=${event.id}" style="height: 150px; width: 100%;" class="rounded shadow"></div>
             </div>    
           </div>  
         </div>
         <div class="modal-footer mt-3">
-          <button type="button" class="btn btn-sumit me-2" onclick="window.location.href='/user/profile'">Cancelar</button>
-          <button type="submit" class="btn btn-sumit" th:text="#{form.update}">Actualizar</button>
+          <button type="button" class="btn btn-submit me-2" onclick="window.location.href='/user/profile'">Cancelar</button>
+          <button type="submit" class="btn btn-submit" th:text="#{form.update}">Actualizar</button>
         </div>
       </form>
     </div>

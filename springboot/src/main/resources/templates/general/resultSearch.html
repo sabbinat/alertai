@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="es">
 <head>
-<meta charset="UTF-8">
-<title>AlertAi - Registro exitoso</title>
+  <title>AlertAi - Resultado de búsqueda</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <!-- BOOTSTRAP   -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
@@ -12,7 +13,6 @@
 
   <!-- CSS PERSONALIZADO -->
   <link rel="stylesheet" th:href="@{/css/user.css}">
-  <link rel="stylesheet" th:href="@{/css/event.css}">
   <link rel="stylesheet" th:href="@{/css/theme.css}">
 
   <!-- FAVICON (ICON DE LA PÁGINA) -->
@@ -34,12 +34,12 @@
 
       <!-- MENÚ -->
       <div class="nav-left">
-        <a th:href="${user != null} ? @{/user/home} : @{/}" th:text="#{profile.home}">Inicio</a>
-        <a th:href="@{/event/allEvents}">Eventos</a>
-        <a href="/contact" th:text="#{profile.contact}">Contacto</a>
-        <a href="/help" th:text="#{profile.help}">Ayuda</a>
+        <a th:href="@{/user/home}" th:text="#{profile.home}" class="bottom-inline">Inicio</a>
+        <a th:href="@{/event/allEvents}" class="bottom-inline">Eventos</a>
+        <a href="/contact" th:text="#{profile.contact}" class="bottom-inline">Contacto</a>
+        <a href="/help" th:text="#{profile.help}" class="bottom-inline">Ayuda</a>
       </div>
-    
+
       <!-- BUSCADOR -->
       <div class="search-bar">
         <form action="/search" method="get" id="searchForm" class="search-form" role="search">
@@ -47,7 +47,7 @@
           <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
         </form>
       </div>
-    
+
       <!-- MENÚ DEL USUARIO -->
       <div class="nav-right">
         <!-- SI EL USUARIO HA INICIADO SESIÓN -->
@@ -91,13 +91,13 @@
         </div>
 
         <!-- SI EL USUARIO NO HA INICIADO SESIÓN -->
-        <div class="guest-menu " th:unless="${user != null}">
+        <div class="guest-menu" th:unless="${user != null}">
           <a href="#" class="btn btn-signin-account" data-bs-toggle="modal" data-bs-target="#loginModal">Entrar</a>
-          <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#registerModal">Crear cuenta</a>
+          <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#registerModal" th:text="#{register.create}">Crear cuenta</a>
 
 
           <!-- CAMBIAR THEME OCURO/CLARO -->
-          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
             <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
           </button>
         </div>
@@ -105,23 +105,129 @@
     </nav>
   </header>
 
-  <!--BANNER DEL EVENTO -->
-  <section class="event-banner">
-    <h1 class="mb-3" th:text="#{register.success.title}">Registro exitoso</h1>
-    <p th:text="#{register.success.msg}">Te hemos enviado un correo de verificación. Por favor, revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.</p>
+  <!-- BANNER DE BÚSQUEDA -->
+  <section class="banner-contact pt-5 text-center">
+    <h1>
+      <span th:text="#{result}">Resultados de búsqueda para</span><br>
+      "<span th:text="${query}">consulta</span>"
+    </h1>
   </section>
 
-  <!-- BOTONES DE CORREOS -->
-  <div class="button-container">
-    <a href="https://mail.google.com/" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir Gmail</a>
-    <a href="https://outlook.live.com/mail/" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir Outlook</a>
-    <a href="https://mail.yahoo.com/" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir Yahoo Mail</a>
-    <a href="https://www.icloud.com/mail" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir iCloud Mail</a>
-  </div>
- 
+  <!-- RESULTADO DE BÚSQUEDA -->
+  <section class="mt-3 p-5">
+    <!-- Resultado de Usuario -->
+    <div th:if="${usuario != null}" class="row mb-4">
+      <div class="col-md-3 d-flex justify-content-center align-items-center">
+        <img th:src="${usuario.image != null} ? '/uploads/icons/' + ${usuario.image} : '/img/icon-default.jpg'"  class="shadow"
+          alt="Foto del usuario" style="width: 200px; height: 200px; border-radius: 50%; object-fit: cover;">
+      </div>
+
+      <div class="col-md-9">
+        <a th:href="@{/user/{id}(id=${usuario.id})}">
+          <h4 class="mb-2 fw-bold bottom-inline">
+            <span th:text="${usuario.name}"></span>
+            <span class="small muted" style="font-size: 0.9rem;">(<span th:text="${usuario.username}"></span>)</span>
+          </h4>
+        </a>
+
+        <div class="mt-1">
+          <p>Eventos creados por este usuario:</p>
+          <ul style="list-style: none;">
+            <li th:each="ev : ${eventosUsuario}" style="margin-bottom: 20px;">
+              <img th:src="@{'/uploads/events/' + ${ev.image}}" alt="Imagen del evento" class="rounded shadow me-3" 
+                  style="width: 40px; height: 50px; object-fit: cover;">
+              <a th:href="@{/event/{id}(id=${ev.id})}" th:text="${ev.name}" style="font-size: 0.9rem; font-weight: 600;" class="bottom-inline"></a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado de Categoría -->
+    <div th:if="${categoria != null}">
+      <div th:each="ev : ${eventosCategoria}" class="row mb-4">
+        <!-- Imagen del Evento -->
+        <div class="col-md-3 d-flex align-items-center justify-content-center">
+          <img th:src="@{'/uploads/events/' + ${ev.image}}"
+              alt="Imagen del evento"
+              class="img-fluid rounded shadow"
+              style="max-height: 300px; object-fit: cover;">
+        </div>
+
+        <!-- Información del Evento -->
+        <div class="col-md-9">
+          <a th:href="@{/event/{id}(id=${ev.id})}" class="back-link">
+            <h4 class="mb-2 fw-bold bottom-inline">
+              <span th:text="${ev.name}"></span>
+            </h4>
+          </a>
+
+          <p class="muted small mb-2">
+            <i class="bi bi-calendar-event-fill me-2"></i>
+            <span th:text="${#strings.capitalize(#temporals.format(ev.startDate, 'EEEE, d ''de'' MMMM ''de'' yyyy'))}"></span>
+              a las 
+            <span th:text="${ev.time}"></span> horas. 
+          </p>
+
+          <p th:text="${ev.description}" class="mb-3" style="line-height: 1.5;"></p>
+
+          <!-- Usuario -->
+          <div class="d-flex align-items-center mt-3">
+              <img th:src="@{'/uploads/icons/' + ${ev.user.image}}" alt="Imagen del usuario"
+                    style="width: 35px; height: 35px; object-fit: cover; border-radius: 50%;"
+                    class="me-2 shadow-sm">
+              <span th:text="${ev.user.name}" class="fw-semibold text-dark"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Resultado de Evento -->
+    <div th:if="${evento != null}" class="row p-4 mb-4">
+      <!-- Imagen del Evento -->
+      <div class="col-md-3 d-flex align-items-center justify-content-center">
+        <img th:src="@{'/uploads/events/' + ${evento.image}}"
+            alt="Imagen del evento"
+            class="img-fluid rounded shadow"
+            style="max-height: 300px; object-fit: cover;">
+      </div>
+
+      <!-- Información del Evento -->
+      <div class="col-md-9">
+        <a th:href="@{/event/{id}(id=${evento.id})}" class="back-link">
+          <h4 class="mb-2 fw-bold bottom-inline">
+            <span th:text="${evento.name}"></span>
+            <span class="small muted" style="font-size: 0.9rem;">(<span th:text="${evento.category.name}"></span>)</span>
+          </h4>
+        </a>
+
+        <p class="muted small mb-2">
+          <i class="bi bi-calendar-event-fill me-2"></i>
+          <span th:text="${#strings.capitalize(#temporals.format(evento.startDate, 'EEEE, d ''de'' MMMM ''de'' yyyy'))}"></span>
+            a las 
+          <span th:text="${evento.time}"></span> horas. 
+        </p>
+
+        <p th:text="${evento.description}" class="mb-3" style="line-height: 1.5;"></p>
+
+        <!-- Usuario -->
+        <div class="d-flex align-items-center mt-3">
+            <img th:src="@{'/uploads/icons/' + ${evento.user.image}}" alt="Imagen del usuario"
+                  style="width: 35px; height: 35px; object-fit: cover; border-radius: 50%;"
+                  class="me-2 shadow-sm">
+            <span th:text="${evento.user.name}" class="fw-semibold text-dark"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sin resultados -->
+    <div th:if="${evento == null and categoria == null and usuario == null}" class="d-flex justify-content-center align-items-center">
+      <p>No se encontraron resultados para "<span th:text="${query}"></span>".</p>
+    </div>
+  </section>
 
   <!-- FOOTER -->
-  <footer class="footer py-4 mt-5 position-absolute bottom-0 w-100">
+  <footer class="footer py-4 mt-auto">
     <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
       <!-- Derechos reservados -->
       <p class="mb-0 small" th:text="#{footer.rights_reserved}">
@@ -143,10 +249,9 @@
       </div>
     </div>
   </footer>
-
+    
   <!-- MODAL -->
 
-  
   <!-- INICIAR SESIÓN -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog custom-login-size">
@@ -491,10 +596,12 @@
     </div>
   </div>
 
+  
   <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script th:src="@{/js/script.js}"></script>
   <script th:src="@{/js/theme.js}"></script>
+
 
 </body>
 </html>

@@ -13,6 +13,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long>{
     List<Category> findCategoryByNameLike(String name);
     <Optional> Category findByName(String name);
     List<Category> findByNameContainingIgnoreCase(String query);
+    Optional<Category> findByNameLike(String name);
+
 
 }
 

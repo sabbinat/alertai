@@ -36,8 +36,6 @@
   z-index: 1030;
 }
 .navbar-user a {
-  text-decoration: none;
-  color: inherit;
   margin: 0 1rem;
   font-weight: 500;
   transition: color 0.3s;
@@ -165,6 +163,8 @@
   font-size: 0.8rem;
   border-radius: 20px;
   border: none;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+
 }
 
 .search-form input:focus{
@@ -396,64 +396,29 @@ color: #333;
 }
 .contact-info {
   display: flex;
-  justify-content: center;
   align-items: center;
   flex-direction: column;
+  padding-top: 4rem;
 }
-.contact-info i{
-  font-size: 1rem;
-}
-.info-card-1{
-  width: 300px;
-  height: 100px;
-  background-color: var(--verde-petroleo-oscuro);
-  text-align: center;
+.info-card{
+  width: 400px;
+  height: 60px;
+  background-color: var(--verde-medio);
   border-radius: 10px;
   color: var(--blanco);
+  font-size: 0.9rem;
+  text-align: start;
   display: flex;
-  justify-content: center;
   align-items: center;
+  padding-left: 1rem;
 }
-.info-card-2{
-  width: 300px;
-  height: 100px;
-  background-color: var(--verde-petroleo-claro);
-  text-align: center;
-  border-radius: 10px;
-  color: var(--verde-oscuro-boton);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}  
-.info-card-3{
-  width: 300px;
-  height: 100px; 
-  background-color: var(--verde-claro);
-  text-align: center;
-  border-radius: 10px;
-  color: var(--verde-oscuro-boton);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.info-card p{
+  margin: 0;
+  padding: 0.5rem;
+  font-size: 0.9rem;
 }
 
 
-/* PÁGINA - RESULTSEARCH */
-.banner-search {
-  padding: 1rem 2rem;
-  height: 200px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-.theme-dark .banner-search {
-  background: linear-gradient(to bottom, var(--verde-petroleo-oscuro),  var(--body-night)); 
-  color: var(--text-night);
-}
-.theme-light .banner-search {
-  background: linear-gradient(to bottom, var(--verde-claro),  var(--body-light)); 
-  color: var(--text-light);
-}
 
 
 /* PÁGINA DE REGISTRO EXITOSO*/
@@ -488,15 +453,15 @@ color: #333;
 
 /* CONFIGURACIÓN */
 
-.settings-container {
+.settings-container, .administrar-container {
   padding: 1.5rem;
 }
-.settings-container h5{
+.settings-container h5, .administrar-container h5{
   font-size: 0.95rem;
 }
-.settings-container a{
+.settings-container a, .administrar-container a {
   color: inherit;
 }
-.settings-container h5:hover{
+.settings-container h5:hover, .settings-container a:hover{
   color: var(--verde-petroleo-oscuro);
 }

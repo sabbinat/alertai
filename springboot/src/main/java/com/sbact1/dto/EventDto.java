@@ -9,6 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.sbact1.model.Event;
 import com.sbact1.model.Location;
+import com.sbact1.model.User;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -36,6 +37,8 @@ public class EventDto {
     private String formattedStartDate;
     private String formattedEndDate;
 
+     private User user;
+
     public EventDto() {
 
     }
@@ -53,6 +56,7 @@ public class EventDto {
         this.image = event.getImage();
         this.registrationTime = event.getRegistrationTime();
         this.timeAgo = event.getTimeAgo();
+        this.user = event.getUser();
 
         this.formattedStartDate = event.getStartDate().format(formatter.withLocale(new Locale("es", "ES")));
         this.formattedEndDate = event.getEndDate().format(formatter.withLocale(new Locale("es", "ES")));

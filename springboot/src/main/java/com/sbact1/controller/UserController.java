@@ -16,6 +16,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.core.Authentication;
+
+
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,16 +29,22 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import com.sbact1.dto.EventDto;
 import com.sbact1.model.Category;
+import com.sbact1.model.Comment;
 import com.sbact1.model.Event;
+import com.sbact1.model.EventStatus;
+import com.sbact1.model.Report;
 import com.sbact1.model.Token;
 import com.sbact1.model.User;
 import com.sbact1.repository.CategoryRepository;
+import com.sbact1.repository.CommentRepository;
 import com.sbact1.repository.EventRepository;
+import com.sbact1.repository.ReportRepository;
 import com.sbact1.repository.TokenRepository;
 import com.sbact1.repository.UserRepository;
 import com.sbact1.service.SettingService;
@@ -43,6 +54,27 @@ import com.sbact1.service.EmailService;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 
+/**
+ * Controlador encargado de gestionar las operaciones relacionadas con el usuario en la aplicación.
+ * Proporciona endpoints para la visualización y edición del perfil, gestión de eventos, preferencias,
+ * notificaciones, configuración, eliminación de cuenta, contacto con el administrador y cambio de contraseña.
+ * 
+ * Funcionalidades principales:
+ * 
+ * - Mostrar la página principal del usuario con eventos, categorías y destacados.
+ * - Visualizar y editar el perfil del usuario, incluyendo imagen y preferencias de categorías.
+ * - Gestionar notificaciones de reportes y comentarios recibidos.
+ * - Configurar opciones visuales y de idioma del sistema.
+ * - Solicitar y confirmar la eliminación de la cuenta de usuario mediante token enviado por correo.
+ * - Enviar consultas o dudas al administrador del sistema.
+ * - Cambiar la contraseña del usuario autenticado.
+ * 
+ * Utiliza servicios y repositorios para interactuar con la base de datos y enviar correos electrónicos.
+ * Incluye medidas de seguridad para verificar la autenticidad del usuario en cada operación sensible.
+ * 
+ * 
+ * Cada método está documentado individualmente para detallar su propósito y parámetros.
+ */
 @Controller
 @RequestMapping("/user")
 public class UserController {
@@ -54,6 +86,8 @@ public class UserController {
     @Autowired private TokenRepository tokenRepository;
     @Autowired private EmailService emailService;
     @Autowired private UserService userService;
+    @Autowired private CommentRepository commentRepository;
+    @Autowired private ReportRepository reportRepository;
     
     // Método que se ejecuta antes de cada petición para agregar el usuario logueado al modelo
     @ModelAttribute
@@ -75,7 +109,7 @@ public class UserController {
         // Verificar si está presente
         if (userOptional.isEmpty()) {
             redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
-            return "redirect:/signin"; // O a donde quieras redirigir si no se encuentra el usuario
+            return "redirect:/signin"; 
         }
 
         User user = userOptional.get();
@@ -86,33 +120,33 @@ public class UserController {
 
         // Carga la configuración visual y de idioma
         settingService.cargarSettings(model, "/user/home");
-
-        // Añade categorías, eventos del usuario y eventos recientes
-        model.addAttribute("categories", categoryRepository.findAll());
-        model.addAttribute("myEvents", eventRepository.findByUser(user));
-        model.addAttribute("size", myEvents.size());
-        model.addAttribute("idx", 0); 
-        model.addAttribute("recentEvents", eventRepository.findAllByOrderByStartDateDesc());  
         
         // Obtiene los eventos recientes
-        List<Event> recentEvents = eventRepository.findAll()
+        List<EventStatus> visibleStatuses = List.of(EventStatus.ACTIVO, EventStatus.DENUNCIADO);
+
+        // Eventos de otros usuarios visibles
+        List<Event> recentEvents = eventRepository.findByUserNotAndStatusIn(user, visibleStatuses)
             .stream()
             .sorted(Comparator.comparing(Event::getRegistrationTime).reversed())
             .toList();
 
-        model.addAttribute("recentEvents", recentEvents);
-        
 
-        // Obtener la categoría de entretenimiento (por nombre o ID)
         Category alerta = categoryRepository.findByName("Alerta"); 
 
-        // Filtrar los eventos solo de esa categoría y tomar los 3 más próximos
-        List<Event> featuredEventsAlert = eventRepository.findByCategoryOrderByStartDateDesc(alerta)
+        // Filtra los eventos solo de esa categoría y toma los 4 más próximos
+        List<Event> featuredEventsAlert = eventRepository
+            .findByCategoryAndStatusInOrderByStartDateDesc(alerta, visibleStatuses)
             .stream()
             .sorted(Comparator.comparing(Event::getStartDate))
             .limit(4)
             .toList();
 
+        model.addAttribute("categories", categoryRepository.findAll());
+        model.addAttribute("myEvents", eventRepository.findByUser(user));
+        model.addAttribute("size", myEvents.size());
+        model.addAttribute("idx", 0); 
+        model.addAttribute("recentEvents", eventRepository.findAllByOrderByStartDateDesc()); 
+        model.addAttribute("recentEvents", recentEvents);
         model.addAttribute("featuredEventsAlert", featuredEventsAlert);
         return "user/user_home";
     }
@@ -144,16 +178,85 @@ public class UserController {
                 .collect(Collectors.toList());
             eventsByCategory.put(cat.getId(), eventDtos);
         }
+
+        Long userId = Long.valueOf(userAccount.getId());
+
+        List<Report> reportesRecibidos = reportRepository.findByEventOwnerIdAndVistoFalse(userId);
+        List<Comment> comentariosRecibidos = commentRepository.findByEventOwnerIdAndVistoFalse(userId);
+
+        List<Event> eventosPreferidos = eventRepository.findByCategoryInAndUserNotOrderByRegistrationTimeDesc(
+            userAccount.getNotificaciones(), userAccount)
+            .stream()
+            .limit(3) 
+            .toList();
+
+        int cantidadNotificaciones = reportesRecibidos.size() + comentariosRecibidos.size();
+
+        model.addAttribute("user", userAccount);         
+        model.addAttribute("profileUser", userAccount);
+
+        model.addAttribute("eventosPreferidos", eventosPreferidos);
+        model.addAttribute("cantidadNotificaciones", cantidadNotificaciones);
         model.addAttribute("eventsByCategory", eventsByCategory);
-        model.addAttribute("user", userAccount);
+        model.addAttribute("comentariosRecibidos", comentariosRecibidos);
+        model.addAttribute("reportesRecibidos", reportesRecibidos);
 
         return "user/profile";
     }
 
+    // Meétodo que permite visualizar el perfil del usuario desde una cuenta externa
+	@GetMapping("/{id}")
+	public String verPerfilUsuario(@PathVariable Integer id, Model model, Principal principal) {
+		Optional<User> profileUserOptional = userRepository.findById(id);
+		Optional<User> visitanteOptional = userRepository.findByEmail(principal.getName());
+
+		if (profileUserOptional.isEmpty() || visitanteOptional.isEmpty()) {
+			return "redirect:/user/home?error=usuarioNoEncontrado";
+		}
+
+		User profileUser = profileUserOptional.get(); // dueño del perfil
+		User visitante = visitanteOptional.get();     // el que está mirando 
+
+		model.addAttribute("user", visitante);
+		model.addAttribute("profileUser", profileUser);
+
+		List<Event> events = eventRepository.findByUser(profileUser);
+		model.addAttribute("events", events);
+
+		List<Category> categories = categoryRepository.findAll();
+		model.addAttribute("categories", categories);
+
+		Map<Long, List<Event>> eventsByCategory = new HashMap<>();
+		for (Category cat : categories) {
+			List<Event> evs = eventRepository.findByUserAndCategoryOrderByStartDateDesc(profileUser, cat);
+			eventsByCategory.put(cat.getId(), evs);
+		}
+		model.addAttribute("eventsByCategory", eventsByCategory);
+
+		return "user/profile";
+	}
+
+    @PostMapping("/notificaciones/vistas")
+    @ResponseBody
+    @Transactional
+    public ResponseEntity<?> marcarVistas(Authentication auth) {
+        User user = userService.getByEmail(auth.getName());
+        Long userId = Long.valueOf(user.getId());
+
+        reportRepository.marcarReportesComoVistos(userId);
+        commentRepository.marcarComentariosComoVistos(userId);
+
+        return ResponseEntity.ok().build();
+    }
+
+
     // Actualiza los datos del perfil del usuario, incluyendo imagen
     @PostMapping("/update")
-    public String updateProfile(@ModelAttribute("user") User updatedUser, @RequestParam(value = "imageFile", required = false) MultipartFile imageFile, Principal principal) {
-        userService.updateUserProfile(updatedUser, imageFile, principal.getName());
+    public String updateProfile(@ModelAttribute("user") User updatedUser, 
+                                @RequestParam(value = "imageFile", required = false) MultipartFile imageFile, 
+                                @RequestParam(value = "phoneVerified", required = false) boolean phoneVerified,
+                                Principal principal) {
+        userService.updateUserProfile(updatedUser, imageFile, principal.getName(), phoneVerified);
         
         Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
         if (optionalUser.isEmpty()) {
@@ -166,9 +269,11 @@ public class UserController {
         } else {
             return "redirect:/user/profile";
         }
+
     }
 
-    // Muestra el formulario para configurar las preferencias de categorías
+    
+    // Guarda las preferencias de categorías seleccionadas por el usuario
     @GetMapping("/preferences")
     public String showPreferences(Model model, Principal principal, RedirectAttributes redirectAttributes) {
         Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
@@ -186,9 +291,9 @@ public class UserController {
         return "user/profile"; 
     }
 
-    // Guarda las preferencias de categorías seleccionadas por el usuario
     @PostMapping("/preferences")
-    public String savePreferences(@RequestParam List<Long> categoriaIds, Principal principal, RedirectAttributes redirectAttributes) {
+    public String savePreferences(@RequestParam List<Long> categoriaIds, 
+                                Principal principal, RedirectAttributes redirectAttributes) {
         Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
 
         if (optionalUser.isEmpty()) {
@@ -204,14 +309,15 @@ public class UserController {
         return "redirect:/user/profile"; 
     }
     
+
     // Muestra la página de configuración del sistema (idioma, visual, etc.)
     @GetMapping("/settings")
-    public String mostrarSettings(Model model, Principal principal, @RequestParam(name = "redirectTo", required = false, defaultValue = "/user/home") String redirectTo) {
+    public String mostrarSettings(Model model, Principal principal, 
+                @RequestParam(name = "redirectTo", required = false, defaultValue = "/user/home") String redirectTo) {
         settingService.cargarSettings(model, redirectTo);
         return "settings";
     }
 
-    // Guarda las configuraciones del sistema (idioma, etc.)
     @PostMapping("/settings")
     public String guardarSettings(@RequestParam String language,
             @RequestParam String redirectTo,
@@ -219,7 +325,8 @@ public class UserController {
         return settingService.guardarSettings(language, redirectTo, redirectAttributes);
     }
 
-    // Elimina un usuario, solo si no tiene eventos o comentarios asociados
+
+    // Método que usa el usuario para eliminar su cuenta (se le envía un correo para confirmar)
     @GetMapping("/eliminar/{id}")
     public String eliminarUsuario(@PathVariable Integer id, RedirectAttributes msg){
         try {
@@ -284,6 +391,8 @@ public class UserController {
         return "redirect:/signin";
     }
 
+
+    // Método para contactarse con el admin o quien maneje el sistema
     @PostMapping("/enviarConsulta")
     public String enviarConsulta(
             @RequestParam String name,
@@ -300,7 +409,7 @@ public class UserController {
         return "/general/contact"; 
     }
 
-
+    // Método para cambiar la contraseña desde configuración
     @PostMapping("/change-password")
     public String cambiarPassword(@RequestParam String currentPassword,
                                 @RequestParam String newPassword,

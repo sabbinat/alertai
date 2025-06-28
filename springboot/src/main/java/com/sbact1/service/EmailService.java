@@ -11,6 +11,23 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMessage;
 
+/**
+ * Servicio para el envío de correos electrónicos utilizando JavaMailSender.
+ * 
+ * Permite enviar correos electrónicos personalizados, incluyendo opciones para
+ * establecer el remitente, destinatario, asunto, contenido, dirección de respuesta (reply-to)
+ * y nombre visible del remitente. Además, proporciona métodos específicos para enviar
+ * consultas de usuarios al correo institucional de soporte.
+ * 
+ * Las credenciales del remitente (email y contraseña) se obtienen desde el archivo
+ * de configuración application-secret.properties
+ * 
+ * - enviarCorreo: Métodos sobrecargados para enviar correos electrónicos con diferentes niveles de personalización.
+ * - enviarDudaUsuario: Envía una consulta de usuario al correo institucional de soporte, incluyendo los datos del usuario y su mensaje.
+ * - Excepciones: Los métodos pueden lanzar MessagingException y UnsupportedEncodingException
+ * si ocurre un error durante la creación o el envío del mensaje.
+ * 
+ */
 @Service
 public class EmailService {
 
@@ -42,7 +59,7 @@ public class EmailService {
         if (displayName != null && !displayName.isBlank()) {
             helper.setFrom(new InternetAddress(emailUser, displayName));
         } else {
-            helper.setFrom(emailUser); // default sin nombre visible
+            helper.setFrom(emailUser); 
         }
 
         helper.setTo(toUser);
@@ -68,27 +85,46 @@ public class EmailService {
 
 
 
-    /**
-     * Envia una duda o mensaje de contacto de un usuario al correo institucional.
-     *
-     * @param name nombre del usuario que consulta
-     * @param email email del usuario
-     * @param asunto asunto del mensaje
-     * @param message mensaje o duda que el usuario quiere enviar
-     * @throws MessagingException si ocurre un error durante el envío
-     */
-    public void enviarDudaUsuario(String name, String email, String asunto, String message) throws MessagingException, UnsupportedEncodingException  {
-        String asuntoFinal = "Consulta de " + name + " - " + asunto;
+    // /**
+    //  * Envia una duda o mensaje de contacto de un usuario al correo institucional.
+    //  *
+    //  * @param name nombre del usuario que consulta
+    //  * @param email email del usuario
+    //  * @param asunto asunto del mensaje
+    //  * @param message mensaje o duda que el usuario quiere enviar
+    //  * @throws MessagingException si ocurre un error durante el envío
+    //  */
+    // public void enviarDudaUsuario(String name, String email, String asunto, String message) throws MessagingException, UnsupportedEncodingException  {
+    //     String asuntoFinal = "Consulta de " + name + " - " + asunto;
 
-        String contenido = """
-            <h3>📩 Nueva consulta de usuario %s</h3>
-            <p><strong>Email:</strong> %s</p>
-            <p><strong>Mensaje:</strong><br>%s</p>
-        """.formatted(name, email, message);
+    //     String contenido = """
+    //         <h3>📩 Nueva consulta de usuario %s</h3>
+    //         <p><strong>Email:</strong> %s</p>
+    //         <p><strong>Mensaje:</strong><br>%s</p>
+    //     """.formatted(name, email, message);
 
-        // El correo va a tu institucional, pero con replyTo del usuario
-        enviarCorreo(emailUser, asuntoFinal, contenido, email, name);
+    //     // El correo va a tu institucional, pero con replyTo del usuario
+    //     enviarCorreo(emailUser, asuntoFinal, contenido, email, name);
+    // }
+
+    public void enviarDudaUsuario(String nombre, String email, String asunto, String mensaje)
+        throws MessagingException, UnsupportedEncodingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        helper.setFrom("zonalerta@gmail.com", "AlertaAi Soporte");
+        helper.setTo("fernandeznatalie18@gmail.com");
+        helper.setSubject("Nueva consulta: " + asunto);
+
+        String contenido = "<p><strong>Nombre:</strong> " + nombre + "</p>"
+                        + "<p><strong>Email:</strong> " + email + "</p>"
+                        + "<p><strong>Asunto:</strong> " + asunto + "</p>"
+                        + "<p><strong>Mensaje:</strong></p><p>" + mensaje + "</p>";
+
+        helper.setText(contenido, true);
+        mailSender.send(message);
     }
+
 
 
 

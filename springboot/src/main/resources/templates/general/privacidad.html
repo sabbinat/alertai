@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
-<meta charset="UTF-8">
-<title>AlertAi - Registro exitoso</title>
-  <!-- BOOTSTRAP   -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AlertAi - Política de Privacidad</title>
+   <!-- BOOTSTRAP   -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
 
@@ -12,13 +12,13 @@
 
   <!-- CSS PERSONALIZADO -->
   <link rel="stylesheet" th:href="@{/css/user.css}">
-  <link rel="stylesheet" th:href="@{/css/event.css}">
   <link rel="stylesheet" th:href="@{/css/theme.css}">
 
   <!-- FAVICON (ICON DE LA PÁGINA) -->
   <link rel="icon" type="image/png" href="/img/icon-nav.png">
 </head>
 <body>
+
   <!-- MENÚ -->
   <header>
     <nav class="navbar-user sticky-top">
@@ -34,12 +34,12 @@
 
       <!-- MENÚ -->
       <div class="nav-left">
-        <a th:href="${user != null} ? @{/user/home} : @{/}" th:text="#{profile.home}">Inicio</a>
-        <a th:href="@{/event/allEvents}">Eventos</a>
-        <a href="/contact" th:text="#{profile.contact}">Contacto</a>
-        <a href="/help" th:text="#{profile.help}">Ayuda</a>
+        <a th:href="@{/user/home}" th:text="#{profile.home}" class="bottom-inline">Inicio</a>
+        <a th:href="@{/event/allEvents}" class="bottom-inline">Eventos</a>
+        <a href="/contact" th:text="#{profile.contact}" class="bottom-inline">Contacto</a>
+        <a href="/help" th:text="#{profile.help}" class="bottom-inline">Ayuda</a>
       </div>
-    
+
       <!-- BUSCADOR -->
       <div class="search-bar">
         <form action="/search" method="get" id="searchForm" class="search-form" role="search">
@@ -47,7 +47,7 @@
           <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
         </form>
       </div>
-    
+
       <!-- MENÚ DEL USUARIO -->
       <div class="nav-right">
         <!-- SI EL USUARIO HA INICIADO SESIÓN -->
@@ -91,13 +91,13 @@
         </div>
 
         <!-- SI EL USUARIO NO HA INICIADO SESIÓN -->
-        <div class="guest-menu " th:unless="${user != null}">
+        <div class="guest-menu" th:unless="${user != null}">
           <a href="#" class="btn btn-signin-account" data-bs-toggle="modal" data-bs-target="#loginModal">Entrar</a>
-          <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#registerModal">Crear cuenta</a>
+          <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#registerModal" th:text="#{register.create}">Crear cuenta</a>
 
 
           <!-- CAMBIAR THEME OCURO/CLARO -->
-          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
             <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
           </button>
         </div>
@@ -105,23 +105,40 @@
     </nav>
   </header>
 
-  <!--BANNER DEL EVENTO -->
-  <section class="event-banner">
-    <h1 class="mb-3" th:text="#{register.success.title}">Registro exitoso</h1>
-    <p th:text="#{register.success.msg}">Te hemos enviado un correo de verificación. Por favor, revisa tu bandeja de entrada y haz clic en el enlace para activar tu cuenta.</p>
+  <!-- CONTENIDO DE PRIVACIDAD -->
+  <section class="banner-contact py-5 text-center">
+    <h1 class="mb-4" th:text="#{privacy.title}">Aviso de Privacidad</h1>
+    <p>
+      <strong th:text="#{privacy.last_update.label}">Última actualización:</strong>
+      <span th:text="#{privacy.last_update.date}">19 de junio de 2025</span>
+    </p>
+
+    <div class="container d-flex justify-content-center">
+      <div class="text-start" style="max-width: 800px; font-size: 0.9rem;">
+        <p th:text="#{privacy.intro}">
+          Respetamos tu privacidad y protegemos los datos personales...
+        </p>
+
+        <ul>
+          <li><strong th:text="#{privacy.purpose.label}">Finalidad:</strong> <span th:text="#{privacy.purpose.text}"></span></li>
+          <li><strong th:text="#{privacy.data.label}">Tipo de datos:</strong> <span th:text="#{privacy.data.text}"></span></li>
+          <li><strong th:text="#{privacy.usage.label}">Uso de los datos:</strong> <span th:text="#{privacy.usage.text}"></span></li>
+          <li><strong th:text="#{privacy.security.label}">Seguridad:</strong> <span th:text="#{privacy.security.text}"></span></li>
+          <li><strong th:text="#{privacy.rights.label}">Derechos:</strong> <span th:text="#{privacy.rights.text}"></span></li>
+          <li><strong th:text="#{privacy.retention.label}">Retención:</strong> <span th:text="#{privacy.retention.text}"></span></li>
+          <li><strong th:text="#{privacy.changes.label}">Modificaciones:</strong> <span th:text="#{privacy.changes.text}"></span></li>
+        </ul>
+
+        <p th:utext="#{privacy.contact}">
+          Si tienes dudas... <strong><a th:href="@{/contact}">contacto</a></strong>.
+        </p>
+      </div>
+    </div>
   </section>
 
-  <!-- BOTONES DE CORREOS -->
-  <div class="button-container">
-    <a href="https://mail.google.com/" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir Gmail</a>
-    <a href="https://outlook.live.com/mail/" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir Outlook</a>
-    <a href="https://mail.yahoo.com/" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir Yahoo Mail</a>
-    <a href="https://www.icloud.com/mail" target="_blank" class="email-button text-center" rel="noopener noreferrer">Abrir iCloud Mail</a>
-  </div>
- 
 
   <!-- FOOTER -->
-  <footer class="footer py-4 mt-5 position-absolute bottom-0 w-100">
+  <footer class="footer py-4 mt-auto">
     <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
       <!-- Derechos reservados -->
       <p class="mb-0 small" th:text="#{footer.rights_reserved}">
@@ -145,8 +162,7 @@
   </footer>
 
   <!-- MODAL -->
-
-  
+   
   <!-- INICIAR SESIÓN -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog custom-login-size">
@@ -154,49 +170,50 @@
         <div class="modal-body p-5">
           <div class="text-center">
             <!-- MENSAJES -->
-            <div th:if="${param.error}" class="alert alert-danger text-center small" role="alert" th:text="#{login.error}">
+            <div th:if="${param.error}" class="alert alert-danger text-center small" role="alert">
                 Correo o contraseña incorrectos. Intenta nuevamente.
             </div>
-            <div th:if="${param.logout}" class="alert alert-success text-center small" role="alert" th:text="#{login.logout}">
+            <div th:if="${param.logout}" class="alert alert-success text-center small" role="alert">
                 Has cerrado sesión exitosamente.
             </div>
 
-            <h4 class="fw-bold mb-5" th:text="#{login.title}">Iniciar sesión</h4>
+            <h4 class="fw-bold mb-5">Iniciar sesión</h4>
           </div>
 
           <form th:action="@{/userLogin}" method="post">
             <!-- CREDENCIALES -->
             <div class="mb-3">
-                <input type="email" name="username" class="form-control muted" th:placeholder="#{login.email}" required>
+                <input type="email" name="username" class="form-control muted" placeholder="Correo electrónico" required>
             </div>
             <div class="mb-3 position-relative small">
-              <input type="password" name="password" id="password" class="form-control muted" th:placeholder="#{login.password}" required>
-              <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 translate-middle-y text-secondary" 
-              style="right: 1rem; cursor: pointer;"></i>
+              <input type="password" name="password" id="password" class="form-control muted" placeholder="Contraseña" required>
+              <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 translate-middle-y text-secondary" style="right: 1rem; cursor: pointer;"></i>
             </div>                
           
             <!-- RECORDAR SESIÓN -->
             <div class="mb-3 d-flex justify-content-between align-items-center">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
-                  <label class="form-check-label small" for="remember-me" th:text="#{login.remember}">Recuérdame</label>
+                  <label class="form-check-label small" for="remember-me">Recuérdame</label>
                 </div>
-                <a href="/forgot-password" class="small forgot-password bottom-inline" th:text="#{login.forgot}">¿Olvidaste la contraseña?</a>
+                <a href="/forgot-password" class="small forgot-password">¿Olvidaste la contraseña?</a>
             </div>
             <div class="submit mt-2">
               <button type="submit" class="btn btn-submit">Entrar</button>
             </div>
 
             <!-- POLÍTICAS -->
-            <p class="text-center mt-4 small muted" th:text="#{login.footer}">
-              Descubrí, compartí y participá de eventos importantes en tu comunidad.
+            <p class="text-center mt-4 small">
+              Este sitio está protegido por reCAPTCHA Enterprise y se aplica la 
+              <strong>Política de Privacidad</strong> y los 
+              <strong>Términos de Servicios de Google</strong>.
             </p>
             <hr class="mt-3">
 
             <!-- REGISTRARSE -->
             <div class="text-center mt-3 small">
-              <p th:utext="#{login.register.full}">
-                ¿Es tu primera vez en AlertAi? <a href="/register" class="ms-2"><strong class="bottom-inline">Regístrate.</strong></a>
+              <p>¿Es tu primera vez en AlertAi?
+                <a href="register" class="ms-2"><strong>Regístrate.</strong></a>
               </p>
             </div>
           </form>
@@ -212,34 +229,34 @@
           <div th:if="${msg}" class="alert alert-info" th:text="${msg}"></div>
       
           <div class="text-center mb-4">
-            <h4 class="fw-bold" th:text="#{register.welcome}">Te damos la bienvenida a AlertAi</h4>
-            <p class="muted mb-3" th:text="#{register.create}">Crea tu cuenta</p>
+            <h4 class="fw-bold">Te damos la bienvenida a AlertAi</h4>
+            <p class="muted mb-3">Crea tu cuenta</p>
           </div>
       
           <form th:action="@{/register}" method="post">
             <div class="mb-2">
-              <input type="text" name="name" class="form-control muted" th:placeholder="#{form.name}" required>
+              <input type="text" name="name" class="form-control muted" placeholder="Nombre completo" required>
             </div>
             <div class="mb-2">
-            <input type="text" name="username" class="form-control muted" th:placeholder="#{form.username}" required>
+            <input type="text" name="username" class="form-control muted" placeholder="Usuario" required>
             </div>
             <div class="mb-2">
-              <input type="email" name="email" class="form-control muted" th:placeholder="#{form.email}" required>
+              <input type="email" name="email" class="form-control muted" placeholder="Correo electrónico" required>
             </div>
             <div class="mb-2">
               <select name="country" class="form-select muted" required>
                 <option value="" hidden>País</option>
-                <option value="Uruguay" th:text="#{register.country.uruguay}">Uruguay</option>
+                <option value="Uruguay">Uruguay</option>
                 <option value="Brasil">Brasil</option>
               </select>
             </div>
 
             <div class="position-relative">
               <input type="password" name="password" id="reg_password" class="form-control pe-5 muted"
-                th:placeholder="#{register.password}"
+                placeholder="Contraseña"
                 minlength="8"
                 pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}"
-                th:title="#{form.password.tooltip}"
+                title="Debe tener al menos 8 caracteres, una mayúscula, una minúscula, un número y un símbolo especial"
                 required>
 
               <!-- Ícono para mostrar/ocultar contraseña -->
@@ -251,8 +268,8 @@
             <!-- TÉRMINOS DE USO -->
             <div class="form-check d-flex align-items-center mt-4">
               <input class="form-check-input mt-0" type="checkbox" id="accept" name="accept">
-              <label class="form-check-label ms-2 small" for="accept" th:utext="#{register.terms}">
-                Acepto los <a th:href="@{/terminos}" class="bottom-inline"><strong>Términos de Uso</strong></a> y el <a th:href="@{/privacidad}" class="bottom-inline"><strong>Aviso de Privacidad</strong></a> de AlertAi.
+              <label class="form-check-label ms-2 small" for="accept">
+                Acepto los <strong>Términos de Uso</strong> y el <strong>Aviso de Privacidad</strong> de AlertAi.
               </label>
             </div>
 
@@ -263,7 +280,7 @@
             
             <hr class="mt-3">
             <!-- INICIAR SESIÓN -->
-            <div class="text-center mt-3 small" th:utext="#{register.login}">
+            <div class="text-center mt-3 small">
               <p>¿Ya formas parte de AlertAi?
               <a href="signin" class="ms-2"><strong>Iniciar sesión.</strong></a>
               </p>
@@ -490,6 +507,7 @@
       </div>
     </div>
   </div>
+  
 
   <!-- JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
@@ -498,3 +516,8 @@
 
 </body>
 </html>
+
+
+
+
+
