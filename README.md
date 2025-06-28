@@ -9,10 +9,10 @@ El sistema también cuenta con un completo panel de administración que permite 
 Su enfoque principal es fomentar la participación ciudadana y mejorar la comunicación en situaciones de emergencia o interés general.
 
 ## Autores
-Marla Mendez - (@MarlaMendez)
-Natalie Fernández - (@sabbinat)
-Nicolás Lara - (@niikila)
-Paula Suarez - (@TainaSuarez)
+- Marla Mendez - (@MarlaMendez)
+- Natalie Fernández - (@sabbinat)
+- Nicolás Lara - (@niikila)
+- Paula Suarez - (@TainaSuarez)
 
 ## 🚀 Funcionalidades principales
 
