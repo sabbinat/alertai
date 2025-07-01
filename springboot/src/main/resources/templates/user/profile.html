@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<meta charset="UTF-8">
+<title>AlertAi - Perfil</title>
+  <!-- BOOTSTRAP   -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- FONT AWESOM  -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- CSS PERSONALIZADO -->
+  <link rel="stylesheet" th:href="@{/css/profile.css}">
+  <link rel="stylesheet" th:href="@{/css/theme.css}">
+  <link rel="stylesheet" th:href="@{/css/user.css}">
+
+  <!-- FAVICON (ICON DE LA PÁGINA) -->
+  <link rel="icon" type="image/png" href="/img/icon-nav.png">
+
+  <!-- LEAFLET (MAPA)  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+</head>
+<body>
+
+  <div class="page-container">
+    <!-- MENÚ -->
+    <header>
+      <nav class="navbar-user sticky-top">
+        <!-- LOGO -->
+        <div class="branding">
+          <a th:href="@{/user/home}">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+              <path d="M177.18,307.9c-1.48,.35-2.9-.76-2.91-2.28-.02-4.67-.06-9.17,.1-13.66,.03-.94,1.12-2.25,2.04-2.68,14.3-6.69,21.11-17.92,21.07-33.63-.03-10.86-.37-21.78,.63-32.57,2.4-25.83,26.36-46.37,52.31-45.56,27.24,.85,49.57,21.69,50.93,47.96,.53,10.33,.23,20.69,.32,31.04,.13,15.59,7.32,26.58,21.58,32.85,1.82,.8,2.56,1.63,2.5,3.65-.12,4.21-.07,8.42-.06,12.85,0,1.52-1.42,2.67-2.9,2.3-10.48-2.66-18.98-7.9-25.97-15.74-9-10.1-13.22-22.06-13.28-35.52-.04-8.93,.01-17.86-.01-26.79-.05-19.4-14.85-34.37-34.01-34.44-18.88-.07-33.75,15.17-33.87,34.6-.07,11.12,.26,22.29-.58,33.36-1.58,20.67-18.08,39.58-37.88,44.26Z"></path>
+              <path d="M225.8,297.54h47.53c1.3,0,2.38,1.06,2.35,2.36-.25,10.42-10.99,20.99-23.44,22.43-13.71,1.59-26.11-7.94-28.76-22-.27-1.45,.84-2.79,2.31-2.79Z"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- MENÚ -->
+        <div class="nav-left">
+          <!-- Link solo visible si el usuario está autenticado -->
+          <a sec:authorize="isAuthenticated()" th:href="@{/user/home}" th:text="#{profile.home}" class="bottom-inline">Inicio</a>
+
+          <!-- Link visible solo si está deslogueado -->
+          <a sec:authorize="isAnonymous()" th:href="@{/}" th:text="#{profile.home}" class="bottom-inline">Inicio</a>
+          <a th:href="@{/event/allEvents}" class="bottom-inline">Eventos</a>
+          <a href="/contact" th:text="#{profile.contact}" class="bottom-inline">Contacto</a>
+          <a href="/help" th:text="#{profile.help}" class="bottom-inline">Ayuda</a>
+        </div>
+      
+        <!-- BUSCADOR -->
+        <div class="search-bar">
+          <form action="/search" method="get" id="searchForm" class="search-form" role="search">
+            <input id="eventSearchInput"
+                  type="text"
+                  name="query"
+                  th:placeholder="#{search.placeholder}"
+                  th:attr="aria-label=#{search.placeholder}" />
+            <button type="submit" th:attr="aria-label=#{search.button}">
+              <i class="fas fa-search"></i>
+            </button>
+          </form>
+        </div>
+
+        <!-- MENÚ DEL USUARIO -->
+        <div class="nav-right">
+          <!-- SI EL USUARIO HA INICIADO SESIÓN -->
+          <div class="user-menu" th:if="${user != null}">
+            <img th:src="@{'/uploads/icons/' + ${user.image}}" onerror="this.onerror=null; this.src='/img/icon-default.jpg';" alt="Foto del usuario">
+            <span class="username">
+              <span th:text="${user.name}"></span>
+            </span>
+
+            <div class="dropdown me-4">
+              <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+
+              <ul class="dropdown-menu dropdown-menu-end custom-dropdown mt-2">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2" th:href="@{/user/profile}">
+                    <i class="fas fa-user me-1"></i>
+                    <span>Perfil</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <i class="fas fa-cog me-1"></i>
+                    <span th:text="#{profile.setting}">Configuración</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i>
+                    <span th:text="#{profile.logout}">Cerrar sesión</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <!-- CAMBIAR THEME OCURO/CLARO -->
+            <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+              <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
+            </button>
+          </div>
+
+          <!-- SI EL USUARIO NO HA INICIADO SESIÓN -->
+          <div class="guest-menu " th:unless="${user != null}">
+            <a href="#" class="btn btn-signin-account" data-bs-toggle="modal" data-bs-target="#loginModal">Entrar</a>
+            <a href="#" class="btn btn-register-account" data-bs-toggle="modal" data-bs-target="#registerModal" th:text="#{register.create}">Crear cuenta</a>
+
+
+            <!-- CAMBIAR THEME OCURO/CLARO -->
+            <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+              <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
+            </button>
+          </div>
+        </div>      
+      </nav>
+    </header>
+
+    <!-- CONTENIDO DEL PERFIL -->
+    <main class="flex-grow-1">
+      <!-- BANNER DE PERFIL -->
+      <section class="banner-profile"></section>
+
+      <!-- PERFIL DEL USUARIO -->
+      <section class="profile">
+        <div class="profile-pic">
+          <img th:src="@{'/uploads/icons/' + ${profileUser.image}}" onerror="this.onerror=null; this.src='/img/icon-default.jpg';" alt="Foto del usuario">
+        </div>
+        <!-- INFORMACIÓN DEL USUARIO -->
+        <div class="profile-info">
+          <div class="d-flex justify-content-between">
+            <!-- Info del usuario -->
+            <p>
+              <span th:text="${profileUser.name}" style="font-size: 2rem; font-weight: 700;" class="me-2">Nombre</span>  
+              (<span th:text="${profileUser.username}" style="font-size: 0.8;" class="muted">Usuario</span>)
+            </p>
+
+            <!-- Botones de notificación y configuración -->
+            <div class="me-4 d-flex position-relative" th:if="${user != null and user.id == profileUser.id}">
+              <button id="toggleNotifications" class="icono-redondo position-relative me-3" title="Ver notificaciones" sec:authorize="hasRole('USER')">
+                <i class="fa fa-bell"></i>
+                <!-- Solo muestra si hay notificaciones sin ver -->
+                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                    th:if="${cantidadNotificaciones > 0}" 
+                    th:text="${cantidadNotificaciones}">
+                </span>
+              </button>
+
+              <!-- Panel de notificaciones -->
+              <div id="notificationPanel" class="notification-panel shadow-lg p-3 border rounded">
+                <div class="title"><h5 th:text="#{notifications.title}">Notificaciones</h5></div>
+
+                <!-- Eventos nuevos en categorías preferidas -->
+                <div class="notification-block my-3">
+                  <h6 th:text="#{notifications.recommended_events}">Eventos para ti</h6>
+                  <div th:if="${#lists.isEmpty(eventosPreferidos)}"
+                      style="font-size: 0.8rem; padding-left: 1rem;"
+                      th:text="#{notifications.no_recommended}">
+                    Sin novedades recientes.
+                  </div>
+                  <ul th:each="e : ${eventosPreferidos}">
+                    <li>
+                      <a th:href="@{/event/{id}(id=${e.id})}" class="text-decoration-none">
+                        <strong th:text="${e.name}">Evento</strong>
+                      </a> 
+                      <span th:text="#{notifications.in_category}">en</span>
+                      <span th:text="${e.category.name}">Categoría</span> – 
+                      <em th:text="${e.timeAgo}">Fecha</em>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Reportes recibidos -->
+                <div class="notification-block mb-3">
+                  <h6 th:text="#{notifications.reports}">Eventos denunciados</h6>
+                  <div th:if="${#lists.isEmpty(reportesRecibidos)}"
+                      style="font-size: 0.8rem; padding-left: 1rem;"
+                      th:text="#{notifications.no_reports}">
+                    No tienes ninguna denuncia.
+                  </div>
+                  <ul th:each="r : ${reportesRecibidos}">
+                    <li>
+                      <strong th:text="${r.event.name}">Evento</strong>
+                      <span th:text="#{notifications.was_reported_by}">fue denunciado por</span>
+                      <span th:text="${r.user.username}">Usuario</span> – 
+                      <em th:text="${r.timeAgo}">Fecha</em>
+                    </li>
+                  </ul>
+                </div> 
+
+                <!-- Comentarios recibidos -->
+                <div class="notification-block">
+                  <h6 th:text="#{notifications.comments}">Comentarios recibidos</h6>
+                  <div th:if="${#lists.isEmpty(comentariosRecibidos)}"
+                      style="font-size: 0.8rem; padding-left: 1rem;"
+                      th:text="#{notifications.no_comments}">
+                    Sin comentarios nuevos.
+                  </div>
+                  <ul th:each="c : ${comentariosRecibidos}">
+                    <li>
+                      <span th:text="#{notifications.in_event}">En</span>
+                      <a th:href="@{/event/{id}(id=${c.event.id})}" class="text-decoration-none">
+                        <strong th:text="${c.event.name}">Evento</strong>
+                      </a>:
+                      <q th:text="${c.content}">Comentario</q> – 
+                      <span th:text="#{notifications.by}">por</span> 
+                      <span th:text="${c.user.username}">Autor</span>
+                      <em th:text="${c.timeAgo}">Fecha</em>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+
+              <!-- Panel de configuración -->
+              <div th:if="${profileUser != null}">
+                <button type="button" class=" icono-redondo me-3" data-bs-toggle="modal" data-bs-target="#settingsModal" 
+                  title="Configuración" sec:authorize="hasRole('USER')">
+                  <i class="bi bi-gear"></i>
+                </button>
+              </div>
+              
+            </div>
+          </div>
+          <p style="font-size: 0.9rem;" th:utext="${profileUser.description != null} ? ${#strings.replace(profileUser.description, '\n', '<br/>')}"></p>
+          <p style="font-size: 0.8rem;" class="muted"> 
+            <i class="bi bi-geo-alt me-1"></i>  
+            <span th:text="${profileUser.country}"></span>
+          </p>
+        </div>
+        <!-- BOTÓN DE EDITAR PERFIL -->
+        <button class="edit-pic" data-bs-toggle="modal" data-bs-target="#editarPerfilModal" 
+          th:if="${user != null and user.id == profileUser.id}" 
+          title="Editar perfil">
+          ✎
+        </button>
+      </section>
+
+      <!-- SECCIÓN DE EVENTOS -->
+      <section class="content-profile row p-4 m-5" style="border-radius: 10px;">
+        <!-- SIDEBAR DE BIENVENIDA + CREAR EVENTO -->
+        <div class="col-12 col-md-4 sidebar me-5 mt-2" th:if="${user != null and user.id == profileUser.id}">
+          <h4 th:text="#{profile.welcome}">Panel de eventos</h4>
+          <p  th:text="#{profile.welcome2}" style="font-size: 0.9rem;">
+            Aquí podrás gestionar y crear nuevos eventos fácilmente
+          </p>
+          <button class="create-event fw-bold" data-bs-toggle="modal" data-bs-target="#crearEventoModal" 
+            th:text="#{profile.create}"
+            sec:authorize="hasRole('USER')">
+              Crear evento
+          </button>
+        </div>
+
+        <!-- SIDEBAR PARA INVITADOS -->
+        <div class="col-12 col-md-4 sidebar me-5 mt-2" th:unless="${user != null and user.id == profileUser.id}">
+          <h6>
+            <span th:text="#{profile.created_by}">Eventos creados por</span> 
+            <span th:text="${profileUser.name}">este usuario</span>
+          </h6>
+          <p class="me-5 fw-bold" th:text="#{profile.check_it_out}">¡Hecha un vistazo!</p>
+        </div>
+
+        <!-- FILTRO DE CATEGORÍAS + EVENTOS-->
+        <div class="col-12 col-md-7 ms-5">
+          <div class="category-scroll-container my-4">
+            <ul class="nav nav-pills flex-nowrap" id="categoryTabs" role="tablist">
+              <li th:each="categoria, stat : ${categories}" class="nav-item" role="presentation">
+                <a th:id="'tab-' + ${categoria.id}" class="filter" th:classappend="${stat.index == 0} ? ' active' : ''" th:href="'#content-' + ${categoria.id}" data-bs-toggle="pill"
+                  role="tab" th:aria-controls="'content-' + ${categoria.id}" th:aria-selected="${stat.index == 0}">
+                  <span th:text="${categoria.name}">Categoría</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- CONTENIDO DE CADA CATEGORÍA -->
+          <div class="tab-content" id="categoryContent">
+            <div th:each="categoria, stat : ${categories}" th:id="'content-' + ${categoria.id}" role="tabpanel" 
+              th:aria-labelledby="'tab-' + ${categoria.id}" th:class="'tab-pane fade' + (${stat.index == 0} ? ' show active' : '')">
+              <!-- Eventos filtrados por categoría -->
+              <div th:with="events=${eventsByCategory[categoria.id]}">
+                <div th:if="${#lists.isEmpty(events)}" class="text-center py-5" th:text="#{profile.anyEvents}">
+                  No hay eventos para esta categoría
+                </div>
+              
+                <div th:if="${!#lists.isEmpty(events)}" >
+                  <div class="events-profile">
+                    <div th:each="event : ${events}" class="event-card-profile">
+                      <div class="event-content row">
+                        <div class="event-item d-flex p-3 mb-3  align-items-start">
+                          <a th:href="@{/event/{id}(id=${event.id})}" class="me-3">
+                            <img th:src="@{'/uploads/events/' + ${event.image}}" onerror="this.onerror=null; this.src='/img/default-event.jpeg';"
+                                alt="Imagen del evento" style="width: 110px; height: 110px; object-fit: cover; border-radius: 0.5rem;">
+                          </a>
+
+                          <!-- Contenido del evento -->
+                          <div class="flex-grow-1">
+                            <a th:href="@{/event/{id}(id=${event.id})}">
+                              <h5 class="mb-2 fw-bold" th:text="${event.name}">Título del evento</h5>
+                            </a>
+
+                            <!-- Autor y fecha -->
+                            <div class="d-flex align-items-center muted small mb-1">
+                              <img th:src="@{'/uploads/icons/' + ${profileUser.image}}" onerror="this.onerror=null; this.src='/img/icon-default.jpg';"
+                                  alt="Foto del autor" class="rounded-circle me-2" style="width: 24px; height: 24px; object-fit: cover;">
+                              <span th:text="${profileUser.name}" class="me-2">Nombre</span>
+                              <span>&middot;</span>
+                              <span class="ms-2" th:text="${event.timeAgo}">hace 2 horas</span>
+                            </div>
+
+                            <!-- Descripción -->
+                            <p class="mb-2 muted small text-truncate-description" th:text="${event.description}">Descripción larga...</p>
+
+                            <!-- Fecha y ubicación -->
+                            <div class="muted small d-flex justify-content-between">
+                              <span>
+                                <i class="bi bi-calendar-event-fill me-1"></i>
+                                Inicia el
+                                <strong><span th:text="${(#temporals.format(event.startDate, 'd ''de'' MMMM '))}"></span></strong>
+                                hasta el
+                                <strong><span th:text="${(#temporals.format(event.endDate, 'd ''de'' MMMM '))}"></span></strong>
+                              </span>
+                              <span class="ms-3">
+                                <i class="bi bi-geo-alt-fill me-1"></i>
+                                <span th:text="${event.location.address}">Dirección</span>
+                              </span>
+                            </div>
+                          </div>
+
+                          <!-- Acciones (solo si el usuario autenticado es el autor del evento) -->
+                          <div class="ms-auto" th:if="${user != null and user.id == profileUser.id}">
+                            <div class="dropdown">
+                              <button class="btn btn-sm" data-bs-toggle="dropdown">
+                                <i class="bi bi-three-dots-vertical"></i>
+                              </button>
+
+                              <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                  <a th:href="@{/event/edit/{id}(id=${event.id})}" class="dropdown-item">Editar</a>
+                                </li>
+                                <li>
+                                  <form th:action="@{/event/delete/{id}(id=${event.id})}" method="post"
+                                        onsubmit="return confirm('¿Eliminar evento?');">
+                                    <button type="submit" class="dropdown-item">Eliminar</button>
+                                  </form>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>    
+      </section>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="footer py-4">
+      <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+        <!-- Derechos reservados -->
+        <p class="mb-0 small" th:text="#{footer.rights_reserved}">
+          &copy; 2025 AlertAi. Todos los derechos reservados.
+        </p>
+
+        <div class="small">
+          <a th:href="@{/terminos}" class="me-3 bottom-inline" th:text="#{footer.terms}">Términos de uso</a> | 
+          <a th:href="@{/privacidad}" class="me-3 ms-2 bottom-inline" th:text="#{footer.privacy}">Aviso de privacidad</a> | 
+          <a th:href="@{/contact}" class="ms-3 bottom-inline" th:text="#{footer.contact}">Contáctanos</a>
+        </div>
+        
+        <!-- Redes sociales -->
+        <div class="footer-links mb-3 mb-md-0">
+          <a href="#" class="text-white me-3" aria-label="Facebook"><i class="bi bi-facebook fs-5"></i></a>
+          <a href="#" class="text-white me-3" aria-label="Twitter"><i class="bi bi-twitter fs-5"></i></a>
+          <a href="#" class="text-white me-3" aria-label="Instagram"><i class="bi bi-instagram fs-5"></i></a>
+          <a href="#" class="text-white" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  
+
+  <!-- MODALES -->
+
+  <!-- CREAR EVENTO -->
+  <div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-3">
+        <form th:action="@{/event/save}" method="post" th:object="${eventDto}" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title" id="crearEventoModalLabel" style="font-size: 1rem;">Crear evento</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" style="font-size: 0.8rem;"></button>
+          </div>          
+          <div class="modal-body">
+            <div class="row">
+              <!-- AQUÍ VA LA IMAGEN DEL EVENTO-->
+              <div class="col-12 col-md-4 d-flex flex-column">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                  <div id="drop-area" class="p-2 border border-secondary rounded d-flex flex-column align-items-center justify-content-center text-center h-100" style="cursor: pointer;">
+                    <div id="drop-placeholder" class="d-flex flex-column align-items-center">
+                      <i class="bi bi-image" style="font-size: 1rem;"></i>
+                      <p class="mt-2 mb-0" style="font-size: 0.8rem;">Arrastra una imagen aquí o haz clic para seleccionar</p>
+                    </div>
+                    <input type="file" id="image" name="imageFile" accept="image/*" class="d-none">
+                    <img id="preview" src="#" alt="Vista previa" class="img-fluid d-none h-100" />
+                  </div>
+                </div>
+              </div>
+              <!--DATOS DE EVENTO-->
+              <div class="col-12 col-md-8">
+                <div class="mb-3">
+                  <input type="text" class="form-control muted" id="name" name="name" required placeholder="Título" th:placeholder="#{form.title}">
+                </div>
+                <div class="mb-3">
+                  <textarea class="form-control muted" id="description" rows="3" name="description" required placeholder="Descripción" th:placeholder="#{form.description}"></textarea>
+                </div>
+                <div class="mb-3">
+                  <input type="text" class="form-control muted" id="contact" name="contact" placeholder="Contacto">
+                </div>
+                <div class="mb-3 d-flex">
+                  <input type="date" class="form-control muted" id="startDate" name="startDate" required/>
+                  <p class="mx-2 my-auto">hasta</p>
+                  <input type="date" class="form-control muted" id="endDate" name="endDate" />
+                </div>
+                <div class="mb-3 d-flex">
+                  <input type="time" class="form-control muted me-2" id="time" name="time" th:placeholder="#{form.time}"/>
+
+                  <select name="categoryId" id="categoryId" class="form-select muted" required aria-label="Selecciona una categoría">
+                    <option value="" disabled selected hidden class="muted"> [[#{form.select_category}]]</option>
+                    <th:block th:each="cat : ${allCategories}">
+                      <option th:value="${cat.id}" th:text="${cat.name}" th:attr="data-name=${cat.name}"></option>
+                    </th:block>
+                  </select>
+                </div>
+
+                <div class="mb-3" id="customCategoryDiv" style="display:none;">
+                  <input type="text" class="form-control muted" id="customCategory" name="customCategory" th:placeholder="#{form.extra_category}">
+                </div>
+                
+                <div class="mb-3 d-flex">
+                  <input type="text" class="form-control muted" id="address" name="location.address" placeholder="Dirección" />
+                  <input type="hidden" id="latitude" name="location.latitude" />
+                  <input type="hidden" id="longitude" name="location.longitude" />
+                  <button type="button" class="btn btn-submit ms-2" onclick="geocodeAddress()">Buscar</button>
+                </div>
+                <!--Mapa-->
+                <div id="map-form" style="height: 150px; width: 100%;" class="rounded shadow-sm"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-submit" th:text="#{profile.create}">Crear evento</button>
+          </div>        
+        </form>
+      </div> 
+    </div>
+  </div>
+  <!-- EDITAR PERFIL DE USUARIO -->
+  <div class="modal fade" id="editarPerfilModal" tabindex="-1" aria-labelledby="editarPerfilModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-4" th:if="${user != null}">
+        <form th:action="@{/user/update}" method="post" enctype="multipart/form-data" th:object="${user}">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editarPerfilModalLabel" style="font-size: 0.9rem;">Editar perfil</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 0.8rem;"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row p-4">
+              <!-- FOTO DE PERFIL -->
+              <div class="col-12 col-md-6 modal-user-photo position-relative mx-auto">
+                <!-- Imagen actual -->
+                <img id="preview-user-image" 
+                  th:src="@{${user.image} != null ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'}" 
+                  data-original-src="@{${user.image} != null ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'}" 
+                  src="#" class="img-fluid" alt="Foto del usuario">
+
+                <input type="file" id="image-profile" name="imageFile" class="overlay-input" data-preview-id="preview-user-image">
+
+                <!-- Botón sobre la imagen -->
+                <label for="image" class="btn btn-sm overlay-button">
+                  <i class="bi bi-camera-fill"></i>
+                </label>
+              </div>
+              <!-- DATOS DEL USUARIO -->
+              <div class="col-12 col-md-6">
+                <div class="mb-2 p-2 form-control">
+                  <span class="muted mb-1" th:text="#{form.name}" style="font-size:0.7rem">Nombre completo</span>
+                  <input class="form-control muted" type="text" th:field="*{name}">
+                </div>
+                <div class="mb-2 p-2 form-control">
+                  <span class="muted mb-1" th:text="#{form.username}" style="font-size:0.7rem">Usuario</span>
+                  <input class="form-control muted" type="text" th:field="*{username}">
+                </div>
+                <div class="mb-2 p-2 form-control">
+                  <span class="muted mb-1" th:text="#{form.biography}" style="font-size:0.7rem">Biografía</span>
+                  <textarea class="form-control muted" style="resize: none;" th:field="*{description}" rows="2" ></textarea>
+                </div>
+              
+                <div class="mb-2 p-2 form-control">
+                  <span class="muted mb-1" th:text="#{form.country}" style="font-size:0.7rem">País</span>
+                  <input class="form-control muted" type="text" id="country" th:field="*{country}"></input>
+                </div>
+              </div>
+            </div>
+            
+            <div class="modal-footer d-flex justify-content-center">
+              <button type="button" class="btn btn-submit me-2" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-submit" th:text="#{form.save}">Guardar cambios</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- CONFIGURACIÓN -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content settings-container shadow-lg border-0 rounded-4" th:if="${user != null}">
+        <div class="modal-header rounded-top-4">
+          <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}">Configuración de Usuario</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form th:action="@{/user/settings}" method="post">
+            <input type="hidden" name="redirectTo" th:value="${redirectTo}" />
+  
+            <div class="mb-5 d-flex align-items-center m-0 p-0">
+              <h5 class="fw-bold me-2" th:text="#{settings.language}">Idioma: </h5>
+              <select name="language" id="language" class="form-select shadow-sm rounded-3" style="width: 200px;">
+                <option value="es" th:selected="${#locale.language == 'es'}" th:text="#{setting.lang_es}">Español</option>
+                <option value="pt" th:selected="${#locale.language == 'pt'}" th:text="#{setting.lang_pt}">Portugués</option>
+              </select>
+            </div>
+
+            <div class="mb-5">
+              <h5 class="fw-bold mb-2" th:text="#{setting.preferences}">Preferencias de notificación</h5>
+              <p class="fst-italic small" th:text="#{setting.preferences_2}">
+                Selecciona las categorías de eventos sobre las que deseas recibir notificaciones y novedades.
+              </p>
+              <div class="d-flex justify-content-center">
+                <div class="form-check" th:each="cat : ${allCategories}">
+                  <input class="form-check-input" type="checkbox"
+                         th:id="'cat-' + ${cat.id}"
+                         th:name="categoriaIds"
+                         th:value="${cat.id}"
+                         th:checked="${user.notificaciones.contains(cat)}">
+                  <label class="form-check-label me-4" th:for="'cat-' + ${cat.id}" th:text="${cat.name}"></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="">
+              <a href="#" class="mb-2" data-bs-toggle="modal" data-bs-target="#administrarCuenta"><h5 class="fw-bold" th:text="#{setting.manage_account}">Administrar cuenta</h5></a>
+              <p class="fst-italic small" th:text="#{setting.manage_account_subtitle}">
+                Cambia tus datos personales o elimina tu cuenta cuando quieras.
+              </p>
+            </div>
+            
+
+            <div class="modal-footer d-flex justify-content-center border-top-0 pt-4">
+              <button type="button" class="btn btn-submit px-4" data-bs-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn btn-submit px-4" th:text="#{settings.save}">Guardar cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>  
+  </div>
+  <!-- ADMINISTRACIÓN DE CUENTA -->
+  <div class="modal fade" id="administrarCuenta" tabindex="-1" aria-labelledby="administrarCuentaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content administrar-container shadow-sm border-0 rounded-4" th:if="${user != null}">
+        <div class="modal-header rounded-top-4">
+          <h5 class="modal-title" id="administrarCuentaModalLabel" th:text="#{manage_account.title}">Administración de la cuenta</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form th:action="@{/user/update}" method="post">
+          <div class="modal-body p-5">
+            <p th:text="#{manage_account.your_account}">Tu cuenta</p>
+            <!-- CREDENCIALES -->
+            <div class="mb-2 p-2 form-control">
+              <span for="email" class="muted mb-1" style="font-size: 0.7rem;" th:text="#{form.email}">Correo electrónico</span>
+              <input type="email" class="form-control muted" id="email" name="email" th:value="${user.email}" th:placeholder="#{form.email}">
+            </div>
+
+            <div class="mb-3 d-flex align-items-center position-relative">
+              <div class="mb-2 p-2 form-control">
+                <span for="password" class="muted mb-1" style="font-size: 0.7rem;" th:text="#{form.password}">Contraseña</span>
+                <input type="password" class="form-control muted" id="password" placeholder="*********">
+              </div>
+              <button type="button" class="btn btn-submit position-absolute end-0 me-2" style="top: 50%; transform: translateY(-50%);"
+                data-bs-toggle="modal" data-bs-target="#cambiarPasswordModal" th:text="#{form.change}"> Cambiar
+              </button>            
+            </div>
+
+            <p th:text="#{manage_account.your_info}">Información personal</p>
+
+            <!-- PAÍS -->
+            <div class="mb-2 p-2 form-control">
+              <label for="country" class="muted mb-1" style="font-size: 0.7rem;" th:text="#{form.country}">País</label>
+              
+              <select id="country" name="country" class="form-select muted" required>
+                <option th:value="${user.country}" th:text="${user.country}" th:if="${user.country != null}" hidden selected></option>
+                <option value="Uruguay" th:text="#{register.country.uruguay}">Uruguay</option>
+                <option value="Brasil">Brasil</option>
+              </select>
+            </div>
+
+
+            <input type="hidden" name="phoneVerified" id="phoneVerified" th:value="${user.phoneVerified}">
+
+            <!-- CAMPO DE TELÉFONO Y VERIFICACIÓN -->
+            <div class="mb-2 p-2 form-control">
+              <label for="phone" class="muted mb-1" style="font-size: 0.7rem;" th:text="#{form.phone}">Teléfono</label>
+              <div class="d-flex align-items-center justify-content-between">
+                <input type="tel"
+                      class="form-control muted"
+                      id="phone"
+                      name="phone"
+                      pattern="^\+\d{7,15}$"
+                      title="Ejemplo: +59812345678"
+                      placeholder="+59812345678"
+                      th:value="${user.phone}"
+                      style="max-width: 300px;"
+                      onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                      onblur="this.placeholder=this.getAttribute('data-placeholder')">
+
+                <i id="phoneVerifiedIcon"
+                  class="bi bi-check-circle-fill text-success"
+                  style="display:none; font-size: 1.4rem;"
+                  title="Número verificado"></i>
+
+                <button type="button" id="sendCodeBtn" class="btn btn-submit ms-2">Enviar código</button>
+              </div>
+            </div>
+
+            <div id="toastContainer">
+              <div id="liveToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                  <div class="toast-body" id="toastMessage">
+                    <!-- mensaje -->
+                  </div>
+                  <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+                </div>
+              </div>
+            </div>
+
+
+            <!-- CAMPO PARA VERIFICAR CÓDIGO -->
+            <div class="mb-3" id="codeVerification" style="display: none;">
+              <div class="input-group">
+                <input type="text" id="verificationCode" class="form-control muted" placeholder="Ingresa el código recibido">
+                <button type="button" id="verifyCodeBtn" class="btn btn-success">Verificar</button>
+              </div>
+            </div>
+            <div id="recaptcha-container"></div>
+
+
+            <div class="mb-2 p-2 form-control">
+              <label for="document" class="muted mb-1" style="font-size: 0.7rem;">Documento</label>
+              <input type="text" class="form-control muted" id="document" name="document" th:value="${user.document}"
+                onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                onblur="this.placeholder=this.getAttribute('data-placeholder')">
+            </div>
+
+            <div class="mt-4 pt-3 d-flex align-items-center">
+              <div class="d-block me-5" >
+                <p th:text="#{manage_account.delete_your_account}">Elimina tus datos y tu cuenta</p>
+                <p class="muted" style="font-size: 0.9rem;" th:text="#{manage_account.delete_your_account_2}">Elimina permanentemente tus datos y todo lo asociado a tu cuenta</p>
+              </div>
+            
+              <!-- Botón que abre el modal -->
+              <button type="button" class="btn bg-danger" data-bs-toggle="modal" data-bs-target="#confirmarEliminacionModal">
+                <i class="bi bi-trash"></i> <span th:text="#{delete.delete}">Eliminar cuenta</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-submit" th:text="#{form.save}">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- CAMBIAR CONTRAEÑA -->
+  <div class="modal fade" id="cambiarPasswordModal" tabindex="-1" aria-labelledby="cambiarPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content" th:if="${user != null}">
+        <div class="modal-header">
+          <h5 class="modal-title" style="font-size: 0.9rem;" id="cambiarPasswordModalLabel" th:text="#{change_password}">Cambiar contraseña</h5>
+          <button type="button" class="btn-close btn-sm" style="width: 20px; width: 20px;" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body px-4 pb-5 pt-3">
+          <!-- CAMBIAR CONTRASEÑA -->
+          <form th:action="@{/user/change-password}" method="post">
+            <div class="mb-2">
+              <input type="password" class="form-control muted" name="currentPassword" th:placeholder="#{form.current_password}" required>
+            </div>
+            <div class="mb-2">
+              <input type="password" class="form-control muted" name="newPassword" th:placeholder="#{form.new_password}" required>
+            </div>
+            <div class="mb-2">
+              <input type="password" class="form-control muted" name="confirmPassword" th:placeholder="#{form.confirm_password}" required>
+            </div>
+            <div class="d-flex justify-content-end align-items-center mt-5">
+              <button type="button" class="btn btn-submit me-2" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-submit" th:text="#{form.confirm}">Confirmar</button>
+            </div>
+          </form>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  <!-- CONFIRMACIÓN PARA ELIMINAR CUENTA -->
+  <div class="modal fade" id="confirmarEliminacionModal" tabindex="-1" aria-labelledby="confirmarEliminacionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-4 border-danger border-2" th:if="${user != null}">
+        <div class="modal-header bg-danger rounded-top-4">
+          <h5 class="modal-title d-flex align-items-center" id="confirmarEliminacionLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="#{delete.confirm_title}">Confirmar eliminación de cuenta</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body p-3">
+          <p>
+            <strong th:text="#{delete.confirm_message}">¿Estás seguro de que deseas eliminar tu cuenta?</strong> 
+            <i th:text="#{delete.action}">Esta acción es irreversible</i><br><br>
+            <span th:text="#{delete.email_confirm}">Se te enviará un correo para confirmar la eliminación.</span>
+          </p>
+        </div>
+        <div class="modal-footer">
+          <form th:action="@{/user/solicitar-eliminacion}" method="post" class="d-flex justify-content-end">
+            <input type="hidden" name="userId" th:value="${user.id}" />
+              <button type="button" class="btn btn-submit me-2" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-submit" th:text="#{form.confirm}">Confirmar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- INICIAR SESIÓN -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-login-size">
+      <div class="modal-content">
+        <div class="modal-body p-5">
+          <div class="text-center">
+            <!-- MENSAJES -->
+            <div th:if="${param.error}" class="alert alert-danger text-center small" role="alert" th:text="#{login.error}">
+                Correo o contraseña incorrectos. Intenta nuevamente.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success text-center small" role="alert" th:text="#{login.logout}">
+                Has cerrado sesión exitosamente.
+            </div>
+
+            <h4 class="fw-bold mb-5" th:text="#{login.title}">Iniciar sesión</h4>
+          </div>
+
+          <form th:action="@{/userLogin}" method="post">
+            <!-- CREDENCIALES -->
+            <div class="mb-3">
+                <input type="email" name="username" class="form-control muted" th:placeholder="#{login.email}" required>
+            </div>
+            <div class="mb-3 position-relative small">
+              <input type="password" name="password" id="password" class="form-control muted" th:placeholder="#{login.password}" required>
+              <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 translate-middle-y text-secondary" 
+              style="right: 1rem; cursor: pointer;"></i>
+            </div>                
+          
+            <!-- RECORDAR SESIÓN -->
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
+                  <label class="form-check-label small" for="remember-me" th:text="#{login.remember}">Recuérdame</label>
+                </div>
+                <a href="/forgot-password" class="small forgot-password bottom-inline" th:text="#{login.forgot}">¿Olvidaste la contraseña?</a>
+            </div>
+            <div class="submit mt-2">
+              <button type="submit" class="btn btn-submit">Entrar</button>
+            </div>
+
+            <!-- POLÍTICAS -->
+            <p class="text-center mt-4 small muted" th:text="#{login.footer}">
+              Descubrí, compartí y participá de eventos importantes en tu comunidad.
+            </p>
+            <hr class="mt-3">
+
+            <!-- REGISTRARSE -->
+            <div class="text-center mt-3 small">
+              <p th:utext="#{login.register.full}">
+                ¿Es tu primera vez en AlertAi? <a href="/register" class="ms-2"><strong class="bottom-inline">Regístrate.</strong></a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- CREAR CUENTA -->
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-register-size">
+      <div class="modal-content">
+        <div class="modal-body p-5">
+          <div th:if="${msg}" class="alert alert-info" th:text="${msg}"></div>
+      
+          <div class="text-center mb-4">
+            <h4 class="fw-bold" th:text="#{register.welcome}">Te damos la bienvenida a AlertAi</h4>
+            <p class="muted mb-3" th:text="#{register.create}">Crea tu cuenta</p>
+          </div>
+      
+          <form th:action="@{/register}" method="post">
+            <div class="mb-2">
+              <input type="text" name="name" class="form-control muted" th:placeholder="#{form.name}" required>
+            </div>
+            <div class="mb-2">
+            <input type="text" name="username" class="form-control muted" th:placeholder="#{form.username}" required>
+            </div>
+            <div class="mb-2">
+              <input type="email" name="email" class="form-control muted" th:placeholder="#{form.email}" required>
+            </div>
+            <div class="mb-2">
+              <select name="country" class="form-select muted" required>
+                <option value="" hidden>País</option>
+                <option value="Uruguay" th:text="#{register.country.uruguay}">Uruguay</option>
+                <option value="Brasil">Brasil</option>
+              </select>
+            </div>
+
+            <div class="position-relative">
+              <input type="password" name="password" id="reg_password" class="form-control pe-5 muted"
+                th:placeholder="#{register.password}"
+                minlength="8"
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}"
+                th:title="#{form.password.tooltip}"
+                required>
+
+              <!-- Ícono para mostrar/ocultar contraseña -->
+              <i id="togglePassword"
+                class="bi bi-eye-slash position-absolute top-50 translate-middle-y text-secondary"
+                style="right: 1rem; cursor: pointer;"></i>
+            </div>
+
+            <!-- TÉRMINOS DE USO -->
+            <div class="form-check d-flex align-items-center mt-4">
+              <input class="form-check-input mt-0" type="checkbox" id="accept" name="accept">
+              <label class="form-check-label ms-2 small" for="accept" th:utext="#{register.terms}">
+                Acepto los <a th:href="@{/terminos}" class="bottom-inline"><strong>Términos de Uso</strong></a> y el <a th:href="@{/privacidad}" class="bottom-inline"><strong>Aviso de Privacidad</strong></a> de AlertAi.
+              </label>
+            </div>
+
+            <!-- BOTÓN SUBMIT -->
+            <div class="submit mb-2 mt-3">
+              <button type="submit" class="btn btn-submit">Continuar</button>
+            </div>
+            
+            <hr class="mt-3">
+            <!-- INICIAR SESIÓN -->
+            <div class="text-center mt-3 small" th:utext="#{register.login}">
+              <p>¿Ya formas parte de AlertAi?
+              <a href="signin" class="ms-2"><strong>Iniciar sesión.</strong></a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+ 
+
+  
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/theme.js}"></script>
+  <script th:src="@{/js/geo_maps.js}"></script>
+  
+  <!-- Agrega Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBLj_OCmPGwLUS1-b-6BqNQ0EawDBMmoqg",
+      authDomain: "alertai-8ed43.firebaseapp.com",
+      projectId: "alertai-8ed43",
+      storageBucket: "alertai-8ed43.firebasestorage.app",
+      messagingSenderId: "391884637989",
+      appId: "1:391884637989:web:c39ff620a632c80f803ccc",
+      measurementId: "G-13P5ZDBYC2"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+  
+    const phoneVerified = document.getElementById('phoneVerified').value === 'true';
+    window.addEventListener('DOMContentLoaded', () => {
+      const icon = document.getElementById('phoneVerifiedIcon');
+      const sendCodeBtn = document.getElementById('sendCodeBtn');
+      const codeVerification = document.getElementById('codeVerification');
+
+      if (phoneVerified) {
+        icon.style.display = 'inline-block';
+        sendCodeBtn.style.display = 'none';        
+        codeVerification.style.display = 'none';   
+      } else {
+        icon.style.display = 'none';
+        sendCodeBtn.style.display = 'inline-block';
+      }
+    });
+
+    function showToast(message) {
+      const toastEl = document.getElementById('liveToast');
+      const toastMessage = document.getElementById('toastMessage');
+      toastMessage.innerHTML = message; 
+
+
+      const toast = new bootstrap.Toast(toastEl);
+      toast.show();
+    }
+
+
+    // Configurar reCAPTCHA invisible
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      size: 'invisible',
+      callback: () => {
+        console.log('reCAPTCHA verificado');
+      }
+    });
+
+    let confirmationResult;
+
+    document.getElementById('sendCodeBtn').addEventListener('click', () => {
+      const phoneNumber = document.getElementById('phone').value.trim();
+      if (!phoneNumber.match(/^\+\d{7,15}$/)) {
+        showToast('Por favor, ingresa un número válido en formato <i>+CódigoPaísNúmero<i>');
+        return;
+      }
+      const appVerifier = window.recaptchaVerifier;
+
+      auth.signInWithPhoneNumber(phoneNumber, appVerifier)
+        .then((result) => {
+          confirmationResult = result;
+          showToast('Código enviado. Por favor revisa tu teléfono.');
+          document.getElementById('codeVerification').style.display = 'block';
+        })
+        .catch((error) => {
+          console.error(error);
+          showToast('Error al enviar el código. Intenta más tarde.');
+        });
+    });
+
+    document.getElementById('verifyCodeBtn').addEventListener('click', () => {
+      const code = document.getElementById('verificationCode').value.trim();
+      if (!code) {
+        showToast('Por favor, ingresa el código recibido');
+        return;
+      }
+
+      confirmationResult.confirm(code)
+      .then((result) => {
+        alert('Teléfono verificado con éxito');
+        document.getElementById('phoneVerified').value = 'true'; 
+
+        // Mostrar ícono
+        document.getElementById('phoneVerifiedIcon').style.display = 'inline-block';
+
+        // Opcional: ocultar el formulario de código para no mostrarlo más
+        document.getElementById('codeVerification').style.display = 'none';
+      })
+      .catch((error) => {
+        console.error(error);
+        showToast('Código incorrecto o expirado');
+      });
+    });
+        
+  </script>
+
+
+
+</body>
+</html>

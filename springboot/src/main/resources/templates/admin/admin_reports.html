@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>AlertAi - Denuncias</title>
+  <!-- BOOTSTRAP   -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- FONT AWESOM  -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- CSS PERSONALIZADO -->
+  <link rel="stylesheet" th:href="@{/css/admin.css}">
+  <link rel="stylesheet" th:href="@{/css/theme.css}">
+  <link rel="stylesheet" th:href="@{/css/user.css}">
+
+  <!-- FAVICON (ICON DE LA PÁGINA) -->
+  <link rel="icon" type="image/png" href="/img/icon-nav.png">
+
+  <!-- LEAFLET (MAPA)  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+</head>
+<body>
+
+  <!-- MENÚ -->
+  <section>
+    <nav class="navbar-user">
+      <!-- LOGO -->
+      <div class="branding">
+        <a th:href="@{/user/home}">
+          <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+            <path d="M177.18,307.9c-1.48,.35-2.9-.76-2.91-2.28-.02-4.67-.06-9.17,.1-13.66,.03-.94,1.12-2.25,2.04-2.68,14.3-6.69,21.11-17.92,21.07-33.63-.03-10.86-.37-21.78,.63-32.57,2.4-25.83,26.36-46.37,52.31-45.56,27.24,.85,49.57,21.69,50.93,47.96,.53,10.33,.23,20.69,.32,31.04,.13,15.59,7.32,26.58,21.58,32.85,1.82,.8,2.56,1.63,2.5,3.65-.12,4.21-.07,8.42-.06,12.85,0,1.52-1.42,2.67-2.9,2.3-10.48-2.66-18.98-7.9-25.97-15.74-9-10.1-13.22-22.06-13.28-35.52-.04-8.93,.01-17.86-.01-26.79-.05-19.4-14.85-34.37-34.01-34.44-18.88-.07-33.75,15.17-33.87,34.6-.07,11.12,.26,22.29-.58,33.36-1.58,20.67-18.08,39.58-37.88,44.26Z"></path>
+            <path d="M225.8,297.54h47.53c1.3,0,2.38,1.06,2.35,2.36-.25,10.42-10.99,20.99-23.44,22.43-13.71,1.59-26.11-7.94-28.76-22-.27-1.45,.84-2.79,2.31-2.79Z"/>
+          </svg>
+        </a>
+      </div>
+
+      <!-- MENÚ -->
+      <div class="nav-left">
+        <a th:href="@{/admin/home}">Inicio</a>
+        <a th:href="@{/admin/allCategories}">Categorías</a>
+        <a th:href="@{/admin/allEvents}">Eventos</a>
+        <a href="/admin/reports" class="active">Denuncias</a>
+        <a href="/admin/users">Usuarios</a>
+      </div>
+
+      <!-- BUSCADOR -->
+      <div class="search-bar">
+        <form action="/search" method="get" id="searchForm" class="search-form" role="search">
+          <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+          <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
+        </form>
+      </div>
+
+      <!-- MENÚ DEL USUARIO -->
+      <div class="nav-right">
+        <div class="user-menu">
+          <img th:src="@{'/uploads/icons/' + ${user.image}}" onerror="this.onerror=null; this.src='/img/icon-default.jpg';" alt="Foto del admin">
+          <span class="username">
+            <span sec:authorize="hasRole('ADMIN')" th:text="${user.name}"></span>
+          </span>
+
+          <div class="dropdown me-4">
+            <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+              <i class="fas fa-chevron-down"></i>
+            </button>
+
+            <ul class="dropdown-menu dropdown-menu-end custom-dropdown">
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#editarPerfilModal">
+                  <i class="fas fa-user me-1"></i>
+                  <span>Editar perfil</span>
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                  <i class="fas fa-cog me-1"></i>
+                  <span th:text="#{profile.setting}">Configuración</span>
+                </a>
+              </li>
+              <li>
+                <a class="dropdown-item d-flex align-items-center gap-2" href="/logout">
+                  <i class="fas fa-sign-out-alt me-1"></i>
+                  <span th:text="#{profile.logout}">Cerrar sesión</span>
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          <!-- CAMBIAR THEME OCURO/CLARO -->
+          <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+            <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
+          </button>
+        </div>
+      </div>
+    </nav>
+  </section>
+
+  <!-- DENUNCIAS -->
+  <div class="container-fluid p-4">
+    <!-- MENSAJES FLASH -->
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+      <span th:text="${success}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+      <span th:text="${error}"></span>
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- TÍTULO -->
+    <div class="d-flex flex-column justify-content-center align-items-center mb-4">
+      <h3 class="mb-1">Gestión de eventos denunciados</h3>
+      <p class="muted">A continuación se listan los eventos que han sido reportados por los usuarios.</p>
+
+      <div class="text-center mb-3">
+        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#infoDenuncias" aria-expanded="false" aria-controls="infoDenuncias">
+          Mostrar información sobre estados y acciones
+        </button>
+      </div>
+
+      <div class="collapse" id="infoDenuncias">
+        <div class="card card-body border-0" style="font-size: 0.85rem;">
+          
+          <p class="muted mb-2">
+            Cada evento muestra su estado actual mediante un indicador visual:
+          </p>
+          
+          <ul class="list-unstyled mb-2">
+            <li>
+              <span class="badge rounded-circle bg-info d-inline-block me-2" style="width: 12px; height: 12px;"></span>
+              <strong>Denunciado</strong>: recién reportado.
+            </li>
+            <li>
+              <span class="badge rounded-circle bg-danger d-inline-block me-2" style="width: 12px; height: 12px;"></span>
+              <strong>En revisión</strong>: tiene 3 o más denuncias.
+            </li>
+            <li>
+              <span class="badge rounded-circle bg-warning d-inline-block me-2" style="width: 12px; height: 12px;"></span>
+              <strong>Inactivo</strong>: fue rechazado por un administrador y permanecera fuera de la vista de los usuarios.
+            </li>
+          </ul>
+
+          <p class="muted mb-2">
+            Cuando un evento alcanza <strong>3 o más denuncias</strong>, se cambia automáticamente al estado <em>En revisión</em>. Desde allí, el administrador puede tomar una decisión.
+          </p>
+
+          <p class="muted">
+            Usa los botones de acción para gestionar los eventos:
+            <i class="bi bi-check-circle text-success"></i> <strong>Aprobar</strong> (marca el evento como activo), 
+            <i class="bi bi-x-circle text-danger"></i> <strong>Rechazar</strong> (marca el evento como inactivo).
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- FILTRO -->
+    <div class="filter-container mb-3">
+      <div class="category-links d-flex flex-wrap align-items-center">
+        <i class="bi bi-funnel me-2"></i>
+
+        <form method="get" action="#" class="d-flex align-items-center" id="filtroForm">
+          <!-- Filtro por estado -->
+          <label for="" class="me-2">Estado: </label>
+          <select name="estadoFiltro" class="form-select w-auto d-inline me-2" onchange="document.getElementById('filtroForm').submit();">
+            <option value="">Todos</option>
+            <option th:each="estado : ${estados}"
+                    th:value="${estado}"
+                    th:text="${estado}"
+                    th:selected="${estado} == ${estadoFiltro}"></option>
+          </select>
+
+          <!-- Filtro por motivo -->
+          <label for="" class="me-2">Motivo: </label>
+          <select name="motivoFiltro" class="form-select w-auto d-inline me-2" onchange="document.getElementById('filtroForm').submit();">
+            <option value="">Todos</option>
+            <option th:each="motivo : ${motivos}"
+                    th:value="${motivo}"
+                    th:text="${motivo}"
+                    th:selected="${motivo} == ${motivoFiltro}"></option>
+          </select>
+        </form>
+      </div>
+    </div>
+
+    <!-- TABLA DE DENUNCIAS -->
+    <div class="d-flex justify-content-center align-items-center flex-column">
+      <div class="table-responsive mt-3">
+        <div class="custom-table">
+          <div class="table-row table-header">
+            <div class="table-cell col-id">ID</div>
+            <div class="table-cell">Evento</div>
+            <div class="table-cell">Autor</div>
+            <div class="table-cell">Publicado</div>
+            <div class="table-cell">Denunciante</div>
+            <div class="table-cell col-special">Motivo</div>
+            <div class="table-cell col-date">Fecha</div>
+            <div class="table-cell col-count">Denuncias</div>
+            <div class="table-cell col-count">Estado</div>
+            <div class="table-cell col-special">Acciones</div>
+          </div>
+          <div class="table-row" th:each="report, iterStat : ${reports}">
+            <div class="table-cell col-id" th:text="${iterStat.count}"></div>
+            <div class="table-cell col-event-name" th:text="${report.event.name}" th:attr="title=${report.event.name}"></div>
+            <div class="table-cell" th:text="${report.event.user.name}"></div>
+            <div class="table-cell" th:text="${report.event.timeAgo}"></div>
+            <div class="table-cell" th:text="${report.user.name}" th:attr="title=${report.user.name}"></div>
+            <div class="table-cell col-special" th:text="${report.reason.descripcion}"></div>
+            <div class="table-cell col-date" th:text="${report.timeAgo}"></div>
+            <div class="table-cell col-count"
+                th:classappend="${reportCounts[report.event.id] > 3} ? 'text-danger fw-bold' : ''"
+                th:text="${reportCounts[report.event.id] != null ? reportCounts[report.event.id] : 0}">
+            </div>
+            <div class="table-cell col-count">
+              <div class="d-flex justify-content-center align-items-center">
+                <div th:class="${report.event.status.name() == 'REVISION' ? 'status-circle bg-danger' :
+                                report.event.status.name() == 'INACTIVO' ? 'status-circle bg-warning' :
+                                report.event.status.name() == 'DENUNCIADO' ? 'status-circle bg-info' : 'status-circle bg-secondary'}"
+                    th:title="|Estado actual: ${report.event.status.name()}|"
+                    style="width: 15px; height: 15px; border-radius: 50%;">
+                </div>
+              </div>
+            </div>
+
+            <div class="table-cell col-special">
+              <div class="btn-actions d-flex align-items-center">
+                <a th:href="@{/event/{id}(id=${report.event.id})}" title="Ver evento">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <form th:action="@{'/admin/event/' + ${report.event.id} + '/approve'}" method="post">
+                  <button type="submit" class="btn btn-sm" title="Aprobar evento">
+                    <i class="bi bi-check-circle"></i>
+                  </button>
+                </form>
+                <form th:action="@{'/admin/event/' + ${report.event.id} + '/reject'}" method="post">
+                  <button type="submit" class="btn btn-sm" title="Rechazar evento">
+                    <i class="bi bi-x-circle"></i>
+                  </button>
+                </form>
+                <a th:href="@{/admin/reports/delete/{id}(id=${report.id})}" title="Eliminar denuncia">
+                    <i class="bi bi-trash"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <div th:if="${#lists.isEmpty(reports)}" class="text-center py-4">
+            No hay denuncias registradas.
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- MODAL -->
+
+  <!-- EDITAR PERFIL DE USUARIO -->
+  <div class="modal fade" id="editarPerfilModal" tabindex="-1" aria-labelledby="editarPerfilModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-4" th:if="${user != null}">
+        <form th:action="@{/user/update}" method="post" enctype="multipart/form-data" th:object="${user}">
+          <div class="modal-header">
+            <h5 class="modal-title" id="editarPerfilModalLabel" style="font-size: 0.9rem;">Editar perfil</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" style="font-size: 0.8rem;"></button>
+          </div>
+          <div class="modal-body">
+            <div class="row p-4">
+              <!-- FOTO DE PERFIL -->
+              <div class="col-12 col-md-6 modal-user-photo position-relative mx-auto">
+                <!-- Imagen actual -->
+                <img id="preview-user-image" 
+                  th:src="@{${user.image} != null ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'}" 
+                  data-original-src="@{${user.image} != null ? '/uploads/icons/' + ${user.image} : '/img/icon-default.jpg'}" 
+                  src="#" class="img-fluid" alt="Foto del usuario">
+
+                <input type="file" id="image-profile" name="imageFile" class="overlay-input" data-preview-id="preview-user-image">
+
+                <!-- Botón sobre la imagen -->
+                <label for="image" class="btn btn-sm overlay-button">
+                  <i class="bi bi-camera-fill"></i>
+                </label>
+              </div>
+              <!-- DATOS DEL USUARIO -->
+              <div class="col-12 col-md-6">
+                <div class="mb-2 p-2 form-control">
+                  <span class="muted mb-1" th:text="#{form.name}" style="font-size:0.7rem">Nombre completo</span>
+                  <input class="form-control muted" type="text" th:field="*{name}">
+                </div>
+                <div class="mb-2 p-2 form-control">
+                  <span class="muted mb-1" th:text="#{form.username}" style="font-size:0.7rem">Usuario</span>
+                  <input class="form-control muted" type="text" th:field="*{username}">
+                </div>
+                <div class="mb-2 p-2 form-control">
+                  <span class="muted mb-1" th:text="#{form.biography}" style="font-size:0.7rem">Biografía</span>
+                  <textarea class="form-control muted" style="resize: none;" th:field="*{description}" rows="2" ></textarea>
+                </div>
+              
+                <div class="mb-2 p-2 form-control">
+                  <span class="muted mb-1" th:text="#{form.country}" style="font-size:0.7rem">País</span>
+                  <input class="form-control muted" type="text" id="country" th:field="*{country}"></input>
+                </div>
+              </div>
+            </div>
+            
+            <div class="modal-footer d-flex justify-content-center">
+              <button type="button" class="btn btn-submit me-2" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-submit" th:text="#{form.save}">Guardar cambios</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- CONFIGURACIÓN -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content settings-container shadow-lg border-0 rounded-4" th:if="${user != null}">
+        <div class="modal-header rounded-top-4">
+          <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}">Configuración de Usuario</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form th:action="@{/user/settings}" method="post">
+            <input type="hidden" name="redirectTo" th:value="${redirectTo}" />
+  
+            <div class="mb-5 d-flex align-items-center m-0 p-0">
+              <h5 class="fw-bold me-2" th:text="#{settings.language}">Idioma: </h5>
+              <select name="language" id="language" class="form-select shadow-sm rounded-3" style="width: 200px;">
+                <option value="es" th:selected="${#locale.language == 'es'}" th:text="#{setting.lang_es}">Español</option>
+                <option value="pt" th:selected="${#locale.language == 'pt'}" th:text="#{setting.lang_pt}">Portugués</option>
+              </select>
+            </div>
+
+            <div class="mb-5">
+              <h5 class="fw-bold mb-2" th:text="#{setting.preferences}">Preferencias de notificación</h5>
+              <p class="fst-italic small" th:text="#{setting.preferences_2}">
+                Selecciona las categorías de eventos sobre las que deseas recibir notificaciones y novedades.
+              </p>
+              <div class="d-flex justify-content-center">
+                <div class="form-check" th:each="cat : ${categories}">
+                  <input class="form-check-input" type="checkbox"
+                         th:id="'cat-' + ${cat.id}"
+                         th:name="categoriaIds"
+                         th:value="${cat.id}"
+                         th:checked="${user.notificaciones.contains(cat)}">
+                  <label class="form-check-label me-4" th:for="'cat-' + ${cat.id}" th:text="${cat.name}"></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="">
+              <a href="#" class="mb-2" data-bs-toggle="modal" data-bs-target="#administrarCuenta"><h5 class="fw-bold" th:text="#{setting.manage_account}">Administrar cuenta</h5></a>
+              <p class="fst-italic small" th:text="#{setting.manage_account_subtitle}">
+                Cambia tus datos personales o elimina tu cuenta cuando quieras.
+              </p>
+            </div>
+            
+
+            <div class="modal-footer d-flex justify-content-center border-top-0 pt-4">
+              <button type="button" class="btn btn-submit px-4" data-bs-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn btn-submit px-4" th:text="#{settings.save}">Guardar cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>  
+  </div>
+  <!-- ADMINISTRACIÓN DE CUENTA -->
+  <div class="modal fade" id="administrarCuenta" tabindex="-1" aria-labelledby="administrarCuentaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content administrar-container shadow-sm border-0 rounded-4" th:if="${user != null}">
+        <div class="modal-header rounded-top-4">
+          <h5 class="modal-title" id="administrarCuentaModalLabel" th:text="#{manage_account.title}">Administración de la cuenta</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form th:action="@{/user/update}" method="post">
+          <div class="modal-body p-5">
+            <p th:text="#{manage_account.your_account}">Tu cuenta</p>
+            <div class="mb-2 p-2 form-control">
+              <span for="email" class="muted mb-1" style="font-size: 0.7rem;" th:text="#{form.email}">Correo electrónico</span>
+              <input type="email" class="form-control muted" id="email" name="email" th:value="${user.email}" th:placeholder="#{form.email}">
+            </div>
+
+            <div class="mb-3 d-flex align-items-center position-relative">
+              <div class="mb-2 p-2 form-control">
+                <span for="password" class="muted mb-1" style="font-size: 0.7rem;" th:text="#{form.password}">Contraseña</span>
+                <input type="password" class="form-control muted" id="password" placeholder="*********">
+              </div>
+              <button type="button" class="btn btn-submit position-absolute end-0 me-2" style="top: 50%; transform: translateY(-50%);"
+                data-bs-toggle="modal" data-bs-target="#cambiarPasswordModal" th:text="#{form.change}"> Cambiar
+              </button>            
+            </div>
+
+            <p th:text="#{manage_account.your_info}">Información personal</p>
+            <div class="mb-2 p-2 form-control">
+              <span for="country" class="muted mb-1" style="font-size: 0.7rem;" th:text="#{form.country}">País</span>
+              <input type="text" class="form-control muted" id="pais" name="country" th:value="${user.country}" th:placeholder="#{form.country}">
+            </div>
+
+            <input type="hidden" name="phoneVerified" id="phoneVerified" th:value="${user.phoneVerified}">
+
+            <!-- CAMPO DE TELÉFONO Y VERIFICACIÓN -->
+            <div class="mb-2 p-2 form-control">
+              <label for="phone" class="muted mb-1" style="font-size: 0.7rem;" th:text="#{form.phone}">Teléfono</label>
+              <div class="d-flex align-items-center justify-content-between">
+                <input type="tel"
+                      class="form-control muted"
+                      id="phone"
+                      name="phone"
+                      pattern="^\+\d{7,15}$"
+                      title="Ejemplo: +59812345678"
+                      placeholder="+59812345678"
+                      th:value="${user.phone}"
+                      style="max-width: 300px;">
+
+                <i id="phoneVerifiedIcon"
+                  class="bi bi-check-circle-fill text-success"
+                  style="display:none; font-size: 1.4rem;"
+                  title="Número verificado"></i>
+
+                <button type="button" id="sendCodeBtn" class="btn btn-submit ms-2">Enviar código</button>
+              </div>
+            </div>
+
+            <div id="toastContainer">
+              <div id="liveToast" class="toast align-items-center border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                  <div class="toast-body" id="toastMessage">
+                    <!-- mensaje -->
+                  </div>
+                  <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Cerrar"></button>
+                </div>
+              </div>
+            </div>
+
+
+            <!-- CAMPO PARA VERIFICAR CÓDIGO -->
+            <div class="mb-3" id="codeVerification" style="display: none;">
+              <div class="input-group">
+                <input type="text" id="verificationCode" class="form-control muted" placeholder="Ingresa el código recibido">
+                <button type="button" id="verifyCodeBtn" class="btn btn-success">Verificar</button>
+              </div>
+            </div>
+            <div id="recaptcha-container"></div>
+
+
+            <div class="mb-2 p-2 form-control">
+              <label for="document" class="muted mb-1" style="font-size: 0.7rem;">Documento</label>
+              <input type="text" class="form-control muted" id="document" name="document" th:value="${user.document}">
+            </div>
+
+            <div class="mt-4 pt-3 d-flex align-items-center">
+              <div class="d-block me-5" >
+                <p th:text="#{manage_account.delete_your_account}">Elimina tus datos y tu cuenta</p>
+                <p class="muted" style="font-size: 0.9rem;" th:text="#{manage_account.delete_your_account_2}">Elimina permanentemente tus datos y todo lo asociado a tu cuenta</p>
+              </div>
+            
+              <!-- Botón que abre el modal -->
+              <button type="button" class="btn bg-danger" data-bs-toggle="modal" data-bs-target="#confirmarEliminacionModal">
+                <i class="bi bi-trash"></i> <span th:text="#{delete.delete}">Eliminar cuenta</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-submit" th:text="#{form.save}">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- CAMBIAR CONTRAEÑA -->
+  <div class="modal fade" id="cambiarPasswordModal" tabindex="-1" aria-labelledby="cambiarPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content" th:if="${user != null}">
+        <div class="modal-header">
+          <h5 class="modal-title" style="font-size: 0.9rem;" id="cambiarPasswordModalLabel" th:text="#{change_password}">Cambiar contraseña</h5>
+          <button type="button" class="btn-close btn-sm" style="width: 20px; width: 20px;" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body px-4 pb-5 pt-3">
+          <!-- CAMBIAR CONTRASEÑA -->
+          <form th:action="@{/user/change-password}" method="post">
+            <div class="mb-2">
+              <input type="password" class="form-control muted" name="currentPassword" th:placeholder="#{form.current_password}" required>
+            </div>
+            <div class="mb-2">
+              <input type="password" class="form-control muted" name="newPassword" th:placeholder="#{form.new_password}" required>
+            </div>
+            <div class="mb-2">
+              <input type="password" class="form-control muted" name="confirmPassword" th:placeholder="#{form.confirm_password}" required>
+            </div>
+            <div class="d-flex justify-content-end align-items-center mt-5">
+              <button type="button" class="btn btn-submit me-2" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-submit" th:text="#{form.confirm}">Confirmar</button>
+            </div>
+          </form>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+  <!-- CONFIRMACIÓN PARA ELIMINAR CUENTA -->
+  <div class="modal fade" id="confirmarEliminacionModal" tabindex="-1" aria-labelledby="confirmarEliminacionLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-4 border-danger border-2" th:if="${user != null}">
+        <div class="modal-header bg-danger rounded-top-4">
+          <h5 class="modal-title d-flex align-items-center" id="confirmarEliminacionLabel">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="#{delete.confirm_title}">Confirmar eliminación de cuenta</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body p-3">
+          <p>
+            <strong th:text="#{delete.confirm_message}">¿Estás seguro de que deseas eliminar tu cuenta?</strong> 
+            <i th:text="#{delete.action}">Esta acción es irreversible</i><br><br>
+            <span th:text="#{delete.email_confirm}">Se te enviará un correo para confirmar la eliminación.</span>
+          </p>
+        </div>
+        <div class="modal-footer">
+          <form th:action="@{/user/solicitar-eliminacion}" method="post" class="d-flex justify-content-end">
+            <input type="hidden" name="userId" th:value="${user.id}" />
+              <button type="button" class="btn btn-submit me-2" data-bs-dismiss="modal">Cancelar</button>
+              <button type="submit" class="btn btn-submit" th:text="#{form.confirm}">Confirmar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/theme.js}"></script>
+
+</body>
+</html>

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+<meta charset="UTF-8">
+<title>AlertAi - Editar evento</title>
+  <!-- BOOTSTRAP   -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- FONT AWESOM  -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- CSS PERSONALIZADO -->
+  <link rel="stylesheet" th:href="@{/css/profile.css}">
+  <link rel="stylesheet" th:href="@{/css/theme.css}">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+
+  <!-- FAVICON (ICON DE LA PÁGINA) -->
+  <link rel="icon" type="image/png" href="/img/icon-nav.png">
+
+  <!-- LEAFLET (MAPA)  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+</head>
+<body class="d-flex justify-content-center align-items-center v-100 ">
+
+  <!-- EDITAR EVENTO -->
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content p-3">
+      <form th:action="@{/event/updateEvent}" method="post" enctype="multipart/form-data">
+        <div class="modal-body">
+          <a href="/user/profile" class="back-link"><p><i class="bi bi-arrow-left-short"></i><span>Atrás</span></p></a>
+          <input type="hidden" name="id" th:value="${event.id}" />
+
+          <div class="row">
+            <!--IMAGEN DEL EVENTO-->
+            <div class="col-12 col-md-4 d-flex flex-column">
+              <div class="flex-grow-1">
+                <div th:id="'drop-area-edit-' + ${event.id}" 
+                  class="drop-area-edit">
+
+                  <!-- Placeholder encima de la imagen -->
+                  <div th:id="'drop-placeholder-edit-' + ${event.id}" class="drop-placeholder-edit">
+                    <i class="bi bi-camera-fill"></i>
+                  </div>
+
+                  <!-- Imagen -->
+                  <img th:id="'preview-edit-' + ${event.id}" 
+                    th:src="@{'/uploads/events/' + ${event.image}}"
+                    th:attr="data-original-src=@{'/uploads/events/' + ${event.image}}"
+                    class="img-fluid">
+
+                  <!-- Input -->
+                  <input type="file" th:id="'image-edit-' + ${event.id}" name="imageFile" accept="image/*" class="d-none">
+                </div>
+              </div>
+            </div>
+            <!--DATOS DEL EVENTO--> 
+            <div class="col-12 col-md-8">
+              <div class="mb-3">
+                  <input type="text" class="form-control muted"  name="name" th:value="${event.name}" required>
+              </div>
+              <div class="mb-3">
+                  <textarea class="form-control muted"  rows="3" name="description" th:text="${event.description}" required></textarea>
+              </div>
+              <div class="mb-3">
+                  <input type="text" class="form-control muted" name="contact" th:value="${event.contact}" placeholder="Contacto">
+              </div>
+              <div class="mb-3 d-flex">
+                  <input class="form-control muted" type="date"  name="startDate" th:value="${event.startDate}" required />
+                  <p class="mx-2 my-auto">hasta</p>
+                  <input class="form-control muted" type="date" name="endDate" th:value="${event.endDate}" required />
+              </div>
+              <div class="mb-3 d-flex">
+                  <input type="time" class="form-control muted me-2" name="time" required th:value="${event.time}"/>
+                  <select name="categoryId"  class="form-select muted" required aria-label="Selecciona una categoría">
+                    <option value="" disabled selected hidden class="muted"> [[#{form.select_category}]]</option>
+                    <th:block th:each="cat : ${categories}">
+                      <option th:value="${cat.id}" th:text="${cat.name}" th:attr="data-name=${cat.name}"
+                        th:selected="${event.category != null} ? (${cat.id} == ${event.category.id}) : false">
+                      </option>
+                    </th:block>
+                  </select>
+              </div>
+              <div class="mb-3" id="customCategoryDiv" style="display:none;">
+                <input type="text" class="form-control muted" id="customCategory" name="customCategory" placeholder="Escribe la categoría" />
+              </div>
+              <div class="mb-3 d-flex">
+                  <input type="text" th:id="'address-edit-' + ${event.id}" name="location.address" th:value="${event.location.address}" placeholder="Dirección" class="form-control muted me-2" />
+                  <input type="hidden" th:id="'latitude-edit-' + ${event.id}" name="location.latitude" th:value="${event.location.latitude}" />
+                  <input type="hidden" th:id="'longitude-edit-' + ${event.id}" name="location.longitude" th:value="${event.location.longitude}" />
+                  <button type="button" class="btn btn-submit" th:onclick="'geocodeAddressEdit(' + ${event.id} + ')'">Buscar</button>
+              </div>
+              <!-- Mapa -->
+              <div th:id="'map-edit-' + ${event.id}" th:attr="data-event-id=${event.id}" style="height: 150px; width: 100%;" class="rounded shadow"></div>
+            </div>    
+          </div>  
+        </div>
+        <div class="modal-footer mt-3">
+          <button type="button" class="btn btn-submit me-2" onclick="window.location.href='/user/profile'">Cancelar</button>
+          <button type="submit" class="btn btn-submit" th:text="#{form.update}">Actualizar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/theme.js}"></script>
+  <script th:src="@{/js/geo_maps.js}"></script>
+
+</body>
+</html>

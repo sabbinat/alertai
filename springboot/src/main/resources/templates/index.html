@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlertAi</title>
+  <!-- BOOTSTRAP   -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- FONT AWESOM  -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+    <!-- CSS PERSONALIZADO -->
+
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <link rel="stylesheet" th:href="@{/css/theme.css}"> 
+
+  <!-- FAVICON (ICON DE LA PÁGINA) -->
+  <link rel="icon" type="image/png" href="/img/icon-nav.png">
+
+  <!-- CALENDARIO -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/main.min.js"></script>
+
+  <!-- LEAFLET (MAPA)  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+
+</head>
+<body>
+  <!-- MENÚ -->
+  <div class="nav sticky-top">
+    <!-- LOGO -->
+    <div class="branding">
+      <svg id="logo_largo" xmlns="http://www.w3.org/2000/svg" viewBox="175 175 150 150"><defs><style>.cls-1{fill:currentColor;}</style></defs>
+      <g><path class="cls-1" d="M120.29,282.86c-.71,.17-1.4-.36-1.4-1.1,0-2.25-.03-4.41,.05-6.58,.02-.45,.54-1.08,.98-1.29,6.88-3.22,10.16-8.62,10.14-16.18-.01-5.23-.18-10.48,.3-15.67,1.15-12.43,12.68-22.31,25.17-21.92,13.11,.41,23.85,10.44,24.51,23.08,.26,4.97,.11,9.96,.15,14.94,.06,7.5,3.52,12.79,10.38,15.81,.87,.38,1.23,.78,1.21,1.75-.06,2.02-.04,4.05-.03,6.18,0,.73-.68,1.29-1.4,1.11-5.04-1.28-9.13-3.8-12.5-7.58-4.33-4.86-6.36-10.61-6.39-17.09-.02-4.3,0-8.59,0-12.89-.03-9.33-7.14-16.54-16.37-16.57-9.09-.03-16.24,7.3-16.3,16.65-.03,5.35,.13,10.73-.28,16.05-.76,9.95-8.7,19.05-18.23,21.3Z"/>
+        <path class="cls-1" d="M143.69,277.88h22.87c.63,0,1.15,.51,1.13,1.14-.12,5.01-5.29,10.1-11.28,10.79-6.6,.76-12.56-3.82-13.84-10.59-.13-.7,.4-1.34,1.11-1.34Z"/></g>
+      <g><path class="cls-1" d="M199.37,232.18c.04-3.22,.04-4.98,.08-5.25h7.7l.08,56.49h-7.86c-.04-31.04-.04-48.14,0-51.24Z"/>
+        <path class="cls-1" d="M247.66,264.29l-25.87-.04c.46,3.3,1.84,6.06,4.22,8.2,2.41,2.15,5.29,3.3,8.74,3.37,2.41-.04,5.06-.5,7.86-1.38,2.84-.84,5.1-1.95,6.9-3.22h.04l4.1,6.02c-3.37,2.34-6.55,3.95-9.51,4.87s-6.09,1.34-9.43,1.3c-5.56-.11-10.27-1.99-14.07-5.6-3.83-3.56-5.98-8.13-6.48-13.6-.04-.46-.04-.92-.04-1.42,0-2.18,.34-4.22,.96-6.21,1.38-4.25,3.83-7.67,7.36-10.31,3.53-2.65,7.63-3.99,12.3-4.06,4.68,.08,8.78,1.42,12.3,4.06,3.49,2.64,5.94,6.09,7.36,10.35,.61,1.95,.92,4.02,.92,6.21,0,.46,0,.96-.04,1.46h-7.63Zm-.69-8.4c-1.11-2.07-2.68-3.72-4.68-4.94s-4.25-1.84-6.75-1.88c-2.49,0-4.75,.65-6.75,1.88s-3.56,2.87-4.68,4.91l22.84,.04Z"/>
+        <path class="cls-1" d="M278.29,242.6c3.18-.38,6.59-.58,10.23-.58v7.36c-4.37-.04-7.9,.19-10.62,.65-2.68,.46-4.68,1.53-5.94,3.18-1.3,1.69-1.95,4.29-1.99,7.86l-.08,14.95v7.47h-7.63v-20.85c0-.65,0-1.26,.04-1.84l.04-18.59h7.59v3.03c2.41-1.38,5.17-2.26,8.36-2.64Z"/>
+        <path class="cls-1" d="M318.53,283.34c-2.84,0-5.25-.15-7.28-.5-1.99-.35-3.99-1.15-5.94-2.42-1.95-1.23-3.3-3.26-3.95-6.06-.57-2.68-.84-6.82-.88-12.45,0-5.64,.04-9.7,.11-12.15h-5.17v-7.63h5.1c-.04-5.21-.04-10.31,0-15.25h7.7l.04,15.25h8.51v7.63h-8.47c-.11,6.21-.11,12.99,0,20.35,.04,4.1,3.64,5.94,10.81,5.63v7.59h-.57Z"/>
+        <path class="cls-1" d="M366.09,263.56v19.85h-7.59v-4.68c-1.8,1.46-3.79,2.61-6.02,3.41-2.22,.84-4.56,1.23-7.01,1.23-3.79,0-7.24-.92-10.35-2.76-3.14-1.88-5.63-4.37-7.47-7.48-1.88-3.14-2.8-6.59-2.8-10.39s.92-7.25,2.8-10.35c1.84-3.14,4.33-5.64,7.47-7.48,3.1-1.88,6.55-2.8,10.35-2.8,2.45,0,4.79,.42,7.01,1.23,2.18,.8,4.22,1.95,5.98,3.41v-4.68h7.59l.04,19.85v1.61Zm-7.63-.15v-1.3c-.23-3.53-1.61-6.48-4.06-8.82-2.49-2.38-5.44-3.56-8.93-3.56s-6.67,1.3-9.2,3.83c-2.57,2.57-3.83,5.63-3.83,9.2s1.26,6.67,3.83,9.24c2.53,2.53,5.6,3.8,9.2,3.8s6.48-1.19,8.93-3.53c2.45-2.38,3.83-5.29,4.06-8.82v-.04Z"/>
+        <path class="cls-1" d="M374.18,233.25c-.8-.73-1.19-1.61-1.19-2.65s.38-1.95,1.19-2.68c.8-.73,1.76-1.11,2.87-1.11s2.07,.38,2.87,1.11c.8,.73,1.19,1.61,1.19,2.68s-.38,1.92-1.19,2.65c-.8,.77-1.76,1.11-2.87,1.11s-2.07-.34-2.87-1.11Zm-.88,8.89h7.59l-.04,41.28-7.63-.04,.08-41.24Z"/></g>
+      </svg>
+    </div>
+
+    <!-- BOTONES -->
+    <div class="buttons">
+      <button class="btn btn-login" data-bs-toggle="modal" data-bs-target="#loginModal" th:text="#{login.title}">Iniciar sesión</button>
+      <button class="btn btn-register" data-bs-toggle="modal" data-bs-target="#registerModal" th:text="#{register.create}">Crea tu cuenta</button>
+      
+      <!-- CAMBIAR THEME (OSCURO/CLARO) -->
+      <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+        <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
+      </button>
+    </div>    
+  </div>
+
+  <!-- CONTENIDO DE INDEX -->
+  <div class="scroll-container">
+    <!--BANNER PRINCIPAL-->
+    <section class="snap-section fade-section d-flex justify-content-center">
+      <div class="hero mt-5">
+        <!-- CONTENIDO DEL BANNER -->
+        <div class="hero-content">
+          <div class="row">
+            <div class="col-md-6 text mt-5">
+              <h1 th:utext="#{home.banner.title}">Tu ciudad, <br>siempre alerta <span style="color: var(--verde-medio);">!</span></h1>
+              <p th:text="#{home.banner.subtitle}">Comparte sucesos en segundos y fortalece la unión urbana.</p>
+              <div class="cta">
+                <button class="btn" data-bs-toggle="modal" data-bs-target="#loginModal" th:text="#{home.banner.cta.create}">Crear evento</button>
+                <a class="btn" th:href="@{/event/allEvents}" th:text="#{home.banner.cta.view}">Ver eventos</a>
+              </div>
+            </div>
+
+            <!-- IMAGEN DEL BANNER PRINCIPAL -->
+            <div class="col-md-6 hero-image">
+              <img src="/img/mega.svg" alt="Imagen del banner principal" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--BUSCADOR-->
+    <section class="snap-section fade-section d-flex justify-content-center" style="background-color: var(--verde-medio);">
+      <div class="row align-items-center justify-content-center">
+        <!-- LADO IZQUIERDO: Imagen -->
+        <div class="col-md-4 text-center">
+          <img src="/img/mobile.png" alt="Buscar eventos" class="img-fluid" style="max-height: 400px;">
+        </div>
+        
+        <!-- LADO DERECHO: Texto y barra de búsqueda -->
+        <div class="col-md-8 mb-4 mb-md-0">
+          <h4 class="fw-bold" style="letter-spacing: 1px;" th:utext="#{home.search.title}">
+            Encuentra eventos cerca de ti y <br>descubre lo que está pasando en tu ciudad.
+          </h4>
+          <div class="search-bar mt-3">
+            <form action="/search" method="get" id="searchForm" class="search-form d-flex" role="search">
+              <input id="eventSearchInput" type="text" name="query" class="form-control me-2"
+                placeholder="Buscar eventos, categorías o creadores..."
+                onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                onblur="this.placeholder=this.getAttribute('data-placeholder')" 
+                aria-label="Buscar eventos, categorías o creadores" />
+              <button type="submit" class="btn me-2" aria-label="Buscar">
+                <i class="fas fa-search"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!--PROGRAMACIÓN DEL MES-->
+    <section class="snap-section fade-section">
+      <div class="monthly-program-section">
+        <h3 class="mb-4 animate-title" th:text="#{home.schedule.title}">Programación del mes</h3>
+        <div class="row">
+          <!-- Calendario -->
+          <div class="col-lg-4 col-sm-12 mb-4">
+            <div class="calendar-card ">
+              <h5 class="mb-3" th:text="#{home.schedule.when}">¿Cuándo?</h5>
+              <div class="calendar">
+                <div class="calendar-header d-flex justify-content-between">
+                  <div class="month-year-group">
+                    <span class="month-change" id="prev-month">‹</span>
+                    <span class="month-picker" id="month-picker"></span>
+                    <span class="month-change" id="next-month">›</span>
+                  </div>              
+                  <div class="year-group">
+                    <span class="year-change" id="prev-year">‹</span>
+                    <span class="year-picker" id="year"></span>
+                    <span class="year-change" id="next-year">›</span>
+                  </div>
+                </div>
+                <div class="calendar-body">
+                  <div class="calendar-week-day">
+                    <div>Dom</div><div>Lun</div><div>Mar</div>
+                    <div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div>
+                  </div>
+                  <div class="calendar-days"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mapa -->
+          <div class="col-lg-8 col-sm-12 mb-4">
+            <div class="map-card">
+              <h5 class="mb-3" th:text="#{home.schedule.where}">¿Dónde?</h5>
+              <div id="event-map"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- EVENTOS MÁS ESPERADOS -->
+    <section class="snap-section fade-section">
+      <div class="featured-events">
+        <h3 class="text-center" th:text="#{home.featured.title}">Eventos más esperados</h3>
+        <p th:text="#{home.featured.subtitle}">¡Lo mejor está por venir! Descubre los eventos que todos están esperando.</p>
+        <div class="row mt-2">
+          <div th:each="evt : ${featuredEvents}" class="col-md-4">
+            <a th:href="@{/event/{id}(id=${evt.id})}">
+              <div class="card shadow-sm">
+                <img th:src="@{'/uploads/events/' + ${evt.image}}" onerror="this.onerror=null; this.src='/img/default-event.jpeg';" 
+                  class="card-img-top shadow" th:alt="${evt.name}"/>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <footer class="footer mt-auto w-100 p-3">
+        <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+          <!-- Derechos reservados -->
+          <p class="mb-0 small" th:text="#{footer.rights_reserved}">
+            &copy; 2025 AlertAi. <span><i>Todos los derechos reservados.</i></span>
+          </p>
+
+          <div class="small">
+            <a th:href="@{/terminos}" class="me-3 bottom-inline" th:text="#{footer.terms}">Términos de uso</a> | 
+            <a th:href="@{/privacidad}" class="me-3 ms-2 bottom-inline" th:text="#{footer.privacy}">Aviso de privacidad</a> | 
+            <a th:href="@{/contact}" class="ms-3 bottom-inline" th:text="#{footer.contact}">Contáctanos</a>
+          </div>
+
+          <!-- Redes sociales -->
+          <div class="footer-links">
+            <a href="#" class="me-3" aria-label="Facebook"><i class="bi bi-facebook fs-5"></i></a>
+            <a href="#" class="me-3" aria-label="Twitter"><i class="bi bi-twitter fs-5"></i></a>
+            <a href="#" class="me-3" aria-label="Instagram"><i class="bi bi-instagram fs-5"></i></a>
+            <a href="#" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
+          </div>
+        </div>
+      </footer>
+    </section>
+   
+  </div> 
+ 
+  <!-- MODAL -->
+
+  <!-- INICIAR SESIÓN -->
+  <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-login-size">
+      <div class="modal-content">
+        <div class="modal-body p-5">
+          <div class="text-center">
+            <!-- MENSAJES -->
+            <div th:if="${param.error}" class="alert alert-danger text-center small" role="alert" th:text="#{login.error}">
+                Correo o contraseña incorrectos. Intenta nuevamente.
+            </div>
+            <div th:if="${param.logout}" class="alert alert-success text-center small" role="alert" th:text="#{login.logout}">
+                Has cerrado sesión exitosamente.
+            </div>
+
+            <h4 class="fw-bold mb-5" th:text="#{login.title}">Iniciar sesión</h4>
+          </div>
+
+          <form th:action="@{/userLogin}" method="post">
+            <!-- CREDENCIALES -->
+            <div class="mb-3">
+                <input type="email" name="username" class="form-control muted" th:placeholder="#{login.email}"
+                  onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                  onblur="this.placeholder=this.getAttribute('data-placeholder')" required>
+            </div>
+            <div class="mb-3 position-relative small">
+              <input type="password" name="password" id="password" class="form-control muted" th:placeholder="#{login.password}"
+                onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                onblur="this.placeholder=this.getAttribute('data-placeholder')" required>
+              <i id="togglePassword" class="bi bi-eye-slash position-absolute top-50 translate-middle-y text-secondary" 
+              style="right: 1rem; cursor: pointer;"></i>
+            </div>                
+          
+            <!-- RECORDAR SESIÓN -->
+            <div class="mb-3 d-flex justify-content-between align-items-center">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" id="remember-me" name="remember-me">
+                  <label class="form-check-label small" for="remember-me" th:text="#{login.remember}">Recuérdame</label>
+                </div>
+                <a href="/forgot-password" class="small forgot-password bottom-inline" th:text="#{login.forgot}">¿Olvidaste la contraseña?</a>
+            </div>
+            <div class="submit mt-2">
+              <button type="submit" class="btn btn-submit">Entrar</button>
+            </div>
+
+            <!-- POLÍTICAS -->
+            <p class="text-center mt-4 small muted" th:text="#{login.footer}">
+              Descubrí, compartí y participá de eventos importantes en tu comunidad.
+            </p>
+            <hr class="mt-3">
+
+            <!-- REGISTRARSE -->
+            <div class="text-center mt-3 small">
+              <p th:utext="#{login.register.full}">
+                ¿Es tu primera vez en AlertAi? <a href="/register" class="ms-2"><strong class="bottom-inline">Regístrate.</strong></a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- CREAR CUENTA -->
+  <div class="modal fade" id="registerModal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog custom-register-size">
+      <div class="modal-content">
+        <div class="modal-body p-5">
+          <div th:if="${msg}" class="alert alert-info" th:text="${msg}"></div>
+      
+          <div class="text-center mb-4">
+            <h4 class="fw-bold" th:text="#{register.welcome}">Te damos la bienvenida a AlertAi</h4>
+            <p class="muted mb-3" th:text="#{register.create}">Crea tu cuenta</p>
+          </div>
+      
+          <form th:action="@{/register}" method="post">
+            <div class="mb-2">
+              <input type="text" name="name" class="form-control muted" th:placeholder="#{form.name}"
+                onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                onblur="this.placeholder=this.getAttribute('data-placeholder')" required>
+            </div>
+            <div class="mb-2">
+            <input type="text" name="username" class="form-control muted" th:placeholder="#{form.username}"
+              onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')" required>
+            </div>
+            <div class="mb-2">
+              <input type="email" name="email" class="form-control muted" th:placeholder="#{form.email}"
+                onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                onblur="this.placeholder=this.getAttribute('data-placeholder')" required>
+            </div>
+            <div class="mb-2">
+              <select name="country" class="form-select muted" required>
+                <option value="" hidden>País</option>
+                <option value="Uruguay" th:text="#{register.country.uruguay}">Uruguay</option>
+                <option value="Brasil">Brasil</option>
+              </select>
+            </div>
+
+            <div class="position-relative">
+              <input type="password" name="password" id="reg_password" class="form-control pe-5 muted"
+                th:placeholder="#{register.password}"
+                minlength="8"
+                pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*]).{8,}"
+                th:title="#{form.password.tooltip}"
+                required
+                onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                onblur="this.placeholder=this.getAttribute('data-placeholder')">
+
+              <!-- Ícono para mostrar/ocultar contraseña -->
+              <i id="toggleRePassword"
+                class="bi bi-eye-slash position-absolute top-50 translate-middle-y text-secondary"
+                style="right: 1rem; cursor: pointer;"></i>
+            </div>
+
+            <!-- TÉRMINOS DE USO -->
+            <div class="form-check d-flex align-items-center mt-4">
+              <input class="form-check-input mt-0" type="checkbox" id="accept" name="accept">
+              <label class="form-check-label ms-2 small" for="accept" th:utext="#{register.terms}">
+                Acepto los <a th:href="@{/terminos}" class="bottom-inline"><strong>Términos de Uso</strong></a> y el <a th:href="@{/privacidad}" class="bottom-inline"><strong>Aviso de Privacidad</strong></a> de AlertAi.
+              </label>
+            </div>
+
+            <!-- BOTÓN SUBMIT -->
+            <div class="submit mb-2 mt-3">
+              <button type="submit" class="btn btn-submit">Continuar</button>
+            </div>
+            
+            <hr class="mt-3">
+            <!-- INICIAR SESIÓN -->
+            <div class="text-center mt-3 small" th:utext="#{register.login}">
+              <p>¿Ya formas parte de AlertAi?
+              <a href="signin" class="ms-2"><strong>Iniciar sesión.</strong></a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/theme.js}"></script>
+  <!-- JS - CALENDARIO/MAPA -->
+  <script th:inline="javascript">
+      const calendarEvents = /*[[${calendarEvents}]]*/ "[]";
+  </script>
+  <script src="/js/calendar_map.js"></script>
+  <!-- JS - SECCIONES -->
+  <script>
+    const sections = document.querySelectorAll('.fade-section');
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.6 
+    });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+
+</body>
+</html>

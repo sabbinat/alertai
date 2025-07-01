@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="es">
+<head>
+<meta charset="UTF-8">
+<title>AlertAi - Inicio</title>
+
+  <!-- BOOTSTRAP   -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- FONT AWESOM  -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <!-- CSS PERSONALIZADO -->
+  <link rel="stylesheet" th:href="@{/css/theme.css}">
+  <link rel="stylesheet" th:href="@{/css/user.css}">
+
+  <!-- FAVICON (ICON DE LA PÁGINA) -->
+  <link rel="icon" type="image/png" href="/img/icon-nav.png">
+
+  <!-- LEAFLET (MAPA)  -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+</head>
+<body>
+  <div class="page-container">
+
+    <!-- MENÚ -->
+    <header>
+      <nav class="navbar-user sticky-top">
+        <!-- LOGO -->
+        <div class="branding">
+          <a th:href="@{/user/home}">
+            <svg class="icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+              <path d="M177.18,307.9c-1.48,.35-2.9-.76-2.91-2.28-.02-4.67-.06-9.17,.1-13.66,.03-.94,1.12-2.25,2.04-2.68,14.3-6.69,21.11-17.92,21.07-33.63-.03-10.86-.37-21.78,.63-32.57,2.4-25.83,26.36-46.37,52.31-45.56,27.24,.85,49.57,21.69,50.93,47.96,.53,10.33,.23,20.69,.32,31.04,.13,15.59,7.32,26.58,21.58,32.85,1.82,.8,2.56,1.63,2.5,3.65-.12,4.21-.07,8.42-.06,12.85,0,1.52-1.42,2.67-2.9,2.3-10.48-2.66-18.98-7.9-25.97-15.74-9-10.1-13.22-22.06-13.28-35.52-.04-8.93,.01-17.86-.01-26.79-.05-19.4-14.85-34.37-34.01-34.44-18.88-.07-33.75,15.17-33.87,34.6-.07,11.12,.26,22.29-.58,33.36-1.58,20.67-18.08,39.58-37.88,44.26Z"></path>
+              <path d="M225.8,297.54h47.53c1.3,0,2.38,1.06,2.35,2.36-.25,10.42-10.99,20.99-23.44,22.43-13.71,1.59-26.11-7.94-28.76-22-.27-1.45,.84-2.79,2.31-2.79Z"/>
+            </svg>
+          </a>
+        </div>
+
+        <!-- MENÚ -->
+        <div class="nav-left">
+          <a th:href="@{/user/home}" th:text="#{profile.home}" class="active">Inicio</a>
+          <a th:href="@{/event/allEvents}">Eventos</a>
+          <a href="/contact" th:text="#{profile.contact}">Contacto</a>
+          <a href="/help" th:text="#{profile.help}">Ayuda</a>
+        </div>
+      
+        <!-- BUSCADOR -->
+        <div class="search-bar">
+          <form action="/search" method="get" id="searchForm" class="search-form" role="search">
+            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+            <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
+          </form>
+        </div>
+      
+        <!-- MENÚ DEL USUARIO -->
+        <div class="nav-right">
+          <div class="user-menu">
+            <img th:src="@{'/uploads/icons/' + ${user.image}}"
+                        onerror="this.onerror=null; this.src='/img/icon-default.jpg';" alt="Foto del usuario">
+            <span class="username">
+              <span sec:authorize="hasRole('ADMIN')" th:text="${user.name}"></span>
+              <span sec:authorize="!hasRole('ADMIN')" th:text="${user.name}"></span>
+            </span>
+
+            <div class="dropdown me-4">
+              <button class="btn btn-sm btn-icon" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-chevron-down"></i>
+              </button>
+
+              <ul class="dropdown-menu dropdown-menu-end custom-dropdown">
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2" th:href="@{/user/profile}">
+                    <i class="fas fa-user me-1"></i><span>Perfil</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#settingsModal">
+                    <i class="fas fa-cog me-1"></i><span th:text="#{profile.setting}">Configuración</span>
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item d-flex align-items-center gap-2" href="/logout">
+                    <i class="fas fa-sign-out-alt me-1"></i><span th:text="#{profile.logout}">Cerrar sesión</span>
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <!-- CAMBIAR THEME OCURO/CLARO -->
+            <button id="theme-toggle-btn" class="btn btn-link theme-toggle-btn p-2" aria-label="Cambiar tema" title="Cambiar a modo oscuro">
+              <i id="theme-icon" class="bi bi-lightbulb-fill fs-4"></i>
+            </button>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <main class="flex-grow-1">
+      <!-- CONTENIDO DEL USER-HOME -->
+      <section class="container-home">
+        <!-- BANNER -->
+        <div class="hero">
+          <div class="hero-content">
+            <h1 th:text="#{hero.title}">Todo comienza con tu reporte</h1>
+            <p class="muted" th:text="#{hero.subtitle}">Comparte lo que ves, cuida tu entorno y fortalece la comunidad.</p>
+            <div class="cta">
+              <button class="btn black" data-bs-toggle="modal" data-bs-target="#crearEventoModal" th:text="#{profile.create}">
+                Crear evento
+              </button>
+              <button id="openSidebarBtn" class="btn black">
+                <i class="fas fa-newspaper me-2"></i>
+                <span th:text="#{hero.latest_news}">Últimas noticias</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EVENTOS -->
+        <div class="event-user-home">
+          <!-- CARRUSEL “Mis publicaciones” -->
+          <div class="event-title mt-5"><h5 th:text="#{homepage.my_posts}">Mis publicaciones</h5></div>
+          <div th:if="${myEvents != null and !myEvents.isEmpty()}" id="carouselMyEvents" class="carousel slide overflow-hidden" 
+                th:with="size=${myEvents.size()},slides=${T(java.lang.Math).ceil(size / 4.0).intValue()}">
+            <div class="carousel-inner p-5">
+              <div th:each="idx : ${#numbers.sequence(0, slides - 1)}" class="carousel-item" th:classappend="${idx == 0} ? ' active'">
+                <div class="row g-0">
+                  <div class="col-12 col-md-3" th:each="event : ${myEvents.subList(idx * 4,(idx + 1) * 4 <= size ? (idx + 1) * 4 : size)}">
+                    <a th:href="@{/event/{id}(id=${event.id})}">
+                      <div class="event-card">
+                        <img th:src="@{'/uploads/events/' + ${event.image}}" onerror="this.onerror=null; this.src='/img/default-event.jpeg';"
+                          alt="Foto del evento" class="img-fluid"/>
+                        <div class="d-flex justify-content-between align-items-center">
+                          <p th:text="${event.category.name}" class="muted"></p> 
+                          <p th:text="${event.timeAgo}" class="muted">hace 2 horas</span>
+                        </div>
+                        <h5 th:text="${event.name}" class="event-name mt-2 bottom-inline"></h5>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- BOTONES DEL CARRUSEL -->
+            <button id="prevMyEvents" class="carousel-control-prev" type="button" data-bs-target="#carouselMyEvents" data-bs-slide="prev">
+              <i class="bi bi-chevron-left fs-4"></i>
+              <span class="visually-hidden">Anterior</span>
+            </button>
+            <button id="nextMyEvents" class="carousel-control-next" type="button" data-bs-target="#carouselMyEvents" data-bs-slide="next">
+              <i class="bi bi-chevron-right fs-4"></i>
+              <span class="visually-hidden">Siguiente</span>
+            </button>
+          </div>
+          <!-- CUANDO NO HAY EVENTOS CREADOS -->
+          <div th:if="${myEvents == null or myEvents.isEmpty()}" class="text-center mt-3">
+              <p th:text="#{homepage.no_events}">Aún no tienes eventos creados. ¡Empieza a organizar uno!</p>
+          </div>
+
+          <!-- CARRUSEL “Eventos recientes” -->
+          <div class="mt-5 event-title"><h5 th:text="#{homepage.recent_events}">Eventos recientes</h5></div>
+          <div th:if="${recentEvents != null and !recentEvents.isEmpty()}" id="carouselRecentEvents" class="carousel slide overflow-hidden" 
+                th:with="size=${recentEvents.size()},slides=${T(java.lang.Math).ceil(size / 4.0).intValue()}">
+            <div class="carousel-inner p-5">
+              <div th:each="idx : ${#numbers.sequence(0, slides - 1)}" class="carousel-item" th:classappend="${idx == 0} ? ' active'">
+                <div class="row g-0">
+                  <div class="col-12 col-md-3" th:each="event : ${recentEvents.subList(idx * 4,(idx + 1) * 4 <= size ? (idx + 1) * 4 : size)}">
+                    <a th:href="@{/event/{id}(id=${event.id})}" class="event-link">
+                      <!-- EVENTOS -->
+                      <div class="event-card">
+                        <img th:src="@{'/uploads/events/' + ${event.image}}" onerror="this.onerror=null; this.src='/img/default-event.jpeg';" 
+                          alt="Foto del evento" class="img-fluid"/>
+                        <div class="d-flex justify-content-between align-items-center">
+                          <p th:text="${event.category.name}" class="muted"></p> 
+                          <p th:text="${event.timeAgo}" class="muted">hace 2 horas</span>
+                        </div>
+                        <h5 th:text="${event.name}" class="event-name mt-2 bottom-inline"></h5>
+                      </div>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- BOTONES DEL CARRUSEL -->
+            <button id="prevRecentEvents" class="carousel-control-prev" type="button" data-bs-target="#carouselRecentEvents" data-bs-slide="prev">
+              <i class="bi bi-chevron-left fs-4"></i>
+              <span class="visually-hidden">Anterior</span>
+            </button>
+            <button id="nextRecentEvents" class="carousel-control-next" type="button" data-bs-target="#carouselRecentEvents" data-bs-slide="next">
+              <i class="bi bi-chevron-right fs-4"></i>
+              <span class="visually-hidden">Siguiente</span>
+            </button>
+          </div>
+          <!-- CUANDO NO HAY EVENTOS CREADOS -->
+          <div th:if="${recentEvents == null or recentEvents.isEmpty()}" class="text-center mt-3">
+              <p th:text="#{homepage.no_events}">Aún no hay eventos creados.</p>
+          </div>
+        </div>
+
+        <!-- SIDEBAR-RIGHT - NOTICIAS DESTACADAS -->
+        <div id="sidebarNoticias" class="sidebar-noticias px-4">
+          <div class="d-flex justify-content-between align-items-center py-3 ">
+            <h5 class="mb-0 fw-semibold" th:text="#{latest_news}">Noticias destacadas</h5>
+            <button id="closeSidebarBtn" class="btn btn-sm" aria-label="Cerrar">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </div>
+
+          
+          <div th:if="${featuredEventsAlert != null and !featuredEventsAlert.isEmpty()}">
+            <div th:each="alert : ${featuredEventsAlert}" class="d-flex justify-content-center align-items-center">
+              <a th:href="@{/event/{id}(id=${alert.id})}">
+                <div class="alert-card rounded shadow-sm">
+                  <!-- INFO DEL AUTOR -->
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                      <img th:src="@{'/uploads/icons/' + ${alert.user.image}}" onerror="this.onerror=null; this.src='/img/icon-default.jpg';"
+
+                        alt="Foto del autor" class="rounded-circle me-2 shadow-sm" 
+                        style="width: 20px; height: 20px; object-fit: cover;"/>
+                      <span th:text="${alert.user.name}" style="font-size: 0.7rem;">Nombre del autor</span>
+                    </div>
+                    <div>
+                      <span th:text="${alert.timeAgo}" class="muted" style="font-size: 0.6rem;">
+                        hace 3 días
+                      </span>
+                    </div>
+                  </div>
+                  <hr>
+                  <!-- INFO DE ALERTA -->
+                  <h5 th:text="${alert.name}" class="mb-1">Título de la noticia</h5>
+                  <p th:text="${alert.description}" class="mb-0 text-truncate-multiline muted">Descripción de la noticia</p>
+                </div>
+              </a>
+            </div>
+          </div>
+          <div th:if="${featuredEventsAlert == null or featuredEventsAlert.isEmpty()}" class="muted">
+            <p>No hay noticias.</p>
+          </div>
+        </div>
+      </section>
+    </main>
+    
+    <!-- FOOTER -->
+    <footer class="footer py-4 ">
+      <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
+        <!-- Derechos reservados -->
+        <p class="mb-0 small" th:text="#{footer.rights_reserved}">
+          &copy; 2025 AlertAi. Todos los derechos reservados.
+        </p>
+
+        <div class="small">
+          <a th:href="@{/terminos}" class="me-3 bottom-inline" th:text="#{footer.terms}">Términos de uso</a> | 
+          <a th:href="@{/privacidad}" class="me-3 ms-2 bottom-inline" th:text="#{footer.privacy}">Aviso de privacidad</a> | 
+          <a th:href="@{/contact}" class="ms-3 bottom-inline" th:text="#{footer.contact}">Contáctanos</a>
+        </div>
+        
+        <!-- Redes sociales -->
+        <div class="footer-links mb-3 mb-md-0">
+          <a href="#" class="text-white me-3" aria-label="Facebook"><i class="bi bi-facebook fs-5"></i></a>
+          <a href="#" class="text-white me-3" aria-label="Twitter"><i class="bi bi-twitter fs-5"></i></a>
+          <a href="#" class="text-white me-3" aria-label="Instagram"><i class="bi bi-instagram fs-5"></i></a>
+          <a href="#" class="text-white" aria-label="LinkedIn"><i class="bi bi-linkedin fs-5"></i></a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+  
+  <!-- MODALES -->
+
+  <!-- CREAR EVENTO -->
+  <div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-3">
+        <form th:action="@{/event/save}" method="post" th:object="${eventDto}" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title" id="crearEventoModalLabel" style="font-size: 1rem;">Crear evento</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" style="font-size: 0.8rem;"></button>
+          </div>          
+          <div class="modal-body">
+            <div class="row">
+              <!-- AQUÍ VA LA IMAGEN DEL EVENTO-->
+              <div class="col-12 col-md-4 d-flex flex-column">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                  <div id="drop-area" class="p-2 border border-secondary rounded d-flex flex-column align-items-center justify-content-center text-center h-100" style="cursor: pointer;">
+                    <div id="drop-placeholder" class="d-flex flex-column align-items-center">
+                      <i class="bi bi-image" style="font-size: 1rem;"></i>
+                      <p class="mt-2 mb-0" style="font-size: 0.8rem;">Arrastra una imagen aquí o haz clic para seleccionar</p>
+                    </div>
+                    <input type="file" id="image" name="imageFile" accept="image/*" class="d-none">
+                    <img id="preview" src="#" alt="Vista previa" class="img-fluid d-none h-100" />
+                  </div>
+                </div>
+              </div>
+              <!--DATOS DE EVENTO-->
+              <div class="col-12 col-md-8">
+                <div class="mb-3">
+                  <input type="text" class="form-control muted" id="name" name="name" required placeholder="Título" th:placeholder="#{form.title}">
+                </div>
+                <div class="mb-3">
+                  <textarea class="form-control muted" id="description" rows="3" name="description" required placeholder="Descripción" th:placeholder="#{form.description}"></textarea>
+                </div>
+                <div class="mb-3">
+                  <input type="text" class="form-control muted" id="contact" name="contact" placeholder="Contacto">
+                </div>
+                <div class="mb-3 d-flex">
+                  <input type="date" class="form-control muted" id="startDate" name="startDate" required/>
+                  <p class="mx-2 my-auto">hasta</p>
+                  <input type="date" class="form-control muted" id="endDate" name="endDate" />
+                </div>
+                <div class="mb-3 d-flex">
+                  <input type="time" class="form-control muted me-2" id="time" name="time" th:placeholder="#{form.time}"/>
+                  <select name="categoryId" id="categoryId" class="form-select muted" required aria-label="Selecciona una categoría">
+                    <option value="" disabled selected hidden class="muted"> [[#{form.select_category}]]</option>
+                    <th:block th:each="cat : ${categories}">
+                      <option th:value="${cat.id}" th:text="${cat.name}" th:attr="data-name=${cat.name}"></option>
+                    </th:block>
+                  </select>
+                </div>
+
+                <div class="mb-3" id="customCategoryDiv" style="display:none;">
+                  <input type="text" class="form-control muted" id="customCategory" name="customCategory" th:placeholder="#{form.extra_category}">
+                </div>
+
+                <div class="mb-3 d-flex">
+                  <input type="text" class="form-control muted" id="address" name="location.address" placeholder="Dirección" />
+                  <input type="hidden" id="latitude" name="location.latitude" />
+                  <input type="hidden" id="longitude" name="location.longitude" />
+                  <button type="button" class="btn btn-submit ms-2" onclick="geocodeAddress()">Buscar</button>
+                </div>
+                <!--Mapa-->
+                <div id="map-form" style="height: 150px; width: 100%;" class="rounded shadow-sm"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-submit" th:text="#{profile.create}">Crear evento</button>
+          </div>        
+        </form>
+      </div> 
+    </div>
+  </div>
+  <!--CONFIGURACIÓN DE USUARIO-->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-labelledby="settingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content settings-container shadow-lg border-0 rounded-4">
+        <div class="modal-header rounded-top-4">
+          <h5 class="modal-title" id="settingsModalLabel" th:text="#{settings.title}">Configuración de Usuario</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <form th:action="@{/user/settings}" method="post">
+            <input type="hidden" name="redirectTo" th:value="${redirectTo}" />
+  
+            <div class="mb-5 d-flex align-items-center m-0 p-0">
+              <h5 class="fw-bold me-2" th:text="#{settings.language}">Idioma: </h5>
+              <select name="language" id="language" class="form-select shadow-sm rounded-3" style="width: 200px;">
+                <option value="es" th:selected="${#locale.language == 'es'}">Español</option>
+                <option value="pt" th:selected="${#locale.language == 'pt'}">Portugués</option>
+              </select>
+            </div>
+
+            <div class="mb-5">
+              <h5 class="fw-bold mb-2" th:text="#{homepage.preferences}">Preferencias de notificación</h5>
+              <p class="fst-italic small">
+                Selecciona las categorías de eventos sobre las que deseas recibir notificaciones y novedades.
+              </p>
+              <div class="d-flex justify-content-center">
+                <div class="form-check" th:each="cat : ${categories}">
+                  <input class="form-check-input" type="checkbox"
+                         th:id="'cat-' + ${cat.id}"
+                         th:name="categoriaIds"
+                         th:value="${cat.id}"
+                         th:checked="${user.notificaciones.contains(cat)}">
+                  <label class="form-check-label me-4" th:for="'cat-' + ${cat.id}" th:text="${cat.name}"></label>
+                </div>
+              </div>
+            </div>
+
+            <div class="">
+              <a href="#" class="mb-2" data-bs-toggle="modal" data-bs-target="#administrarCuenta"><h5>Administrar cuenta</h5></a>
+              <p class="fst-italic small">
+                Cambia tus datos personales o elimina tu cuenta cuando quieras.
+              </p>
+            </div>
+            
+
+            <div class="modal-footer d-flex justify-content-center border-top-0 pt-4">
+              <button type="button" class="btn px-4" data-bs-dismiss="modal">Cerrar</button>
+              <button type="submit" class="btn px-4" th:text="#{settings.save}">Guardar cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>  
+  </div>
+  <!-- ADMINISTRACIÓN DE CUENTA -->
+  <div class="modal fade" id="administrarCuenta" tabindex="-1" aria-labelledby="administrarCuentaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content shadow-sm border-0 rounded-4">
+        <div class="modal-header rounded-top-4">
+          <h5 class="modal-title" id="administrarCuentaModalLabel">Administración de la cuenta</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form th:action="@{/user/update}" method="post">
+          <div class="modal-body p-5">
+            <p>Tu cuenta</p>
+            <div class="mb-2 p-2 form-control">
+              <span for="email" class="muted mb-1" style="font-size: 0.7rem;">Correo electrónico</span>
+              <input type="email" class="form-control bg-transparent" id="email" name="email" th:value="${user.email}" placeholder="Correo electrónico">
+            </div>
+
+            <div class="mb-3 d-flex align-items-center position-relative">
+              <div class="mb-2 p-2 form-control">
+                <span for="password" class="muted mb-1">Contraseña</span>
+                <input type="password" class="form-control bg-transparent" id="password" name="password" placeholder="*********">
+              </div>
+              <button type="button" class="btn btn-sumit position-absolute end-0 me-2" style="top: 50%; transform: translateY(-50%);"
+                data-bs-toggle="modal" data-bs-target="#cambiarPasswordModal"> Cambiar
+              </button>            
+            </div>
+
+            <p>Información personal</p>
+            <div class="mb-2 p-2 form-control">
+              <span for="country" class="muted mb-1">País</spna>
+              <input type="text" class="form-control bg-transparent" id="pais" name="country" th:value="${user.country}">
+            </div>
+
+            <div class="mb-2 p-2 form-control">
+              <label for="phone" class="muted mb-1">Teléfono</label>
+              <input type="tel" class="form-control bg-transparent" id="phone" name="phone" th:value="${user.phone}">
+            </div>
+
+            <div class="mb-2 p-2 form-control">
+              <label for="document" class="muted mb-1">Documento</label>
+              <input type="text" class="form-control bg-transparent" id="document" name="document" th:value="${user.document}">
+            </div>
+
+            <div class="mt-4 pt-3 d-flex align-items-center">
+              <div class="d-block me-5" >
+                <p>Elimina tus datos y tu cuenta</p>
+                <p class="muted" style="font-size: 0.95rem;">Elimina permanentemente tus datos y todo lo asociado a tu cuenta</p>
+              </div>
+            
+              <button type="button" class="btn btn-danger" style="width: 300px;" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">Eliminar cuenta</button>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- CAMBIAR CONTRAEÑA -->
+  <div class="modal fade" id="cambiarPasswordModal" tabindex="-1" aria-labelledby="cambiarPasswordModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cambiarPasswordModalLabel">Cambiar contraseña</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <form th:action="@{/user/changePassword}" method="post">
+          <div class="modal-body">
+            <div class="mb-3">
+              <label for="currentPassword" class="form-label">Contraseña actual</label>
+              <input type="password" class="form-control" id="currentPassword" name="currentPassword" required>
+            </div>
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">Nueva contraseña</label>
+              <input type="password" class="form-control" id="newPassword" name="newPassword" required>
+            </div>
+            <div class="mb-3">
+              <label for="confirmNewPassword" class="form-label">Confirmar nueva contraseña</label>
+              <input type="password" class="form-control" id="confirmNewPassword" name="confirmNewPassword" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-primary">Actualizar contraseña</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  <!-- CONFIRMACIÓN PARA ELIMINAR CUENTA -->
+  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar eliminación</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body">
+          <p>¿Estás seguro que deseas eliminar tu cuenta? Esta acción no se puede deshacer.</p>
+        </div>
+        <div class="modal-footer">
+          <form th:action="@{/user/delete}" method="post">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-danger">Eliminar cuenta</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script th:src="@{/js/theme.js}"></script>
+  <script th:src="@{/js/script.js}"></script>
+  <script th:src="@{/js/geo_maps.js}"></script>
+
+</body>
+</html>
