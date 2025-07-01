@@ -1,43 +1,90 @@
-# AlertAi
-## Sistema de Gestión de Eventos
+# AlertAi  
+**Sistema de Eventos**
 
-Este es un sistema web desarrollado con **Spring Boot** y **MySQL** que permite a los usuarios crear, modificar y eliminar eventos, además de gestionar sus cuentas. También incluye un panel administrativo completo.
+**AlertAi** es una plataforma web integral para la gestión de eventos públicos y la difusión de alertas comunitarias, desarrollada con tecnologías modernas como **Spring Boot**, **MySQL** y **Leaflet.js**.
+
+Permite a los ciudadanos crear, explorar, denunciar y visualizar eventos relevantes para su comunidad mediante interfaces intuitivas.
+
+El sistema también cuenta con un completo panel de administración que permite a los moderadores revisar reportes, gestionar usuarios y mantener la plataforma segura y actualizada. Su enfoque principal es fomentar la participación ciudadana y mejorar la comunicación en situaciones de emergencia o interés general.
+
+---
 
 ## Autores
 
-## 🚀 Funcionalidades principales
+- Marla Mendez - [@MarlaMendez](https://github.com/MarlaMendez)
+- Natalie Fernández - [@sabbinat](https://github.com/sabbinat)
+- Nicolás Lara - [@niikila](https://github.com/niikila)
+- Paula Suarez - [@TainaSuarez](https://github.com/TainaSuarez)
 
-### 🧑‍💼 Para los usuarios:
+---
+
+## Funcionalidades principales
+
+### Para los usuarios:
+
 - Registro y autenticación de cuentas.
 - Creación, edición y eliminación de eventos.
 - Visualización de eventos creados.
 - Gestión del perfil de usuario (actualización de datos personales).
 - Reporte/denuncia de eventos inapropiados.
 
-### 🛠️ Para el administrador:
+### Para el administrador:
+
 - Dashboard de administración.
 - Gestión de categorías de eventos.
 - Visualización y control de denuncias realizadas por los usuarios.
 - Gestión general de usuarios y eventos.
 
-## 🛠️ Tecnologías utilizadas
+---
+
+## Tecnologías utilizadas
 
 - Java 21+
 - Spring Boot
-- Spring Security 
+- Spring Security
 - MySQL
 - JPA / Hibernate
-- Thymeleaf 
+- Thymeleaf
+- Bootstrap 5
 - Maven
+- OpenStreetMap – visualización interactiva de la ubicación de eventos.
+- Leaflet.js – biblioteca para mapas interactivos.
 
-## ⚠️ Este proyecto necesita credenciales para funcionar correctamente.
+---
 
-1. Copia `application-secret.example.properties` como `application-secret.properties`.
-2. Completa los siguientes datos:
-   - **Contraseña de aplicación** generada en tu cuenta de Gmail para el envío de correos.
-   - **Usuario y contraseña de la base de datos** MySQL usados localmente.
-3. Este archivo está ignorado en el repositorio por seguridad.
-4. Si no tienes las credenciales necesarias, pídeselas a los responsables del proyecto.
+## Configuración de Credenciales
 
-💡 Puedes generar una contraseña de aplicación desde tu cuenta Gmail:  
-https://myaccount.google.com/apppasswords
+Para que el proyecto funcione correctamente, necesitás un archivo de configuración con las credenciales necesarias:
+
+1. Copiá el archivo `application-secret.example.properties` como `application-secret.properties`.
+2. Completá los siguientes campos:
+   - Contraseña de aplicación de Gmail (para envío de correos).
+   - Usuario y contraseña de la base de datos MySQL.
+
+> ⚠️ Este archivo está en `.gitignore` y no se sube al repositorio por seguridad.
+
+Si no contás con las credenciales, consultalo con el equipo de **Star Software**.
+
+📌 **Guía para generar una contraseña de aplicación en Gmail:**  
+[https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
+
+---
+
+## Ejecución Local
+
+1. Asegurate de tener **Java 21** y **MySQL** instalados.
+2. Cloná el proyecto:
+
+   ```bash
+   git clone https://github.com/sabbinat/alertai.git
+   ```
+
+3. Configurá el archivo application-secret.properties como se explicó.
+4. Ejecutá el proyecto desde tu IDE o con:
+
+   ```bash
+   mvn spring-boot:run
+   ```
+5. Accedé a la aplicación en:
+http://localhost:8080
+
