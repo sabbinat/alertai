@@ -32,7 +32,6 @@
         <div class="modal-body">
           <a href="/user/profile" class="back-link"><p><i class="bi bi-arrow-left-short"></i><span>Atrás</span></p></a>
           <input type="hidden" name="id" th:value="${event.id}" />
-
           <div class="row">
             <!--IMAGEN DEL EVENTO-->
             <div class="col-12 col-md-4 d-flex flex-column">
@@ -62,7 +61,7 @@
                   <input type="text" class="form-control muted"  name="name" th:value="${event.name}" required>
               </div>
               <div class="mb-3">
-                  <textarea class="form-control muted"  rows="3" name="description" th:text="${event.description}" required></textarea>
+                  <textarea class="form-control muted no-scrollbar"  rows="3" name="description" th:text="${event.description}" required></textarea>
               </div>
               <div class="mb-3">
                   <input type="text" class="form-control muted" name="contact" th:value="${event.contact}" placeholder="Contacto">
@@ -73,19 +72,21 @@
                   <input class="form-control muted" type="date" name="endDate" th:value="${event.endDate}" required />
               </div>
               <div class="mb-3 d-flex">
-                  <input type="time" class="form-control muted me-2" name="time" required th:value="${event.time}"/>
-                  <select name="categoryId"  class="form-select muted" required aria-label="Selecciona una categoría">
-                    <option value="" disabled selected hidden class="muted"> [[#{form.select_category}]]</option>
-                    <th:block th:each="cat : ${categories}">
-                      <option th:value="${cat.id}" th:text="${cat.name}" th:attr="data-name=${cat.name}"
-                        th:selected="${event.category != null} ? (${cat.id} == ${event.category.id}) : false">
-                      </option>
-                    </th:block>
-                  </select>
+                <input type="time" class="form-control muted me-2" name="time" required th:value="${event.time}"/>
+                <select name="categoryId"  class="form-select muted" required aria-label="Selecciona una categoría">
+                  <option value="" disabled selected hidden class="muted"> [[#{form.select_category}]]</option>
+                  <th:block th:each="cat : ${categories}">
+                    <option th:value="${cat.id}" th:text="${cat.name}" th:attr="data-name=${cat.name}"
+                      th:selected="${event.category != null} ? (${cat.id} == ${event.category.id}) : false">
+                    </option>
+                  </th:block>
+                </select>
               </div>
+              
               <div class="mb-3" id="customCategoryDiv" style="display:none;">
                 <input type="text" class="form-control muted" id="customCategory" name="customCategory" placeholder="Escribe la categoría" />
               </div>
+
               <div class="mb-3 d-flex">
                   <input type="text" th:id="'address-edit-' + ${event.id}" name="location.address" th:value="${event.location.address}" placeholder="Dirección" class="form-control muted me-2" />
                   <input type="hidden" th:id="'latitude-edit-' + ${event.id}" name="location.latitude" th:value="${event.location.latitude}" />

@@ -80,7 +80,7 @@ public class CategoryController {
         Optional<Category> categoria = categoryRepository.findById(id);
 
         if (result.hasErrors()) {
-            msg.addFlashAttribute("errorCadastrar", "Error al editar la categoría");
+            msg.addFlashAttribute("error", "Error al editar la categoría");
             return "redirect:/admin/allCategories";
         }
 
@@ -88,32 +88,26 @@ public class CategoryController {
             var categoriaModel = categoria.get();
             BeanUtils.copyProperties(categoriaDto, categoriaModel);
             categoryRepository.save(categoriaModel);
-            msg.addFlashAttribute("sucessoCadastrar", "¡Categoría actualizada exitosamente!");
+            msg.addFlashAttribute("success", "¡Categoría actualizada exitosamente!");
         } else {
-            msg.addFlashAttribute("errorCadastrar", "Categoría no encontrada");
+            msg.addFlashAttribute("error", "No se encontró la categoría.");
         }
 
         return "redirect:/admin/allCategories";
     }
 
     // Elimina una categoría si no tiene eventos asociados
-    @GetMapping("/delete/{id}")
-    public String eliminar(@PathVariable(value = "id") Long id, RedirectAttributes msg) {
-        Optional<Category> categoria = categoryRepository.findById(id);
-
-        if (categoria.isEmpty()) {
-            msg.addFlashAttribute("errorEliminar", "Categoría no encontrada");
+    @PostMapping("/delete/{id}")
+    public String deleteCategory(@PathVariable(value = "id") Long id, RedirectAttributes msg) {
+        Optional<Category> category = categoryRepository.findById(id);
+        if(category.isEmpty()) {
+            msg.addFlashAttribute("error", "Categoría no encontrada.");
             return "redirect:/admin/allCategories";
         }
-
-        if (!eventRepository.findByCategoryId(id).isEmpty()) {
-            msg.addFlashAttribute("errorEliminar", "No se puede eliminar: la categoría tiene eventos asociados.");
-            return "redirect:/admin/allCategories";
-        }
-
         categoryRepository.deleteById(id);
-        msg.addFlashAttribute("sucessoEliminar", "Categoría eliminada exitosamente.");
+        msg.addFlashAttribute("success", "¡Categoría eliminada exitosamente!");
         return "redirect:/admin/allCategories";
     }
+
     
 }

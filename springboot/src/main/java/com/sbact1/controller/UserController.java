@@ -89,12 +89,12 @@ public class UserController {
 
     // Muestra la página principal del usuario, con eventos, categorías y destacados
     @GetMapping("/home")
-    public String userHome(Model model, Principal principal, RedirectAttributes redirectAttributes) {
+    public String userHome(Model model, Principal principal, RedirectAttributes msg) {
         Optional<User> userOptional = userRepository.findByEmail(principal.getName());
 
         // Verificar si está presente
         if (userOptional.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
+            msg.addFlashAttribute("error", "Usuario no encontrado.");
             return "redirect:/signin"; 
         }
 
@@ -131,7 +131,6 @@ public class UserController {
                 .toList();
         }
 
-
         model.addAttribute("categories", categoryRepository.findAll());
         model.addAttribute("myEvents", eventRepository.findByUser(user));
         model.addAttribute("size", myEvents.size());
@@ -139,16 +138,17 @@ public class UserController {
         model.addAttribute("recentEvents", eventRepository.findAllByOrderByStartDateDesc()); 
         model.addAttribute("recentEvents", recentEvents);
         model.addAttribute("featuredEventsAlert", featuredEventsAlert);
+        
         return "user/user_home";
     }
 
     // Muestra la página de perfil del usuario, con sus eventos organizados por categoría
     @GetMapping("/profile")
-    public String userProfile(Model model, Principal principal, RedirectAttributes redirectAttributes) {
+    public String userProfile(Model model, Principal principal, RedirectAttributes msg) {
         Optional<User> user = userRepository.findByEmail(principal.getName());
 
         if (user.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
+            msg.addFlashAttribute("error", "Usuario no encontrado.");
             return "redirect:/signin";
         }
 
@@ -274,9 +274,9 @@ public class UserController {
             @RequestParam(required = false) List<Long> categoriaIds,
             @RequestParam(defaultValue = "/user/home") String redirectTo,
             Principal principal,
-            RedirectAttributes redirectAttributes) {
+            RedirectAttributes msg) {
 
-        settingService.guardarSettings(language, redirectTo, redirectAttributes);
+        settingService.guardarSettings(language, redirectTo, msg);
 
         Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
         if (optionalUser.isPresent()) {
@@ -291,7 +291,7 @@ public class UserController {
 
             userRepository.save(user);
         } else {
-            redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
+            msg.addFlashAttribute("error", "Usuario no encontrado.");
             return "redirect:/signin";
         }
 
@@ -304,23 +304,23 @@ public class UserController {
     public String deleteUser(@PathVariable Integer id, RedirectAttributes msg){
         try {
             userService.deleteUser(id);
-            msg.addFlashAttribute("sucessoEliminar", "Usuario eliminado exitosamente!");
+            msg.addFlashAttribute("success", "¡Usuario eliminado exitosamente!");
         } catch (EntityNotFoundException e) {
-            msg.addFlashAttribute("errorEliminar", "Usuario no encontrado");
+            msg.addFlashAttribute("error", "El usuario no fue encontrado");
             return "redirect:/signin";
         } catch (IllegalStateException e) {
-            msg.addFlashAttribute("errorEliminar", e.getMessage());
-            return "redirect:/user/profile"; // o donde tenga sentido
+            msg.addFlashAttribute("error", e.getMessage());
+            return "redirect:/user/profile"; 
         }
         return "redirect:/signin";
     }
 
     @PostMapping("/solicitar-eliminacion")
-    public String requestDeletion(Principal principal, RedirectAttributes redirectAttributes) {
+    public String requestDeletion(Principal principal, RedirectAttributes msg) {
         Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
 
         if (optionalUser.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorEliminar", "Usuario no encontrado.");
+            msg.addFlashAttribute("error", "El usuario no fue encontrado.");
             return "redirect:/signin";
         }
 
@@ -336,22 +336,32 @@ public class UserController {
         String enlace = "http://localhost:8080/user/confirmar-eliminacion?token=" + token;
 
         try {
-            emailService.enviarCorreo(user.getEmail(), "Confirmación para eliminar tu cuenta",
-                "Haz clic en el siguiente enlace para confirmar la eliminación de tu cuenta: <br><a href='" + enlace + "'>Eliminar cuenta</a>");
-            redirectAttributes.addFlashAttribute("successEliminar", "Se envió un enlace de confirmación a tu correo.");
+            String asunto = "Confirmación para eliminar tu cuenta";
+            String contenido = """
+                <p>Hola,</p>
+                <p>Recibimos una solicitud para eliminar tu cuenta. Si fuiste tú quien inició esta acción, confirma haciendo clic en el siguiente enlace:</p>
+                <p><a href='%s' style='color: #d9534f; font-weight: bold;'>Confirmar eliminación de cuenta</a></p>
+                <p>Si no realizaste esta solicitud, puedes ignorar este mensaje. Tu cuenta permanecerá activa.</p>
+                <br>
+                <p>Gracias,</p>
+                <p><strong>El equipo de Star Software</strong></p>
+                """.formatted(enlace);
+
+            emailService.enviarCorreo(user.getEmail(), asunto, contenido);
+            msg.addFlashAttribute("success", "Te enviamos un enlace de confirmación a tu correo. Revisa tu bandeja de entrada.");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("errorEliminar", "Error al enviar correo de confirmación.");
+            msg.addFlashAttribute("error", "Ocurrió un error al enviar el correo de confirmación. Intentá nuevamente más tarde.");
         }
 
         return "redirect:/user/profile";
     }
 
     @GetMapping("/confirmar-eliminacion")
-    public String confirmDeletion(@RequestParam("token") String token, RedirectAttributes redirectAttributes) {
+    public String confirmDeletion(@RequestParam("token") String token, RedirectAttributes msg) {
         Optional<Token> optionalToken = tokenRepository.findByToken(token);
 
         if (optionalToken.isEmpty() || optionalToken.get().getExpiryDate().isBefore(LocalDateTime.now())) {
-            redirectAttributes.addFlashAttribute("errorEliminar", "Token inválido o expirado.");
+            msg.addFlashAttribute("error", "Token inválido o expirado.");
             return "redirect:/signin";
         }
 
@@ -359,7 +369,7 @@ public class UserController {
         tokenRepository.delete(optionalToken.get());
 
         userService.deleteUser(user.getId());
-        redirectAttributes.addFlashAttribute("sucessoEliminar", "Tu cuenta ha sido eliminada exitosamente.");
+        msg.addFlashAttribute("success", "Tu cuenta ha sido eliminada exitosamente.");
 
         return "redirect:/signin";
     }
@@ -367,17 +377,15 @@ public class UserController {
 
     // Método para contactarse con el admin o quien maneje el sistema
     @PostMapping("/enviarConsulta")
-    public String sendInquiry(
-            @RequestParam String name,
-            @RequestParam String email,
-            @RequestParam String asunto,
+    public String sendInquiry(@RequestParam String name, @RequestParam String email, @RequestParam String asunto,
             @RequestParam String message,
             Model model) {
+
         try {
             emailService.enviarDudaUsuario(name, email, asunto, message);
-            model.addAttribute("exito", "Tu mensaje fue enviado con éxito.");
+            model.addAttribute("exito", "¡Gracias por contactarnos! Tu mensaje fue enviado correctamente.");
         } catch (MessagingException | UnsupportedEncodingException e) {
-            model.addAttribute("error", "Hubo un problema al enviar el mensaje.");
+            model.addAttribute("error", "Ocurrió un error al enviar tu mensaje. Por favor, intentá nuevamente más tarde.");
         }
         return "/general/contact"; 
     }
@@ -388,18 +396,18 @@ public class UserController {
                                 @RequestParam String newPassword,
                                 @RequestParam String confirmPassword,
                                 Principal principal,
-                                RedirectAttributes redirectAttributes) {
+                                RedirectAttributes msg) {
 
         if (!newPassword.equals(confirmPassword)) {
-            redirectAttributes.addFlashAttribute("error", "Las contraseñas no coinciden.");
+            msg.addFlashAttribute("error", "Las nuevas contraseñas no coinciden. Por favor, verifícalas e intenta nuevamente.");
             return "redirect:/user/profile";
         }
 
         boolean result = userService.cambiarPassword(principal.getName(), currentPassword, newPassword);
         if (!result) {
-            redirectAttributes.addFlashAttribute("error", "La contraseña actual es incorrecta.");
+            msg.addFlashAttribute("error", "La contraseña actual ingresada es incorrecta.");
         } else {
-            redirectAttributes.addFlashAttribute("success", "Contraseña actualizada correctamente.");
+            msg.addFlashAttribute("success", "Tu contraseña fue actualizada exitosamente.");
         }
 
         return "redirect:/user/profile";

@@ -64,41 +64,66 @@ public class EventController {
     // Método que guarda los eventos creados
     @PostMapping("/save")
     public String saveEvent(@ModelAttribute EventDto eventDto, Principal principal, @RequestParam("categoryId") Long categoryId,
-        @RequestParam(value = "customCategory", required = false) String customCategory) throws Exception {
+                            @RequestParam(value = "customCategory", required = false) String customCategory,
+                            RedirectAttributes msg) throws Exception {
 
-        if (categoryId == 9 && customCategory != null && !customCategory.trim().isEmpty()) {
-            Optional<Category> catOpt = categoryRepository.findByName(customCategory.trim());
-            Category customCat;
-            if (catOpt.isPresent()) {
-                customCat = catOpt.get();
-            } else {
-                customCat = new Category();
-                customCat.setName(customCategory.trim());
-                customCat = categoryRepository.save(customCat);
+        try{
+            if (categoryId == 9 && customCategory != null && !customCategory.trim().isEmpty()) { // categoría "otro"
+                Optional<Category> catOpt = categoryRepository.findByName(customCategory.trim());
+                Category customCat;
+                if (catOpt.isPresent()) {
+                    customCat = catOpt.get();
+                } else {
+                    customCat = new Category();
+                    customCat.setName(customCategory.trim());
+                    customCat = categoryRepository.save(customCat);
+                }
+                categoryId = customCat.getId();
             }
-            categoryId = customCat.getId();
-        }
-        Event evento = eventService.saveEvent(eventDto, eventDto.getImageFile(), principal.getName(), categoryId);
 
-        List<User> interesados = userRepository.findByNotificacionesContaining(evento.getCategory());
-        for (User user : interesados) {
-            emailService.enviarCorreo(
-                user.getEmail(),
-                "Nuevo evento en " + evento.getCategory().getName(),
-                "Hola " + user.getName() + ",\n\n" +
-                "Tenemos buenas noticias para ti. \n" +
-                "Se ha publicado un nuevo evento que coincide con tus intereses:\n\n" +
-                "Nombre: " + evento.getName() + "\n" +
-                "Descripción: " + evento.getDescription() + "\n" +
-                "Fecha: " + evento.getStartDate().toString() + "\n" +
-                "Categoría: " + evento.getCategory().getName() + "\n\n" +
-                "¡No te lo pierdas! Puedes consultar más detalles en nuestro sitio web.\n\n" +
-                "Gracias por ser parte de nuestra comunidad,\n" +
-                "El equipo de Star Software."            
-            );
+            Event evento = eventService.saveEvent(eventDto, eventDto.getImageFile(), principal.getName(), categoryId);
+
+            List<User> interesados = userRepository.findByNotificacionesContaining(evento.getCategory());
+            for (User user : interesados) {
+                String subject = "Nuevo evento en tu categoría favorita: " + evento.getCategory().getName();
+
+                String content = """
+                    <div style="font-family: Arial, sans-serif; color: #333;">
+                        <p>Hola <strong>%s</strong>,</p>
+
+                        <p>¡Tenemos una novedad que podría interesarte! Se ha publicado un nuevo evento relacionado con tu categoría favorita:</p>
+
+                        <ul>
+                            <li><strong>Nombre:</strong> %s</li>
+                            <li><strong>Descripción:</strong> %s</li>
+                            <li><strong>Fecha:</strong> %s</li>
+                            <li><strong>Categoría:</strong> %s</li>
+                        </ul>
+
+                        <p>Te invitamos a ingresar al sitio para conocer todos los detalles..</p>
+
+                        <p>¡Gracias por ser parte de nuestra comunidad!<br>
+                        <em>El equipo de Star Software</em></p>
+                    </div>
+                    """.formatted(
+                        user.getName(),
+                        evento.getName(),
+                        evento.getDescription(),
+                        evento.getStartDate().toString(),
+                        evento.getCategory().getName()
+                    );
+
+                emailService.enviarCorreo(user.getEmail(), subject, content);
+            }
+
+            msg.addFlashAttribute("success", "¡Evento creado exitosamente!");
+            return "redirect:/event/" + evento.getId();
+            
+        } catch (Exception e) {
+            msg.addFlashAttribute("error", "Ocurrió un error al crear el evento.");
+            return "redirect:/user/home"; 
         }
 
-        return "redirect:/user/home";
     }
 
 
@@ -170,26 +195,47 @@ public class EventController {
     public String updateEvent(@ModelAttribute EventDto eventDto,
                             @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
                             @RequestParam(value = "redirectTo", required = false) String redirectTo,
-                            Principal principal) throws Exception {
+                            @RequestParam("categoryId") Long categoryId,
+                            @RequestParam(value = "customCategory", required = false) String customCategory,
+                            Principal principal, RedirectAttributes msg) throws Exception {
+        try{                       
+            if (categoryId == 9 && customCategory != null && !customCategory.trim().isEmpty()) {
+                Optional<Category> catOpt = categoryRepository.findByName(customCategory.trim());
+                Category customCat;
+                if (catOpt.isPresent()) {
+                    customCat = catOpt.get();
+                } else {
+                    customCat = new Category();
+                    customCat.setName(customCategory.trim());
+                    customCat = categoryRepository.save(customCat);
+                }
+                categoryId = customCat.getId();
+            }
 
-        eventService.updateEvent(eventDto, imageFile, principal.getName());
+            eventService.updateEvent(eventDto, imageFile, principal.getName());
 
-        if (redirectTo != null && !redirectTo.isBlank()) {
-            return "redirect:" + redirectTo;
+            if (redirectTo != null && !redirectTo.isBlank()) {
+                return "redirect:" + redirectTo;
+            }
+
+            msg.addFlashAttribute("success", "¡Evento actualizado con éxito!");
+            return "redirect:/event/" + eventDto.getId();
+        } catch (Exception e){
+            msg.addFlashAttribute("error", "Ocurrió un error al editar el evento.");
+            return "redirect:/event/" + eventDto.getId(); 
         }
-
-        return "redirect:/user/profile";
     }
 
 
     // Método para eliminar evento
     @PostMapping("/delete/{id}")
-    public String deleteEvent(@PathVariable Long id, Principal principal, RedirectAttributes redirectAttributes) {
+    public String deleteEvent(@PathVariable Long id, Principal principal, RedirectAttributes msg,
+                            @RequestHeader(value = "Referer", required = false) String referer) {
         try {
             eventService.deleteEvent(id, principal.getName());
-            redirectAttributes.addFlashAttribute("successMessage", "Evento eliminado con éxito.");
+            msg.addFlashAttribute("success", "Evento eliminado con éxito.");
         } catch (RuntimeException e) {
-            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            msg.addFlashAttribute("error", e.getMessage());
         }
 
         Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
@@ -204,9 +250,10 @@ public class EventController {
 
     // Método para denunciar evento
     @PostMapping("/{id}/report")
-    public String reportEvent(@PathVariable Long id, @RequestParam("reason") ReportReason reason, Principal principal, RedirectAttributes ra) {
+    public String reportEvent(@PathVariable Long id, @RequestParam("reason") ReportReason reason, Principal principal, 
+                            RedirectAttributes msg) {
         if (principal == null) {
-            ra.addFlashAttribute("error", "Debes iniciar sesión para reportar.");
+            msg.addFlashAttribute("error", "Debes iniciar sesión para reportar.");
             return "redirect:/event/" + id;
         }
 
@@ -217,14 +264,14 @@ public class EventController {
         // Busca el usuario
         Optional<User> optionalUser = userRepository.findByEmail(principal.getName());
         if (optionalUser.isEmpty()) {
-            ra.addFlashAttribute("error", "Usuario no encontrado.");
+            msg.addFlashAttribute("error", "Usuario no encontrado.");
             return "redirect:/event/" + id;
         }
         User user = optionalUser.get();
 
         // Chequea denuncia duplicada
         if (reportRepository.existsByEventAndUser(event, user)) {
-            ra.addFlashAttribute("error", "Ya has denunciado este evento.");
+            msg.addFlashAttribute("error", "Ya has denunciado este evento.");
             return "redirect:/event/" + id;
         }
 
@@ -247,7 +294,7 @@ public class EventController {
         eventRepository.save(event);
         
         // Notifica al admin
-        ra.addFlashAttribute("success", "Gracias. Tu denuncia ha sido registrada.");
+        msg.addFlashAttribute("success", "Gracias. Tu denuncia ha sido registrada.");
 
         return "redirect:/event/" + id;
     }
@@ -258,15 +305,15 @@ public class EventController {
 	public String cambiarEstadoEvento(@RequestParam Long eventId,
 									@RequestParam EventStatus nuevoEstado,
 									@RequestParam(required = false) String redirectTo,
-									RedirectAttributes redirectAttributes) {
+									RedirectAttributes msg) {
 		Optional<Event> optionalEvent = eventRepository.findById(eventId);
 		if (optionalEvent.isPresent()) {
 			Event evento = optionalEvent.get();
 			evento.setStatus(nuevoEstado);
 			eventRepository.save(evento);
-			redirectAttributes.addFlashAttribute("success", "Estado del evento actualizado correctamente.");
+			msg.addFlashAttribute("success", "Estado del evento actualizado correctamente.");
 		} else {
-			redirectAttributes.addFlashAttribute("error", "Evento no encontrado.");
+			msg.addFlashAttribute("error", "Evento no encontrado.");
 		}
 		return "redirect:/admin/allEvents";
 	}

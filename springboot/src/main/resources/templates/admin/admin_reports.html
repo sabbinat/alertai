@@ -49,7 +49,8 @@
       <!-- BUSCADOR -->
       <div class="search-bar">
         <form action="/search" method="get" id="searchForm" class="search-form" role="search">
-          <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+          <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
           <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
         </form>
       </div>
@@ -193,6 +194,7 @@
         <div class="custom-table">
           <div class="table-row table-header">
             <div class="table-cell col-id">ID</div>
+            <div class="table-cell col-img">Imagen</div>
             <div class="table-cell">Evento</div>
             <div class="table-cell">Autor</div>
             <div class="table-cell">Publicado</div>
@@ -201,10 +203,15 @@
             <div class="table-cell col-date">Fecha</div>
             <div class="table-cell col-count">Denuncias</div>
             <div class="table-cell col-count">Estado</div>
-            <div class="table-cell col-special">Acciones</div>
+            <div class="table-cell col-acction">Acciones</div>
           </div>
           <div class="table-row" th:each="report, iterStat : ${reports}">
             <div class="table-cell col-id" th:text="${iterStat.count}"></div>
+            <div class="table-cell col-img"><img th:src="@{'/uploads/events/' + ${report.event.image}}" 
+              onerror="this.onerror=null; this.src='/img/default-event.jpeg';" 
+              alt="Imagen del evento reportado" 
+              style="width: 50px; height: 50px; border-radius: 5px;" class="shadow">
+            </div>
             <div class="table-cell col-event-name" th:text="${report.event.name}" th:attr="title=${report.event.name}"></div>
             <div class="table-cell" th:text="${report.event.user.name}"></div>
             <div class="table-cell" th:text="${report.event.timeAgo}"></div>
@@ -225,25 +232,53 @@
                 </div>
               </div>
             </div>
-
-            <div class="table-cell col-special">
+            <div class="table-cell col-acction">
               <div class="btn-actions d-flex align-items-center">
-                <a th:href="@{/event/{id}(id=${report.event.id})}" title="Ver evento">
+                <a th:href="@{/event/{id}(id=${report.event.id})}" title="Ver evento" class="btn btn-sm bg-info me-2 d-flex justify-content-center align-items-center" 
+                  style="width: 30px; height: 30px;">
                   <i class="bi bi-eye"></i>
                 </a>
                 <form th:action="@{'/admin/event/' + ${report.event.id} + '/approve'}" method="post">
-                  <button type="submit" class="btn btn-sm" title="Aprobar evento">
+                  <button type="submit" class="btn btn-sm bg-success me-2 text-white d-flex justify-content-center align-items-center" 
+                    style="width: 30px; height: 30px;" title="Aprobar evento">
                     <i class="bi bi-check-circle"></i>
                   </button>
                 </form>
                 <form th:action="@{'/admin/event/' + ${report.event.id} + '/reject'}" method="post">
-                  <button type="submit" class="btn btn-sm" title="Rechazar evento">
+                  <button type="submit" class="btn btn-sm bg-warning me-2 d-flex justify-content-center align-items-center" 
+                    style="width: 30px; height: 30px;" title="Rechazar evento">
                     <i class="bi bi-x-circle"></i>
                   </button>
                 </form>
-                <a th:href="@{/admin/reports/delete/{id}(id=${report.id})}" title="Eliminar denuncia">
-                    <i class="bi bi-trash"></i>
-                </a>
+                <button type="button" class="btn btn-sm bg-danger d-flex justify-content-center align-items-center"
+                        style="width: 30px; height: 30px;" 
+                        th:data-bs-toggle="modal" 
+                        th:data-bs-target="'#deleteEventModal__' + ${report.event.id}" 
+                        title="Eliminar evento">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Confirmar eliminación del evento -->
+            <div class="modal fade" th:id="'deleteEventModal__' + ${report.event.id}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <form th:action="@{/event/delete/{id}(id=${report.event.id})}" method="post">
+                    <div class="modal-header">
+                      <h5 class="modal-title" style="font-size: 0.9rem;">Confirmar eliminación</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body p-3" style="font-size: 0.9rem;">
+                      <p>¿Estás seguro de que deseas eliminar el evento <strong th:text="${report.event.name}"></strong>? <br><br>
+                        Esta acción no se puede deshacer.</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+                      <button type="submit" class="btn btn-danger" style="font-size: 0.8rem;">Eliminar</button>
+                    </div>
+                  </form>
+                </div>
               </div>
             </div>
           </div>

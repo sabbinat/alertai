@@ -23,8 +23,8 @@
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 </head>
 <body>
-  <div class="page-container">
 
+  <div class="page-container">
     <!-- MENÚ -->
     <header>
       <nav class="navbar-user sticky-top">
@@ -49,7 +49,8 @@
         <!-- BUSCADOR -->
         <div class="search-bar">
           <form action="/search" method="get" id="searchForm" class="search-form" role="search">
-            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
             <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
           </form>
         </div>
@@ -57,8 +58,7 @@
         <!-- MENÚ DEL USUARIO -->
         <div class="nav-right">
           <div class="user-menu">
-            <img th:src="@{'/uploads/icons/' + ${user.image}}"
-                        onerror="this.onerror=null; this.src='/img/icon-default.jpg';" alt="Foto del usuario">
+            <img th:src="@{'/uploads/icons/' + ${user.image}}" onerror="this.onerror=null; this.src='/img/icon-default.jpg';" alt="Foto del usuario">
             <span class="username">
               <span sec:authorize="hasRole('ADMIN')" th:text="${user.name}"></span>
               <span sec:authorize="!hasRole('ADMIN')" th:text="${user.name}"></span>
@@ -97,6 +97,7 @@
       </nav>
     </header>
 
+    <!-- PÁGINA PRINCIPAL DEL USUARIO -->
     <main class="flex-grow-1">
       <!-- CONTENIDO DEL USER-HOME -->
       <section class="container-home">
@@ -114,6 +115,13 @@
                 <span th:text="#{hero.latest_news}">Últimas noticias</span>
               </button>
             </div>
+          </div>
+        </div>
+
+        <!-- MENSAJES DE ÉXITO / ERROR -->
+        <div class="row justify-content-center mb-3">
+          <div class="col-md-8">
+            <div th:if="${errorCadastrar}" class="alert alert-danger" th:text="${errorCadastrar}"></div>
           </div>
         </div>
 
@@ -242,7 +250,7 @@
     </main>
     
     <!-- FOOTER -->
-    <footer class="footer py-4 ">
+    <footer class="footer py-4">
       <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center">
         <!-- Derechos reservados -->
         <p class="mb-0 small" th:text="#{footer.rights_reserved}">
@@ -264,7 +272,6 @@
         </div>
       </div>
     </footer>
-
   </div>
   
   <!-- MODALES -->
@@ -296,18 +303,24 @@
               <!--DATOS DE EVENTO-->
               <div class="col-12 col-md-8">
                 <div class="mb-3">
-                  <input type="text" class="form-control muted" id="name" name="name" required placeholder="Título" th:placeholder="#{form.title}">
+                  <input type="text" class="form-control muted" id="name" name="name" required placeholder="Título" th:placeholder="#{form.title}"
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')">
                 </div>
                 <div class="mb-3">
-                  <textarea class="form-control muted" id="description" rows="3" name="description" required placeholder="Descripción" th:placeholder="#{form.description}"></textarea>
+                  <textarea class="form-control muted" id="description" rows="3" name="description" required placeholder="Descripción"
+                  th:placeholder="#{form.description}" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')"></textarea>
                 </div>
                 <div class="mb-3">
-                  <input type="text" class="form-control muted" id="contact" name="contact" placeholder="Contacto">
+                  <input type="text" class="form-control muted" id="contact" name="contact" placeholder="Contacto" 
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')">
                 </div>
                 <div class="mb-3 d-flex">
                   <input type="date" class="form-control muted" id="startDate" name="startDate" required/>
                   <p class="mx-2 my-auto">hasta</p>
-                  <input type="date" class="form-control muted" id="endDate" name="endDate" />
+                  <input type="date" class="form-control muted" id="endDate" name="endDate" required/>
                 </div>
                 <div class="mb-3 d-flex">
                   <input type="time" class="form-control muted me-2" id="time" name="time" th:placeholder="#{form.time}"/>
@@ -320,11 +333,15 @@
                 </div>
 
                 <div class="mb-3" id="customCategoryDiv" style="display:none;">
-                  <input type="text" class="form-control muted" id="customCategory" name="customCategory" th:placeholder="#{form.extra_category}">
+                  <input type="text" class="form-control muted" id="customCategory" name="customCategory" th:placeholder="#{form.extra_category}"
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')">
                 </div>
 
                 <div class="mb-3 d-flex">
-                  <input type="text" class="form-control muted" id="address" name="location.address" placeholder="Dirección" />
+                  <input type="text" class="form-control muted" id="address" name="location.address" placeholder="Dirección" 
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
                   <input type="hidden" id="latitude" name="location.latitude" />
                   <input type="hidden" id="longitude" name="location.longitude" />
                   <button type="button" class="btn btn-submit ms-2" onclick="geocodeAddress()">Buscar</button>

@@ -49,7 +49,8 @@
       <!-- BUSCADOR -->
       <div class="search-bar">
         <form action="/search" method="get" id="searchForm" class="search-form" role="search">
-          <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+          <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
           <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
         </form>
       </div>
@@ -101,10 +102,8 @@
   <!-- EVENTOS -->
   <div class="container-fluid p-4">
     <!-- MENSAJES FLASH -->
-    <div th:if="${sucessoEliminar}" class="alert alert-success" th:text="${sucessoEliminar}"></div>
-    <div th:if="${errorEliminar}" class="alert alert-danger" th:text="${errorEliminar}"></div>
-    <div th:if="${sucessoCadastrar}" class="alert alert-success" th:text="${sucessoCadastrar}"></div>
-    <div th:if="${errorCadastrar}" class="alert alert-danger" th:text="${errorCadastrar}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
     
     <!-- INFO -->
     <div class="d-flex justify-content-center align-items-center flex-column mb-4">
@@ -162,8 +161,8 @@
           <div class="table-cell col-date">Inicio</div>
           <div class="table-cell col-date">Fin</div>
           <div class="table-cell col-date">Hora</div>
-          <div class="table-cell">Ubicación</div>
-          <div class="table-cell col-date">Publicado</div>
+          <div class="table-cell col-special">Ubicación</div>
+          <div class="table-cell col-special">Publicado</div>
           <div class="table-cell col-count">Estado</div>
           <div class="table-cell">Acciones</div>             
         </div>
@@ -183,8 +182,8 @@
           <div class="table-cell col-date" th:text="${event.startDate}"></div>
           <div class="table-cell col-date" th:text="${event.endDate}"></div>
           <div class="table-cell col-date" th:text="${event.time}"></div>
-          <div class="table-cell" th:text="${event.location.address}" th:attr="title=${event.location.address}" data-bs-toggle="tooltip"></div>
-          <div class="table-cell col-date" th:text="${event.timeAgo}"></div>
+          <div class="table-cell col-special" th:text="${event.location.address}" th:attr="title=${event.location.address}" data-bs-toggle="tooltip"></div>
+          <div class="table-cell col-special" th:text="${event.timeAgo}"></div>
           <div class="table-cell col-count">
             <!-- ESTADO DEL EVENTO -->
             <form th:action="@{/event/changeStatus}" method="post">
@@ -203,22 +202,45 @@
 
             </form>
           </div>
+          <!-- ACCIONES DEL EVENTO  -->
           <div class="table-cell">
-            <!-- ACCIONES DEL EVENTO ELIMINAR Y VER -->
             <div class="btn-actions d-flex justify-content-center align-items-center">
-              <a th:href="@{/event/{id}(id=${event.id})}" class="me-2">
+              <a th:href="@{/event/{id}(id=${event.id})}" class="btn btn-sm bg-info me-2 d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;">
                 <i class="bi bi-eye"></i>
               </a>
 
-              <a th:href="@{/event/edit/{id}(id=${event.id})}" class="dropdown-item">
+              <a th:href="@{/event/edit/{id}(id=${event.id})}" class="btn btn-sm bg-warning me-2 d-flex justify-content-center align-items-center" style="width: 30px; height: 30px;">
                 <i class="bi bi-pencil-square"></i>
               </a>
               
-              <form th:action="@{/event/delete/{id}(id=${event.id})}" method="post" th:id="'deleteForm_' + ${event.id}">
-                <button type="submit" class="btn btn-sm" onclick="return confirm('¿Seguro que deseas eliminar este evento?')">
-                  <i class="bi bi-trash"></i>
-                </button>
-              </form>
+              <button type="button" class="btn btn-sm bg-danger d-flex justify-content-center align-items-center"
+                      style="width: 30px; height: 30px;" 
+                      th:data-bs-toggle="modal" 
+                      th:data-bs-target="'#deleteEventModal__' + ${event.id}" 
+                      title="Eliminar evento">
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
+          </div>
+          <!-- Confirmar eliminación del evento -->
+          <div class="modal fade" th:id="'deleteEventModal__' + ${event.id}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <form th:action="@{/event/delete/{id}(id=${event.id})}" method="post">
+                  <div class="modal-header">
+                    <h5 class="modal-title" style="font-size: 0.9rem;">Confirmar eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                  </div>
+                  <div class="modal-body p-3" style="font-size: 0.9rem;">
+                    <p>¿Estás seguro de que deseas eliminar el evento <strong th:text="${event.name}"></strong>? <br><br>
+                      Esta acción no se puede deshacer.</p>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger" style="font-size: 0.8rem;">Eliminar</button>
+                  </div>
+                </form>
+              </div>
             </div>
           </div>
         </div>

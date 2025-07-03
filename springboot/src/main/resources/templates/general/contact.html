@@ -48,7 +48,8 @@
         <!-- BUSCADOR -->
         <div class="search-bar">
           <form action="/search" method="get" id="searchForm" class="search-form" role="search">
-            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
             <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
           </form>
         </div>
@@ -117,6 +118,14 @@
         <h1 th:text="#{contact.title}">Contáctanos</h1>
         <p th:text="#{contact.subtitle}">¿Tenés alguna sugerencia, duda o querés reportar un problema? ¡Estamos para ayudarte!</p>
 
+        <!-- MENSAJES DE ÉXITO / ERROR -->
+        <div class="row justify-content-center mb-3">
+          <div class="col-md-8">
+            <div th:if="${exito}" class="alert alert-success text-center" th:text="${exito}"></div>
+            <div th:if="${error}" class="alert alert-danger text-center" th:text="${error}"></div>
+          </div>
+        </div>
+        
         <div class="row">
           <div class="col-md-8 contact-form">
             <form th:action="@{/user/enviarConsulta}" method="post">
@@ -141,9 +150,8 @@
                 style="resize: none;" 
                 id="message" 
                 name="message"
-                th:placeholder="#{contact.message}"></textarea>
-
-
+                th:placeholder="#{contact.message}" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                onblur="this.placeholder=this.getAttribute('data-placeholder')"></textarea>
 
 
               <small class="muted" style="font-size: 0.75rem;" th:text="#{contact.recover_note}">

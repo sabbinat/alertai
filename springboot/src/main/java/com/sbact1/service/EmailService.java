@@ -22,11 +22,6 @@ import jakarta.mail.internet.MimeMessage;
  * Las credenciales del remitente (email y contraseña) se obtienen desde el archivo
  * de configuración application-secret.properties
  * 
- * - enviarCorreo: Métodos sobrecargados para enviar correos electrónicos con diferentes niveles de personalización.
- * - enviarDudaUsuario: Envía una consulta de usuario al correo institucional de soporte, incluyendo los datos del usuario y su mensaje.
- * - Excepciones: Los métodos pueden lanzar MessagingException y UnsupportedEncodingException
- * si ocurre un error durante la creación o el envío del mensaje.
- * 
  */
 @Service
 public class EmailService {
@@ -35,11 +30,9 @@ public class EmailService {
     @Value("${email.sender}")
     private String emailUser;
 
-    // Obtiene la contraseña del remitente 
     @Value("${password.sender}")
     private String password;
 
-    // Inyecta automáticamente el componente JavaMailSender que se encarga de enviar correos
     @Autowired private JavaMailSender mailSender;
 
 
@@ -100,11 +93,10 @@ public class EmailService {
         String asuntoFinal = "Consulta de " + email + " - " + asunto;
 
         String contenido = """
-            <h3>📩 Nueva consulta de usuario</h3>
-            <p><strong>Nombre:</strong> %s</p>
-            <p><strong>Email:</strong> %s</p>
-            <p><strong>Mensaje:</strong><br>%s</p>
-        """.formatted(name, email, message);
+            <div style="font-family: Arial, sans-serif;">
+                <p style="white-space: pre-line;">%s</p>
+            </div>
+        """.formatted(message);
 
         // Envía al correo institucional (emailUser), con reply-to del usuario
         enviarCorreo(emailUser, asuntoFinal, contenido, email, name);

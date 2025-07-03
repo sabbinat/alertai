@@ -53,14 +53,11 @@
         <!-- BUSCADOR -->
         <div class="search-bar">
           <form action="/search" method="get" id="searchForm" class="search-form" role="search">
-            <input id="eventSearchInput"
-                  type="text"
-                  name="query"
-                  th:placeholder="#{search.placeholder}"
-                  th:attr="aria-label=#{search.placeholder}" />
-            <button type="submit" th:attr="aria-label=#{search.button}">
-              <i class="fas fa-search"></i>
-            </button>
+            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." 
+              aria-label="Buscar eventos, categorías o creadores" 
+              onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
+            <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
           </form>
         </div>
 
@@ -129,7 +126,8 @@
       <!-- PERFIL DEL USUARIO -->
       <section class="profile">
         <div class="profile-pic">
-          <img th:src="@{'/uploads/icons/' + ${profileUser.image}}" onerror="this.onerror=null; this.src='/img/icon-default.jpg';" alt="Foto del usuario">
+          <img th:src="@{'/uploads/icons/' + ${profileUser.image}}" onerror="this.onerror=null; this.src='/img/icon-default.jpg';" 
+            alt="Foto del usuario">
         </div>
         <!-- INFORMACIÓN DEL USUARIO -->
         <div class="profile-info">
@@ -241,6 +239,21 @@
         </button>
       </section>
 
+      <!-- MENSAJES DE ÉXITO / ERROR -->
+      <div class="row justify-content-center mb-3">
+        <div class="col-md-8">
+          <div th:if="${success}" class="alert alert-success text-center d-flex justify-content-between" role="alert">
+            <span th:text="${success}">Mensaje de error</span>
+            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+          <div th:if="${error}" class="alert alert-danger text-center d-flex justify-content-between" role="alert">
+            <span th:text="${error}">Mensaje de error</span>
+            <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        </div>
+      </div>
+
+
       <!-- SECCIÓN DE EVENTOS -->
       <section class="content-profile row p-4 m-5" style="border-radius: 10px;">
         <!-- SIDEBAR DE BIENVENIDA + CREAR EVENTO -->
@@ -344,15 +357,17 @@
                                   <a th:href="@{/event/edit/{id}(id=${event.id})}" class="dropdown-item">Editar</a>
                                 </li>
                                 <li>
-                                  <form th:action="@{/event/delete/{id}(id=${event.id})}" method="post"
-                                        onsubmit="return confirm('¿Eliminar evento?');">
-                                    <button type="submit" class="dropdown-item">Eliminar</button>
-                                  </form>
+                                  <button type="button"
+                                          class="dropdown-item"
+                                          data-bs-toggle="modal"
+                                          data-bs-target="#confirmDeleteEventModal"
+                                          th:attr="data-event-id=${event.id}">
+                                    Eliminar
+                                  </button>
                                 </li>
                               </ul>
                             </div>
                           </div>
-
                         </div>
                       </div>
                     </div>
@@ -390,8 +405,6 @@
     </footer>
   </div>
 
-  
-
   <!-- MODALES -->
 
   <!-- CREAR EVENTO -->
@@ -421,18 +434,25 @@
               <!--DATOS DE EVENTO-->
               <div class="col-12 col-md-8">
                 <div class="mb-3">
-                  <input type="text" class="form-control muted" id="name" name="name" required placeholder="Título" th:placeholder="#{form.title}">
+                  <input type="text" class="form-control muted" id="name" name="name" required placeholder="Título" th:placeholder="#{form.title}"
+                  onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                  onblur="this.placeholder=this.getAttribute('data-placeholder')">
                 </div>
                 <div class="mb-3">
-                  <textarea class="form-control muted" id="description" rows="3" name="description" required placeholder="Descripción" th:placeholder="#{form.description}"></textarea>
+                  <textarea class="form-control muted" id="description" rows="3" name="description" required placeholder="Descripción"
+                    th:placeholder="#{form.description}" 
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')"></textarea>
                 </div>
                 <div class="mb-3">
-                  <input type="text" class="form-control muted" id="contact" name="contact" placeholder="Contacto">
+                  <input type="text" class="form-control muted" id="contact" name="contact" placeholder="Contacto"
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')">
                 </div>
                 <div class="mb-3 d-flex">
                   <input type="date" class="form-control muted" id="startDate" name="startDate" required/>
                   <p class="mx-2 my-auto">hasta</p>
-                  <input type="date" class="form-control muted" id="endDate" name="endDate" />
+                  <input type="date" class="form-control muted" id="endDate" name="endDate" required/>
                 </div>
                 <div class="mb-3 d-flex">
                   <input type="time" class="form-control muted me-2" id="time" name="time" th:placeholder="#{form.time}"/>
@@ -446,11 +466,15 @@
                 </div>
 
                 <div class="mb-3" id="customCategoryDiv" style="display:none;">
-                  <input type="text" class="form-control muted" id="customCategory" name="customCategory" th:placeholder="#{form.extra_category}">
+                  <input type="text" class="form-control muted" id="customCategory" name="customCategory" th:placeholder="#{form.extra_category}"
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')">
                 </div>
                 
                 <div class="mb-3 d-flex">
-                  <input type="text" class="form-control muted" id="address" name="location.address" placeholder="Dirección" />
+                  <input type="text" class="form-control muted" id="address" name="location.address" placeholder="Dirección" 
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')" />
                   <input type="hidden" id="latitude" name="location.latitude" />
                   <input type="hidden" id="longitude" name="location.longitude" />
                   <button type="button" class="btn btn-submit ms-2" onclick="geocodeAddress()">Buscar</button>
@@ -699,7 +723,7 @@
   </div>
   <!-- CAMBIAR CONTRAEÑA -->
   <div class="modal fade" id="cambiarPasswordModal" tabindex="-1" aria-labelledby="cambiarPasswordModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" th:if="${user != null}">
         <div class="modal-header">
           <h5 class="modal-title" style="font-size: 0.9rem;" id="cambiarPasswordModalLabel" th:text="#{change_password}">Cambiar contraseña</h5>
@@ -729,7 +753,7 @@
   </div>
   <!-- CONFIRMACIÓN PARA ELIMINAR CUENTA -->
   <div class="modal fade" id="confirmarEliminacionModal" tabindex="-1" aria-labelledby="confirmarEliminacionLabel" aria-hidden="true">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content rounded-4 border-danger border-2" th:if="${user != null}">
         <div class="modal-header bg-danger rounded-top-4">
           <h5 class="modal-title d-flex align-items-center" id="confirmarEliminacionLabel">
@@ -755,6 +779,28 @@
       </div>
     </div>
   </div>
+  <!-- CONFIRMAR ELIMINACIÓN DE EVENTO -->
+  <div class="modal fade" id="confirmDeleteEventModal" tabindex="-1" aria-labelledby="deleteEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content shadow">
+        <div class="modal-header">
+          <h5 class="modal-title" id="deleteEventModalLabel" style="font-size: 0.9rem;">Eliminar evento</h5>
+          <button type="button" class="btn-close btn-sm small" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+        <div class="modal-body p-3" style="font-size: 0.9rem;">
+          <strong>¿Estás segura/o de que deseas eliminar este evento?</strong><br><br>
+          Esta acción no se puede deshacer.
+        </div>
+        <div class="modal-footer">
+          <form id="deleteEventForm" method="post">
+            <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-danger" style="font-size: 0.8rem;">Eliminar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
 
   <!-- INICIAR SESIÓN -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
@@ -890,7 +936,16 @@
   <script th:src="@{/js/script.js}"></script>
   <script th:src="@{/js/theme.js}"></script>
   <script th:src="@{/js/geo_maps.js}"></script>
-  
+  <script>
+    const deleteEventModal = document.getElementById('confirmDeleteEventModal');
+    deleteEventModal.addEventListener('show.bs.modal', function (event) {
+      const button = event.relatedTarget;
+      const eventId = button.getAttribute('data-event-id');
+      const form = document.getElementById('deleteEventForm');
+      form.action = `/event/delete/${eventId}`;
+    });
+  </script>
+
   <!-- Agrega Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>

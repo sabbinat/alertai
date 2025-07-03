@@ -1,6 +1,7 @@
 package com.sbact1.controller;
 
 import java.security.Principal;
+import java.security.SecureRandom;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,7 +64,7 @@ public class AdminController {
 
 	// Método para la página principal del admin (/admin/home)
 	@GetMapping("/home")
-	public String userHome(@RequestParam(value = "metaUsuarios", required = false, defaultValue = "100") int metaUsuarios, Model model) {
+	public String userHome(@RequestParam(value = "metaUsuarios", required = false, defaultValue = "50") int metaUsuarios, Model model) {
 		List<User> users = userRepository.findAll();
         model.addAttribute("users", users); 
 
@@ -191,17 +192,18 @@ public class AdminController {
 	}
 
 	// Método que elimina usuario
-	@GetMapping("/eliminar/{id}")
-	public String deleteUser(@PathVariable Integer id, RedirectAttributes msg){ 
-	    Optional<User> categoria = userRepository.findById(id); 
-	    if(categoria.isEmpty()) {
-	        msg.addFlashAttribute("errorEliminar", "Ususario no encontrado");
-	        return "redirect:/admin/users";
-	    }
-        userService.deleteUser(id); 
-	    msg.addFlashAttribute("sucessoEliminar", "Usuario eliminado exitosamente!");
-	    return "redirect:/admin/users";
+	@PostMapping("/eliminar/{id}")
+	public String deleteUser(@PathVariable Integer id, RedirectAttributes msg) {
+		Optional<User> user = userRepository.findById(id);
+		if(user.isEmpty()) {
+			msg.addFlashAttribute("error", "No se encontró el usuario");
+			return "redirect:/admin/users";
+		}
+		userService.deleteUser(id);
+		msg.addFlashAttribute("success", "Usuario eliminado exitosamente!");
+		return "redirect:/admin/users";
 	}
+
 
 	// Método para cambiar el rol de los usuarios
 	@PostMapping("/cambiar-rol")
@@ -215,39 +217,79 @@ public class AdminController {
 		return "redirect:/admin/users"; 
 	}
 
+	public String generarPasswordSegura(int longitud) {
+		String mayus = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+		String minus = "abcdefghijklmnopqrstuvwxyz";
+		String numeros = "0123456789";
+		String simbolos = "@#%&*!?";
+
+		// Garantiza al menos un carácter de cada tipo
+		StringBuilder password = new StringBuilder();
+		SecureRandom random = new SecureRandom();
+
+		password.append(mayus.charAt(random.nextInt(mayus.length())));
+		password.append(minus.charAt(random.nextInt(minus.length())));
+		password.append(numeros.charAt(random.nextInt(numeros.length())));
+		password.append(simbolos.charAt(random.nextInt(simbolos.length())));
+
+		// Rellena el resto aleatoriamente
+		String todos = mayus + minus + numeros + simbolos;
+		for (int i = 4; i < longitud; i++) {
+			password.append(todos.charAt(random.nextInt(todos.length())));
+		}
+
+		// Mezcla los caracteres para mayor seguridad
+		List<Character> caracteres = password.chars()
+			.mapToObj(c -> (char) c)
+			.collect(Collectors.toList());
+		Collections.shuffle(caracteres);
+
+		// Convierte a string final
+		return caracteres.stream()
+			.map(String::valueOf)
+			.collect(Collectors.joining());
+	}
+
+
 	// Método para que el admin cambie la contraseña del usuario
 	@PostMapping("/reset-password")
-	public String resetPassword(@RequestParam int userId, RedirectAttributes redirectAttributes) {
+	public String resetPassword(@RequestParam int userId, RedirectAttributes msg) {
 		Optional<User> optionalUser = userRepository.findById(userId);
 		if (optionalUser.isEmpty()) {
-			redirectAttributes.addFlashAttribute("error", "Usuario no encontrado.");
+			msg.addFlashAttribute("error", "Usuario no encontrado.");
 			return "redirect:/admin/users";
 		}
 
 		User user = optionalUser.get();
 
-		// Generar contraseña temporal (puedes cambiar el método por uno más seguro si quieres)
-		String tempPassword = "Temporal123@"; 
-		
-		// Cambiar la contraseña del usuario
+		// Genera contraseña temporal 
+		String tempPassword = generarPasswordSegura(8);
+
+		// Cambia la contraseña del usuario
 		user.setPassword(passwordEncoder.encode(tempPassword));
 		userRepository.save(user);
 
-		// Opcional: enviar un correo notificando al usuario sobre la nueva contraseña temporal
-		String subject = "Contraseña restablecida";
-		String content = "<p>Hola " + user.getName() + ",</p>"
-					+ "<p>Tu contraseña ha sido restablecida por un administrador. "
-					+ "Tu nueva contraseña temporal es: <strong>" + tempPassword + "</strong></p>"
-					+ "<p>Por favor, ingresa y cambia tu contraseña.</p>";
+		// Envia un correo notificando al usuario sobre la nueva contraseña temporal
+		String subject = "🔐 Tu contraseña ha sido restablecida";
+		String content = """
+			<div style="font-family: Arial, sans-serif; color: #333;">
+				<p>Hola <strong>%s</strong>,</p>
+				<p>Un administrador ha restablecido tu contraseña.</p>
+				<p>Tu nueva contraseña temporal es:</p>
+				<p style="font-size: 1.2em; font-weight: bold; color: #007bff;">%s</p>
+				<p>Por motivos de seguridad, te recomendamos iniciar sesión y cambiarla lo antes posible desde la sección de configuración de tu perfil.</p>
+				<hr>
+				<p style="font-size: 0.9em; color: #888;">Si no solicitaste este cambio, comunicate con el soporte de la plataforma.</p>
+			</div>
+			""".formatted(user.getName(), tempPassword);
 		try {
 			emailService.enviarCorreo(user.getEmail(), subject, content);
 		} catch (Exception e) {
-			// Si falla el email, no bloqueamos la acción pero podemos avisar al admin
-			redirectAttributes.addFlashAttribute("warning", "Contraseña restablecida, pero no se pudo enviar el correo.");
+			msg.addFlashAttribute("warning", "Contraseña restablecida, pero no se pudo enviar el correo.");
 			return "redirect:/admin/users";
 		}
 
-		redirectAttributes.addFlashAttribute("success", "Contraseña restablecida y correo enviado al usuario.");
+		msg.addFlashAttribute("success", "Contraseña restablecida y correo enviado al usuario.");
 		return "redirect:/admin/users";
 	}
 

@@ -49,7 +49,8 @@
         <!-- BUSCADOR -->
         <div class="search-bar">
           <form action="/search" method="get" id="searchForm" class="search-form" role="search">
-            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
             <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
           </form>
         </div>

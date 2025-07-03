@@ -148,6 +148,13 @@
 
 
 /* COMENTARIOS */
+.theme-light .comment-form textarea,
+.theme-light .comment-form textarea:focus,
+.theme-light .reply-form textarea,
+.theme-light .reply-form textarea:focus {
+  background-color: var(--secondary-light);
+}
+
 
 /* PADRES */
 .parent-comment {

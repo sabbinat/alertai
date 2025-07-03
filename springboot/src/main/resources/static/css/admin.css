@@ -350,12 +350,14 @@
 .col-special {
   flex: 0 0 150px;
 }
+.col-acction {
+  flex: 0 0 170px;
+}
 
 /* BOTONES */
 .btn-actions a i, .btn-actions .btn i{
   font-size: 1rem;
   transition: color 0.2s ease;
-  color: var(--verde-medio);
   gap: 5px;
   cursor: pointer;
 }

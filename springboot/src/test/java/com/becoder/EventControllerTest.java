@@ -62,7 +62,7 @@ class EventControllerTest {
         user.setName("User2");
         when(userRepository.findByNotificacionesContaining(category)).thenReturn(List.of(user));
 
-        String result = eventController.saveEvent(eventDto, principal, 9L, "CustomCat");
+        String result = eventController.saveEvent(eventDto, principal, 9L, "CustomCat", redirectAttributes);
         assertEquals("redirect:/user/home", result);
         verify(emailService).enviarCorreo(
                 eq("user2@mail.com"),
@@ -77,7 +77,7 @@ class EventControllerTest {
         admin.setRole("ROLE_ADMIN");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(admin));
 
-        String result = eventController.deleteEvent(1L, principal, redirectAttributes);
+        String result = eventController.deleteEvent(1L, principal, redirectAttributes, null);
         assertEquals("redirect:/admin/allEvents", result);
         verify(redirectAttributes).addFlashAttribute(eq("successMessage"), any());
     }
@@ -88,7 +88,7 @@ class EventControllerTest {
         user.setRole("ROLE_USER");
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
 
-        String result = eventController.deleteEvent(1L, principal, redirectAttributes);
+        String result = eventController.deleteEvent(1L, principal, redirectAttributes, null);
         assertEquals("redirect:/user/profile", result);
     }
 

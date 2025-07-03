@@ -71,7 +71,7 @@ public class AuthController {
     @PostMapping("/register")
     public String registerUser(@ModelAttribute @Valid User user, BindingResult result, HttpSession session) {
 
-        // Verificar si el correo ya está en uso (esto debe ir primero)
+        // Verifica si el correo ya está en uso (esto debe ir primero)
         if (userRepository.existsByEmail(user.getEmail())) {
             result.rejectValue("email", "", "Ya existe una cuenta con este correo");
             return "auth/register";
@@ -82,10 +82,10 @@ public class AuthController {
             return "auth/register";
         }
 
-        // Guardar usuario
+        // Guarda usuario
         User savedUser = userService.saveUser(user); // Aquí ya se codifica la contraseña y se asigna el rol
 
-        // Generar token de verificación
+        // Genera token de verificación
         String token = UUID.randomUUID().toString();
         Token verificationToken = new Token();
         verificationToken.setToken(token);
@@ -94,17 +94,32 @@ public class AuthController {
         verificationToken.setPurpose("verify");
         tokenRepository.save(verificationToken);
 
-        // Enviar correo con el enlace de verificación
+        // Envia correo con el enlace de verificación
         String link = "http://localhost:8080/confirmar?token=" + token;
+
+        // Contenido HTML del correo
+        String content = """
+            <div style='font-family: Arial, sans-serif;'>
+                <h2>¡Bienvenido a AlertAi, %s!</h2>
+                <p>Gracias por registrarte. Para activar tu cuenta, por favor haz clic en el siguiente enlace:</p>
+                <p style='margin: 16px 0;'>
+                    <a href='%s' style='background-color:rgb(61, 87, 187); color: white; padding: 10px 20px;
+                    text-decoration: none; border-radius: 5px;'>Verificar cuenta</a>
+                </p>
+                <p>Este enlace expirará en 24 horas por seguridad.</p>
+                <p>Si no te registraste en nuestra plataforma, puedes ignorar este mensaje.</p>
+                <p style='margin-top: 30px;'>Atentamente,<br>El equipo de Star Software</p>
+            </div>
+        """.formatted(user.getName(), link);
+        
         try {
-            emailService.enviarCorreo(savedUser.getEmail(), "Verifica tu cuenta", 
-                "Haz clic aquí para verificar tu cuenta: <a href='" + link + "'>Verificar</a>");
+            emailService.enviarCorreo(savedUser.getEmail(), "Verifica tu cuenta en AlertAi", content);
         } catch (Exception e) {
-            session.setAttribute("msg", "Hubo un problema al enviar el correo de verificación.");
+            session.setAttribute("msg", "Hubo un problema al enviar el correo de verificación. Intenta nuevamente.");
             return "auth/register";
         }
 
-        session.setAttribute("msg", "Registrado con éxito. Revisa tu correo para verificar la cuenta.");
+        session.setAttribute("msg", "Registro exitoso. Te enviamos un correo para verificar tu cuenta.");
         return "auth/successful_registration";
     }
 
@@ -129,7 +144,7 @@ public class AuthController {
     }
 
 
-    // Panatlla de registro exitoso
+    // Página de registro exitoso
     @GetMapping("/successful_registration")
     public String registerExited() {
         return "auth/successful_registration"; 
@@ -151,11 +166,11 @@ public class AuthController {
 
     @Transactional
     @PostMapping("/forgot-password")
-    public String processForgotPassword(@RequestParam("email") String email, RedirectAttributes redirectAttributes) {
+    public String processForgotPassword(@RequestParam("email") String email, RedirectAttributes msg) {
 
         Optional<User> optionalUser = userRepository.findByEmail(email);
         if (optionalUser.isEmpty()) {
-            redirectAttributes.addFlashAttribute("error", "No existe una cuenta con ese correo.");
+            msg.addFlashAttribute("error", "No existe una cuenta con ese correo.");
             return "redirect:/forgot-password";
         }
 
@@ -163,8 +178,7 @@ public class AuthController {
 
         tokenRepository.deleteByUserId(user.getId());
 
-
-        // Crear token
+        // Crea un token para el reset
         String token = UUID.randomUUID().toString();
         Token resetToken = new Token();
         resetToken.setToken(token);
@@ -173,22 +187,33 @@ public class AuthController {
         resetToken.setPurpose("reset"); 
         tokenRepository.save(resetToken);
 
-        // Enviar correo con link
+        // Envia correo con link
         String resetUrl = "http://localhost:8080/reset-password?token=" + token;
-        String subject = "Recuperar contraseña";
-        String content = "<p>Hola " + user.getName() + ",</p>"
-            + "<p>Haz clic en el siguiente enlace para restablecer tu contraseña:</p>"
-            + "<a href=\"" + resetUrl + "\">Restablecer contraseña</a>";
+        String subject = "Restablece tu contraseña";
+        String content = """
+            <div style="font-family: Arial, sans-serif;">
+                <p>Hola <strong>%s</strong>,</p>
+                <p>Recibimos una solicitud para restablecer tu contraseña.</p>
+                <p>Para continuar, debes hacer clic en el siguiente enlace:</p>
+                <p>
+                    <a href="%s" style="display: inline-block; color: #007bff; text-decoration: none;">
+                        Restablecer contraseña
+                    </a>
+                </p>
+                <p style="margin-top: 20px;">Si no solicitaste este cambio, puedes ignorar este mensaje. Tu cuenta seguirá segura.</p>
+                <hr>
+                <p style="font-size: 0.9em; color: #888;">Este enlace estará disponible por 30 minutos.</p>
+            </div>
+            """.formatted(user.getName(), resetUrl);
 
         try {
             emailService.enviarCorreo(user.getEmail(), subject, content);
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "No se pudo enviar el correo. Intenta más tarde.");
+            msg.addFlashAttribute("error", "No se pudo enviar el correo. Intenta nuevamente más tarde.");
             return "redirect:/forgot-password";
         }
 
-
-        redirectAttributes.addFlashAttribute("success", "Te enviamos un correo con instrucciones.");
+        msg.addFlashAttribute("success", "Te enviamos un correo con instrucciones.");
         return "redirect:/forgot-password";
     }
 

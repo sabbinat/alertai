@@ -49,7 +49,8 @@
       <!-- BUSCADOR -->
       <div class="search-bar">
         <form action="/search" method="get" id="searchForm" class="search-form" role="search">
-          <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+          <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
           <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
         </form>
       </div>
@@ -100,10 +101,8 @@
 
   <!-- CATEGORÍAS -->
   <div class="container-fluid p-4">
-    <div th:if="${sucessoEliminar}" class="alert alert-success" th:text="${sucessoEliminar}"></div>
-    <div th:if="${errorEliminar}" class="alert alert-danger" th:text="${errorEliminar}"></div>
-    <div th:if="${sucessoCadastrar}" class="alert alert-success" th:text="${sucessoCadastrar}"></div>
-    <div th:if="${errorCadastrar}" class="alert alert-danger" th:text="${errorCadastrar}"></div>
+    <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
 
 
     <div class="d-flex justify-content-center align-items-center flex-column">
@@ -128,22 +127,75 @@
             <div class="table-cell text-center" th:text="${category.name}"></div>
             <div class="table-cell text-center" th:text="${eventCountByCategory[category.id]}"></div>
             <div class="table-cell">
-              <div class="btn-actions d-flex align-items-center">
-                <a data-bs-toggle="modal" th:data-bs-target="'#editModal__' + ${category.id}">
+              <div class="btn-actions d-flex justify-content-center">
+                <a data-bs-toggle="modal" th:data-bs-target="'#editModal__' + ${category.id}" 
+                  class="btn bg-warning btn-sm me-2 d-flex justify-content-center align-items-center" 
+                  style="width: 30px; height: 30px;">
                   <i class="bi bi-pencil-square"></i>
                 </a>
               
-                <a th:href="@{/category/delete/{id}(id=${category.id})}" 
-                  onclick="return confirm('¿Estás seguro de que deseas eliminar esta categoría?');">
+                <a href="#" 
+                  class="btn bg-danger btn-sm d-flex justify-content-center align-items-center"
+                  style="width: 30px; height: 30px;"
+                  data-bs-toggle="modal" 
+                  th:data-bs-target="'#deleteCategoryModal__' + ${category.id}">
                   <i class="bi bi-trash"></i>
                 </a>
+
               </div>
             </div>
+
+
+            <!-- MODAL PARA EDITAR CATEGORÍA -->
+            <div class="modal fade" th:id="'editModal__' + ${category.id}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <!-- Formulario de edición -->
+                  <form th:action="@{/category/edit/{id}(id=${category.id})}" method="post">
+                    <div class="d-flex justify-content-between p-3">
+                      <h5 style="font-size: 0.9rem;">Editar categoría</h5>
+                      <button type="button" style="font-size: 0.9rem;" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                      <div class="p-3">
+                        <input type="text" class="form-control muted" name="name" th:value="${category.name}" placeholder="Nombre de la categoría" required>
+                      </div>
+                    </div>
+                    <div class="d-flex justify-content-end p-3 flex-wrap gap-2">
+                      <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+                      <button type="submit" class="btn btn-submit">Guardar cambios</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+            <!-- MODAL PARA CONFIRMAR ELIMINACIÓN DE CATEGORÍA -->
+            <div class="modal fade" th:id="'deleteCategoryModal__' + ${category.id}" tabindex="-1" aria-hidden="true">
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <form th:action="@{/category/delete/{id}(id=${category.id})}" method="post">
+                    <div class="modal-header">
+                      <h5 class="modal-title" style="font-size: 0.9rem;">Confirmar eliminación</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body p-3" style="font-size: 0.9rem;">
+                      <strong>¿Estás segura/o de que deseas eliminar la categoría <span th:text="${category.name}"></span>?</strong><br><br>
+                      <p>Esta acción no se puede deshacer y afectará los eventos relacionados.</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+                      <button type="submit" class="btn btn-danger" style="font-size: 0.8rem;">Eliminar</button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            </div>
+
+
           </div>
         </div>
       </div>
-
-      
     </div>
   </div>
 
@@ -152,7 +204,7 @@
 
   <!-- REGISTRA CATEGORÍA -->
   <div class="modal fade" id="registroCategoriaModal" tabindex="-1" aria-labelledby="registroCategoriaModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
+  <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
       <!-- Formulario empieza aquí -->
       <form th:action="@{/category/save}" method="post" enctype="multipart/form-data">
@@ -162,12 +214,14 @@
         </div>
         <div class="modal-body">
           <div class=" p-3">
-            <input type="text" class="form-control muted" id="categoryName" name="name" placeholder="Nombre de la categoría" required>
+            <input type="text" class="form-control muted" id="categoryName" name="name" placeholder="Nombre de la categoría" required
+              onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')">
           </div>
         </div>
         <div class="d-flex justify-content-end p-3 flex-wrap gap-2">
-          <button type="button" class="btn btn-submit border-0" data-bs-dismiss="modal">Cancelar</button>
-          <button type="submit" class="btn btn-submit btn-sm border-0">Agregar</button>
+          <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-submit">Agregar</button>
         </div>
       </form>
     </div>

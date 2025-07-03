@@ -50,7 +50,6 @@ public class EventDto {
         this.image = event.getImage();
         this.registrationTime = event.getRegistrationTime();
         this.timeAgo = event.getTimeAgo();
-
         this.formattedStartDate = event.getStartDate().format(formatter.withLocale(Locale.forLanguageTag("es-ES")));
         this.formattedEndDate = event.getEndDate().format(formatter.withLocale(Locale.forLanguageTag("es-ES")));
     }

@@ -54,7 +54,8 @@
         <!-- BUSCADOR -->
         <div class="search-bar">
           <form action="/search" method="get" id="searchForm" class="search-form" role="search">
-            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores"/>
+            <input id="eventSearchInput" type="text" name="query" placeholder="Buscar eventos, categorías o creadores..." aria-label="Buscar eventos, categorías o creadores" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+              onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
             <button type="submit" aria-label="Buscar"><i class="fas fa-search"></i></button>
           </form>
         </div>
@@ -233,7 +234,90 @@
     
 
   <!-- MODALES -->
-  
+
+  <!-- CREAR EVENTO -->
+  <div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content p-3">
+        <form th:action="@{/event/save}" method="post" th:object="${eventDto}" enctype="multipart/form-data">
+          <div class="modal-header">
+            <h5 class="modal-title" id="crearEventoModalLabel" style="font-size: 1rem;">Crear evento</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar" style="font-size: 0.8rem;"></button>
+          </div>          
+          <div class="modal-body">
+            <div class="row">
+              <!-- AQUÍ VA LA IMAGEN DEL EVENTO-->
+              <div class="col-12 col-md-4 d-flex flex-column">
+                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
+                  <div id="drop-area" class="p-2 border border-secondary rounded d-flex flex-column align-items-center justify-content-center text-center h-100" style="cursor: pointer;">
+                    <div id="drop-placeholder" class="d-flex flex-column align-items-center">
+                      <i class="bi bi-image" style="font-size: 1rem;"></i>
+                      <p class="mt-2 mb-0" style="font-size: 0.8rem;">Arrastra una imagen aquí o haz clic para seleccionar</p>
+                    </div>
+                    <input type="file" id="image" name="imageFile" accept="image/*" class="d-none">
+                    <img id="preview" src="#" alt="Vista previa" class="img-fluid d-none h-100" />
+                  </div>
+                </div>
+              </div>
+              <!--DATOS DE EVENTO-->
+              <div class="col-12 col-md-8">
+                <div class="mb-3">
+                  <input type="text" class="form-control muted" id="name" name="name" required placeholder="Título" th:placeholder="#{form.title}"
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')">
+                </div>
+                <div class="mb-3">
+                  <textarea class="form-control muted" id="description" rows="3" name="description" required placeholder="Descripción"
+                  th:placeholder="#{form.description}" onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')"></textarea>
+                </div>
+                <div class="mb-3">
+                  <input type="text" class="form-control muted" id="contact" name="contact" placeholder="Contacto" 
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')">
+                </div>
+                <div class="mb-3 d-flex">
+                  <input type="date" class="form-control muted" id="startDate" name="startDate" required/>
+                  <p class="mx-2 my-auto">hasta</p>
+                  <input type="date" class="form-control muted" id="endDate" name="endDate" required/>
+                </div>
+                <div class="mb-3 d-flex">
+                  <input type="time" class="form-control muted me-2" id="time" name="time" th:placeholder="#{form.time}"/>
+                  <select name="categoryId" id="categoryId" class="form-select muted" required aria-label="Selecciona una categoría">
+                    <option value="" disabled selected hidden class="muted"> [[#{form.select_category}]]</option>
+                    <th:block th:each="cat : ${categories}">
+                      <option th:value="${cat.id}" th:text="${cat.name}" th:attr="data-name=${cat.name}"></option>
+                    </th:block>
+                  </select>
+                </div>
+
+                <div class="mb-3" id="customCategoryDiv" style="display:none;">
+                  <input type="text" class="form-control muted" id="customCategory" name="customCategory" th:placeholder="#{form.extra_category}"
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')">
+                </div>
+
+                <div class="mb-3 d-flex">
+                  <input type="text" class="form-control muted" id="address" name="location.address" placeholder="Dirección" 
+                    onfocus="this.setAttribute('data-placeholder', this.placeholder), this.placeholder=''" 
+                    onblur="this.placeholder=this.getAttribute('data-placeholder')"/>
+                  <input type="hidden" id="latitude" name="location.latitude" />
+                  <input type="hidden" id="longitude" name="location.longitude" />
+                  <button type="button" class="btn btn-submit ms-2" onclick="geocodeAddress()">Buscar</button>
+                </div>
+                <!--Mapa-->
+                <div id="map-form" style="height: 150px; width: 100%;" class="rounded shadow-sm"></div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-submit" data-bs-dismiss="modal">Cancelar</button>
+            <button type="submit" class="btn btn-submit" th:text="#{profile.create}">Crear evento</button>
+          </div>        
+        </form>
+      </div> 
+    </div>
+  </div>
   <!-- INICIAR SESIÓN -->
   <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">
     <div class="modal-dialog custom-login-size">
@@ -357,76 +441,6 @@
             </div>
           </form>
         </div>
-      </div>
-    </div>
-  </div>
-  <!-- CREAR EVENTO -->
-  <div class="modal fade" id="crearEventoModal" tabindex="-1" aria-labelledby="crearEventoModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-      <div class="modal-content p-3" th:if="${user != null}">
-        <form th:action="@{/event/save}" method="post" th:object="${eventDto}" enctype="multipart/form-data">
-          <div class="modal-header">
-            <h5 class="modal-title" id="crearEventoModalLabel" style="font-size: 1rem;" th:text="#{form.create_event}">Crear evento</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="#{form.cancel}" style="font-size: 0.8rem;"></button>
-          </div>
-          <div class="modal-body">
-            <div class="row">
-              <!-- IMAGEN -->
-              <div class="col-12 col-md-4 d-flex flex-column">
-                <div class="flex-grow-1 d-flex align-items-center justify-content-center">
-                  <div id="drop-area" class="p-2 border border-secondary rounded d-flex flex-column align-items-center justify-content-center text-center h-100" style="cursor: pointer;">
-                    <div id="drop-placeholder" class="d-flex flex-column align-items-center">
-                      <i class="bi bi-image" style="font-size: 1rem;"></i>
-                      <p class="mt-2 mb-0" style="font-size: 0.8rem;" th:text="#{form.image_text}">Arrastra una imagen...</p>
-                    </div>
-                    <input type="file" id="image" name="imageFile" accept="image/*" class="d-none">
-                    <img id="preview" src="#" th:alt="#{form.image_preview}" class="img-fluid d-none h-100" />
-                  </div>
-                </div>
-              </div>
-              <!-- DATOS -->
-              <div class="col-12 col-md-8">
-                <div class="mb-3">
-                  <input type="text" class="form-control muted" id="name" name="name" required th:placeholder="#{form.title}">
-                </div>
-                <div class="mb-3">
-                  <textarea class="form-control muted" id="description" rows="3" name="description" required th:placeholder="#{form.description}"></textarea>
-                </div>
-                <div class="mb-3">
-                  <input type="text" class="form-control muted" id="contact" name="contact" th:placeholder="#{form.contact}">
-                </div>
-                <div class="mb-3 d-flex">
-                  <input type="date" class="form-control muted" id="startDate" name="startDate" required/>
-                  <p class="mx-2 my-auto" th:text="#{form.to}">hasta</p>
-                  <input type="date" class="form-control muted" id="endDate" name="endDate" />
-                </div>
-                <div class="mb-3 d-flex">
-                  <input type="time" class="form-control muted me-2" id="time" name="time" th:title="#{form.time}">
-                  <select name="categoryId" id="categoryId" class="form-select muted" required th:attr="aria-label=#{form.select_category}">
-                    <option value="" disabled selected hidden class="muted">[[#{form.select_category}]]</option>
-                    <th:block th:each="cat : ${categories}">
-                      <option th:value="${cat.id}" th:text="${cat.name}" th:attr="data-name=${cat.name}"></option>
-                    </th:block>
-                  </select>
-                </div>
-                <div class="mb-3" id="customCategoryDiv" style="display:none;">
-                  <input type="text" class="form-control muted" id="customCategory" name="customCategory" th:placeholder="#{form.extra_category}">
-                </div>
-                <div class="mb-3 d-flex">
-                  <input type="text" class="form-control muted" id="address" name="location.address" th:placeholder="#{form.location}">
-                  <input type="hidden" id="latitude" name="location.latitude" />
-                  <input type="hidden" id="longitude" name="location.longitude" />
-                  <button type="button" class="btn btn-submit btn-sm ms-2" onclick="geocodeAddress()" th:text="#{form.search}">Buscar</button>
-                </div>
-                <div id="map-form" style="height: 150px; width: 100%;" class="rounded shadow-sm"></div>
-              </div>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-submit" data-bs-dismiss="modal" th:text="#{form.cancel}">Cancelar</button>
-            <button type="submit" class="btn btn-submit" th:text="#{profile.create}">Crear evento</button>
-          </div>
-        </form>
       </div>
     </div>
   </div>

@@ -62,6 +62,7 @@ public class SecurityConfig {
     SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) 
             .authorizeHttpRequests(requests -> requests
+                .requestMatchers("/user/enviarConsulta").permitAll()
                 .requestMatchers("/user/eliminar/**").authenticated()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN")

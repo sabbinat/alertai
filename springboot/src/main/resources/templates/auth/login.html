@@ -24,10 +24,10 @@
       <div class="modal-body p-5">
         <a href="/" class="back-link"><p><i class="bi bi-arrow-left-short me-2"></i><span th:text="#{back}">Atrás</span></p></a>
 
-        <!-- MENSAJES -->
         <div class="text-center">
           <h4 class="fw-bold mb-3" th:text="#{login.title}">Iniciar sesión</h4>
-           <!-- Mensaje de error al fallar el login -->
+          
+          <!-- MENSAJE DE ERROR / ÉXITO -->
           <div th:if="${param.error}" class="alert text-center small" style="color: red;" role="alert" th:text="#{login.error}">
               Correo o contraseña incorrectos. Intenta nuevamente.
           </div>
