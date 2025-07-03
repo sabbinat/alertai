@@ -1,3 +1,7 @@
+<div >
+  <img src="https://github.com/user-attachments/assets/deaa3df0-bc22-482e-bcb0-0b6d574f6370">
+</div>
+
 # AlertAi  
 **Sistema de Eventos**
 
